@@ -7,7 +7,7 @@ import ocsf.server.*;
 
 public class Server_Controller extends AbstractServer {
 
-	final public static int DEFAULT_PORT = 5555;
+	final public static int DEFAULT_PORT = 5555; 
 
 	public Server_Controller(int port) {
 		super(port);
@@ -28,7 +28,7 @@ public class Server_Controller extends AbstractServer {
 //								", Model: " + receivedCar.getModel() +
 //								", from client: " + client.toString());
 //		}
-
+		
 		else
 			System.out.println("Message received: " + message + " from " + client);
 		
@@ -40,31 +40,17 @@ public class Server_Controller extends AbstractServer {
 
 	}
 
-	/**
-	 * This method overrides the one in the superclass. Called when the server
-	 * starts listening for connections.
-	 */
+
 	protected void serverStarted() {
 		System.out.println("Server listening for connections on port " + getPort());
 	}
 
-	/**
-	 * This method overrides the one in the superclass. Called when the server stops
-	 * listening for connections.
-	 */
+
 	protected void serverStopped() {
 		System.out.println("Server has stopped listening for connections.");
 	}
 
-	// Class methods ***************************************************
 
-	/**
-	 * This method is responsible for the creation of the server instance (there is
-	 * no UI in this phase).
-	 *
-	 * @param args[0] The port number to listen on. Defaults to 5555 if no argument
-	 *                is entered.
-	 */
 	public static void main(String[] args) {
 		int port = 0; // Port to listen on
 
@@ -83,4 +69,3 @@ public class Server_Controller extends AbstractServer {
 		}
 	}
 }
-//End of EchoServer class
