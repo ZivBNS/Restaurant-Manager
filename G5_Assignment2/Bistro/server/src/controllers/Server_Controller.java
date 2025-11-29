@@ -1,71 +1,132 @@
 package controllers;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import ocsf.server.*;
 
+import entities.Reservation;
+import entities.User;
+import gui.Server_GUI;
+import messages.Message;
+import messages.MessageType;
+import ocsf.server.AbstractServer;
+import ocsf.server.ConnectionToClient;
 
 public class Server_Controller extends AbstractServer {
 
-	final public static int DEFAULT_PORT = 5555; 
-
-	public Server_Controller(int port) {
-		super(port);
-	}
-
-	public void handleMessageFromClient(Object message, ConnectionToClient client) {
-		if (message instanceof ArrayList) {
-			@SuppressWarnings("unchecked")
-			ArrayList<String> list = (ArrayList<String>) message;
-			int lastItem = list.size();
-			String recived = list.get(lastItem - 1);
-			System.out.println("message " + recived);
-		}
-//		else if(message instanceof Car) {
-//			Car receivedCar = (Car) message;
-//			System.out.println("Car received: " +
-//								" Make: " + receivedCar.getMake() +
-//								", Model: " + receivedCar.getModel() +
-//								", from client: " + client.toString());
-//		}
-		
-		else
-			System.out.println("Message received: " + message + " from " + client);
-		
-		try {
-	        client.sendToClient(message); 
-	    } catch (IOException e) {
-	        e.printStackTrace();
-	    }
-
-	}
+    final public static int DEFAULT_PORT = 5555;
+    private Server_GUI gui;
 
 
-	protected void serverStarted() {
-		System.out.println("Server listening for connections on port " + getPort());
-	}
+    public Server_Controller(int port, Server_GUI gui) {
+        super(port); 
+        this.gui = gui;
+    }
+
+    
+    @Override
+    protected void handleMessageFromClient(Object msg, ConnectionToClient client) {
+        // 1. Input Validation: Check if message is valid
+        if (msg == null || !(msg instanceof Message)) {
+            log("Error: Invalid message format from " + client);
+            return;
+        }
+
+        Message clientMsg = (Message) msg;
+        Message serverResponse = null;
+
+        log("Processing command: " + clientMsg.getType());
+
+        try {
+            // 2. Switch Case: Handle specific commands
+            switch (clientMsg.getType()) {
+
+                // --- Authentication ---
+                case LOGIN_REQUEST:
+                    // Extract User object from message content
+                    User user = (User) clientMsg.getContent();
+                    // TODO: Check credentials in DB (LoginController)
+                    if ("admin".equals(user.getUsername())) { 
+                        serverResponse = new Message(MessageType.LOGIN_SUCCESS, "Welcome!");
+                    } else {
+                        serverResponse = new Message(MessageType.LOGIN_FAILED, "Invalid Pass");
+                    }
+                    break;
+
+                case LOGOUT_REQUEST:
+                    log("Client disconnected: " + client.getInetAddress());
+                    // TODO: Update 'isLoggedIn' status in DB
+                    break;
+
+                // --- Reservation Management ---
+                case CREATE_RESERVATION:
+                    Reservation res = (Reservation) clientMsg.getContent();
+                    // TODO: Check table availability (ReservationController)
+                    log("New reservation request for " + res.getNumDiners() + " people.");
+                    serverResponse = new Message(MessageType.SUCCESS_RESPONSE, "Reservation Confirmed");
+                    break;
+
+                case CANCEL_RESERVATION:
+                    // TODO: Update reservation status to 'CANCELLED' in DB
+                    serverResponse = new Message(MessageType.SUCCESS_RESPONSE, "Reservation Cancelled");
+                    break;
+
+                // --- Waitlist Management ---
+                case JOIN_WAITLIST:
+                    // TODO: Add WaitlistEntry to DB (WaitlistController)
+                    serverResponse = new Message(MessageType.SUCCESS_RESPONSE, "Added to Waitlist");
+                    break;
+
+                // --- Restaurant Status (Live Map) ---
+                case GET_TABLES_STATUS:
+                    // TODO: Fetch all tables and their status from DB
+                    // List<RestaurantTable> tables = TableRepository.getAll();
+                    serverResponse = new Message(MessageType.TEXT_MESSAGE, "List of Tables (Mock)");
+                    break;
+
+                case UPDATE_TABLE_STATUS:
+                    // TODO: Change table status (e.g., OCCUPIED -> AVAILABLE)
+                    break;
+                
+                // Reports (Manager Only)
+                case GET_REPORTS:
+                    // TODO: Generate PDF/Data report (ReportController)
+                    break;
+
+                default:
+                    log("Warning: Unknown command received.");
+                    serverResponse = new Message(MessageType.ERROR_RESPONSE, "Unknown Command");
+            }
+
+            // 3. Send Response: If a response object was created, send it back
+            if (serverResponse != null) {
+                client.sendToClient(serverResponse);
+            }
+
+        } catch (Exception e) {
+            log("Critical Error: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 
 
-	protected void serverStopped() {
-		System.out.println("Server has stopped listening for connections.");
-	}
+    @Override
+    protected void serverStarted() {
+        log("Server listening for connections on port " + getPort());
+    }
 
+    @Override
+    protected void serverStopped() {
+        log("Server has stopped listening for connections.");
+    }
 
-	public static void main(String[] args) {
-		int port = 0; // Port to listen on
+    @Override
+    protected void clientConnected(ConnectionToClient client) {
+        log("Client connected: " + client);
+    }
 
-		try {
-			port = Integer.parseInt(args[0]); // Get port from command line
-		} catch (Throwable t) {
-			port = DEFAULT_PORT; // Set port to 5555
-		}
-
-		Server_Controller sv = new Server_Controller(port);
-
-		try {
-			sv.listen(); // Start listening for connections
-		} catch (Exception ex) {
-			System.out.println("ERROR - Could not listen for clients!");
-		}
-	}
+    private void log(String message) {
+        if (gui != null) {
+            gui.appendLog(message);
+        } else {
+            System.out.println(message);
+        }
+    }
 }
