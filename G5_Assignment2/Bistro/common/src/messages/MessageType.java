@@ -13,6 +13,7 @@ public enum MessageType {
     CANCEL_RESERVATION,     // Client requests to cancel a Reservation
     JOIN_WAITLIST,          // Client requests to join the waitlist
     GET_RESERVATIONS_LIST,  // Client requests list of active bookings
+    UPDATE_RESERVATION,		// Client requests to update a Reservation
     
     // --- Restaurant Management and Status ---
     GET_TABLES_STATUS,      // Client requests current status of all tables

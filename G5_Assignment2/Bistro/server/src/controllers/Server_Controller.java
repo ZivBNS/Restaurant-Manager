@@ -67,6 +67,11 @@ public class Server_Controller extends AbstractServer {
                     // TODO: Update reservation status to 'CANCELLED' in DB
                     serverResponse = new Message(MessageType.SUCCESS_RESPONSE, "Reservation Cancelled");
                     break;
+                
+                case UPDATE_RESERVATION:
+                    // TODO: Update reservation information
+                    serverResponse = new Message(MessageType.SUCCESS_RESPONSE, "Reservation Updated");
+                    break;
 
                 // --- Waitlist Management ---
                 case JOIN_WAITLIST:
@@ -87,7 +92,7 @@ public class Server_Controller extends AbstractServer {
                 
                 // Reports (Manager Only)
                 case GET_REPORTS:
-                    // TODO: Generate PDF/Data report (ReportController)
+                    // TODO: Generate report (ReportController)
                     break;
 
                 default:
