@@ -16,8 +16,8 @@ import javafx.stage.Stage;
 public class Customer_GUI {
 	@FXML
 	private Parent rootPane;  
-	//private final Client_Controller controller = new Client_Controller(null, 0);
-	//JavaFX_Adapter adapter = new JavaFX_Adapter(controller);
+	private final Client_Controller controller = new Client_Controller("localhost", 5555);
+	JavaFX_Adapter adapter = new JavaFX_Adapter(controller);
 
 	@FXML
 	private void onViewReservationsClicked() {
@@ -29,7 +29,7 @@ public class Customer_GUI {
 	        Stage stage = (Stage) rootPane.getScene().getWindow();
 	        stage.getScene().setRoot(newView);   
 	        
-	        //adapter.requestShowReservations();
+	        adapter.requestShowReservations();
 	        
 	    } catch (Exception e) {
 	        e.printStackTrace();

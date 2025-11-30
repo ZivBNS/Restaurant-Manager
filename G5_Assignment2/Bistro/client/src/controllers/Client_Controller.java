@@ -4,6 +4,10 @@ package controllers;
 import java.io.*;
 import java.util.ArrayList;
 
+import entities.Casual_Customer;
+import messages.Message;
+import messages.MessageType;
+
 
 public class Client_Controller implements ChatIF {
 	// Class variables *************************************************
@@ -29,12 +33,12 @@ public class Client_Controller implements ChatIF {
 	 * @param port The port to connect on.
 	 */
 	public Client_Controller(String host, int port) {
-//		try {
-//			client = new ChatClient(host, port, this);
-//		} catch (IOException exception) {
-//			System.out.println("Error: Can't setup connection!" + " Terminating client.");
-//			System.exit(1);
-//		}
+		try {
+			client = new ChatClient(host, port, this);
+		} catch (IOException exception) {
+			System.out.println("Error: Can't setup connection!" + " Terminating client.");
+			System.exit(1);
+		}
 	}
 
 	// Instance methods ************************************************
@@ -45,17 +49,15 @@ public class Client_Controller implements ChatIF {
 	 */
 	public void accept() {
 		try {
-			BufferedReader fromConsole = new BufferedReader(new InputStreamReader(System.in));
+			//BufferedReader fromConsole = new BufferedReader(new InputStreamReader(System.in));
 			// Object message;
 //			Car car1 = new Car("hunday","i10",1990);
 //			client.handleMessageFromClientUI(car1);
 
-			ArrayList<String> message = new ArrayList<>();
-			while (true) {
-				String inputFromConsole = fromConsole.readLine();
-				message.add(inputFromConsole);
-				client.handleMessageFromClientUI(message);
-			}
+			//Message message = new Message(MessageType.GET_RESERVATIONS_LIST, );
+
+			//client.handleMessageFromClientUI(message);
+			
 		} catch (Exception ex) {
 			System.out.println("Unexpected error while reading from console!");
 		}
@@ -66,7 +68,16 @@ public class Client_Controller implements ChatIF {
 	}
 	
 	public void onShowReservationsRequest() {
-		
+		//TEMP, todo: crate a customer object in Customer_GUI
+		Casual_Customer customer1 = new Casual_Customer("123456789", "test@test.com");
+		try {
+			Message message = new Message(MessageType.GET_RESERVATIONS_LIST, customer1);
+
+			client.handleMessageFromClientUI(message);
+			
+		} catch (Exception ex) {
+			System.out.println("Unexpected error while sending a reservation request!");
+		}
 	}
 
 	/**
@@ -77,11 +88,13 @@ public class Client_Controller implements ChatIF {
 	 */
 	public void display(Object message) {
 		
-		if (message instanceof ArrayList) {
-			@SuppressWarnings("unchecked")
-			ArrayList<String> list = (ArrayList<String>) message;
-			int lastItem = list.size();
-			String recived = list.get(lastItem - 1);
+		if (message instanceof Message) {
+			Message recivedMessage = (Message)message;
+			
+//			@SuppressWarnings("unchecked")
+//			ArrayList<String> list = (ArrayList<String>) message;
+//			int lastItem = list.size();
+			String recived = recivedMessage.toString();
 			System.out.println("> " + recived);
 		}
 //		else if(message instanceof Car) {
@@ -98,13 +111,13 @@ public class Client_Controller implements ChatIF {
 
 
 	public static void main(String[] args) {
-		String host = "";
+		String host = "localhost";
 
-		try {
-			host = args[0];
-		} catch (ArrayIndexOutOfBoundsException e) {
-			host = "localhost";
-		}
+		//try {
+		//	host = args[0];
+		//} catch (ArrayIndexOutOfBoundsException e) {
+		//	host = "localhost";
+		//}
 		Client_Controller chat = new Client_Controller(host, DEFAULT_PORT);
 		chat.accept(); // Wait for console data
 	}

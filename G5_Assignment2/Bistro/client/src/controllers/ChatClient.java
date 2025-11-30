@@ -55,12 +55,13 @@ public class ChatClient extends AbstractClient
   {
     try
     {
+    	clientUI.display("trying to send a messege to the server");
     	sendToServer(message);
     }
     catch(IOException e)
     {
       clientUI.display
-        ("Could not send message to server.  Terminating client.");
+        ("Could not send message to server.  Terminating client." + e.toString());
       quit();
     }
   }
