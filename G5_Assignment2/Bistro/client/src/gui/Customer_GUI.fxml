@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.StackPane?>
+
+<StackPane prefHeight="327.0" prefWidth="284.0"
+           xmlns="http://javafx.com/javafx/25"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="gui.Customer_GUI"
+           fx:id="rootPane">
+
+    <children>
+        <Button fx:id="viewReservationsButton"
+                mnemonicParsing="false"
+                onAction="#onViewReservationsClicked"
+                text="View Reservations" />
+    </children>
+</StackPane>
