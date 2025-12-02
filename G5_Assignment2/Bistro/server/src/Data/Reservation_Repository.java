@@ -4,22 +4,13 @@ import java.util.List;
 
 import entities.Reservation;
 
-public class Reservation_Repository {
+public class Reservation_Repository implements Repository_Interface<Reservation>{
 	 private Object today;
 	private List<Reservation> reservationsForToday;
 
 	public Reservation_Repository(){
 		//get data from db for todays reservations and initialize;
 	}		
-	
-	public Reservation getReservationByConfirmationCode(String confCode) {
-		for (Reservation r:reservationsForToday)
-			if (r.getConfirmationCode().equals(confCode)) return r;
-		//should ask with sql to get reservation start with this confi code(and prepare statment)
-		//should take the data and make it new reservation and return it.
-		//otherwise:
-		return null;
-	}
 	
 	public Reservation getReservationByTable(int tableNumber) {
 		for (Reservation r:reservationsForToday)
@@ -29,8 +20,7 @@ public class Reservation_Repository {
 
 		
 	public void setReservation(Reservation reservation) {
-		//sql to set new reservation
-		if (reservation.getReservationTime().equals(today)) reservationsForToday.add(reservation);
+
 	}
 	
 	public void updateReservation(Reservation reservation) {
@@ -48,8 +38,37 @@ public class Reservation_Repository {
     	
     }
 
-    void deleteById(String id);
+	@Override
+	public Reservation getByCode(String confimrationCode) {
+		for (Reservation r:reservationsForToday)
+			if (r.getConfirmationCode().equals(confimrationCode)) return r;
+		//should ask with sql to get reservation start with this confi code(and prepare statment)
+		//should take the data and make it new reservation and return it.
+		//otherwise:
+		return null;
+	}
 
+
+	@Override
+	public boolean deleteByCode(String confimrationCode) {
+		
+		
+		return true;
+	}
+
+	@Override
+	public boolean set(Reservation objToSet) {
+		//sql to set new reservation
+		if (objToSet.getReservationTime().equals(today)) reservationsForToday.add(objToSet);
+		
+		return false;
+	}
+
+	@Override
+	public boolean updateByCode(Reservation objToUpdate) {
+		return false;
+	}
+	
 	public List<Reservation> getReservationsForToday() {
 		return reservationsForToday;
 	}
