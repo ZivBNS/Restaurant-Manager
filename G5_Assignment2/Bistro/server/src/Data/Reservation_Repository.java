@@ -76,4 +76,19 @@ public class Reservation_Repository implements Repository_Interface<Reservation>
 	public void setReservationsForToday(List<Reservation> reservationsForToday) {
 		this.reservationsForToday = reservationsForToday;
 	}
+
+	public static boolean createReservation(Reservation reservation) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	public static Object getReservationsByUser(int userId) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public static boolean cancelReservation(int reservationId) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

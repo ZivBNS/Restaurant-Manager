@@ -1,150 +1,99 @@
 package controllers;
 
-import entities.Reservation;  
-import entities.Bill;    
-import entities.Table; 
-import Data.Bill_Repository;           
-import Data.Waitlist_Repository;     
-import Data.Table_Repository; 
-import java.time.LocalDateTime;  
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID; 
+import messages.Message;
+import messages.MessageType;
+import ocsf.server.ConnectionToClient;
+import Data.Reservation_Repository;
+import entities.Reservation;
 
 public class Reservation_Controller {
 
-    private final Reservation_Repository reservationRepository;
-    private final Bill_Repository billRepository;
-    private final Waitlist_Repository waitlistRepository; 
-    private final Messaging_Controller messagingController;
-    private final Table_Repository tableRepository; 
+    public static void handleMessage(Message msg, ConnectionToClient client) {
 
-    public Reservation_Controller(
-            Reservation_Repository reservationRepository,
-            Bill_Repository billRepository,
-            Waitlist_Repository waitlistRepository,
-            Messaging_Controller messagingController,
-            Table_Repository tableRepository) {
-        
-        this.reservationRepository = reservationRepository;
-        this.billRepository = billRepository;
-        this.waitlistRepository = waitlistRepository;
-        this.messagingController = messagingController;
-        this.tableRepository = tableRepository;
-    }
+        switch (msg.getType()) {
 
+            case CREATE_RESERVATION:
+                createReservation(msg, client);
+                break;
 
-    public Reservation createReservation(
-            LocalDateTime dateTime, 
-            int numberOfDiners, 
-            String customerPhone, 
-            String customerEmail,
-            String subscriberCode) {
+            case CANCEL_RESERVATION:
+                cancelReservation(msg, client);
+                break;
 
+            case GET_RESERVATIONS_BY_USER:
+                getReservationsByUser(msg, client);
+                break;
 
-        Optional<Table> availableTable = tableRepository.findAvailableTable(dateTime, numberOfDiners);
-        
-        if (availableTable.isPresent()) {
-        	
-            Reservation newReservation = new Reservation();
-            newReservation.setDateTime(dateTime);
-            newReservation.setNumberOfDiners(numberOfDiners);
-            newReservation.setCustomerPhone(customerPhone);
-            newReservation.setCustomerEmail(customerEmail);
-            newReservation.setSubscriberCode(subscriberCode);
-            newReservation.setConfirmationCode(UUID.randomUUID().toString().substring(0, 8)); 
-            newReservation.setStatus("CONFIRMED");
-
-
-            Reservation savedReservation = reservationRepository.save(newReservation);
-            
-            messagingController.sendConfirmation(savedReservation.getCustomerPhone(), savedReservation.getConfirmationCode());
-
-            return savedReservation;
-        } else {
-
-            tryMoveToWaitlist(dateTime, numberOfDiners, customerPhone);
-            return null; 
+            default:
+                System.out.println("Reservation_Controller: Unknown message type: " + msg.getType());
         }
     }
 
-    public Optional<Reservation> getReservationByCode(String code) {
+    // ------------------------------------------------------
+    // CREATE RESERVATION
+    // ------------------------------------------------------
+    private static void createReservation(Message msg, ConnectionToClient client) {
+        try {
 
-        return reservationRepository.findByCode(code);
-    }
-    
-    public List<Reservation> getReservationByDate(LocalDate date) {
-        return reservationRepository.findByDate(date);
-    }
+            Reservation reservation = (Reservation) msg.getContent();
 
+            boolean success = Reservation_Repository.createReservation(reservation);
 
-    public boolean updateReservationDetails(String confirmationCode, LocalDateTime newDateTime, int newNumberOfDiners) {
-        Optional<Reservation> reservationOpt = reservationRepository.findByCode(confirmationCode);
-        
-        if (reservationOpt.isPresent()) {
-            Reservation reservation = reservationOpt.get();
-            
-            reservation.setDateTime(newDateTime);
-            reservation.setNumberOfDiners(newNumberOfDiners);
-            reservationRepository.update(reservation);
-            
-            messagingController.sendUpdateNotification(reservation.getCustomerPhone());
-            return true;
+            if (success) {
+                client.sendToClient(
+                    new Message(MessageType.RESERVATION_CONFIRMED, reservation)
+                );
+            } else {
+                client.sendToClient(
+                    new Message(MessageType.RESERVATION_FAILED, null)
+                );
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        return false;
     }
 
-    public boolean cancelReservation(String code) {
-        Optional<Reservation> reservationOpt = reservationRepository.findByCode(code);
-        
-        if (reservationOpt.isPresent()) {
-            Reservation reservation = reservationOpt.get();
-            reservation.setStatus("CANCELED");
-            reservationRepository.update(reservation);
-            
-            messagingController.sendCancellation(reservation.getCustomerPhone());
-            return true;
+    // ------------------------------------------------------
+    // GET RESERVATIONS BY USER
+    // ------------------------------------------------------
+    private static void getReservationsByUser(Message msg, ConnectionToClient client) {
+        try {
+            int userId = (int) msg.getContent();
+
+            var reservations = Reservation_Repository.getReservationsByUser(userId);
+
+            client.sendToClient(
+                new Message(MessageType.RETURN_RESERVATIONS_BY_USER, reservations)
+            );
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        return false;
     }
 
-    public Bill processCheckIn(String confirmationCode, int tableId) {
-        Optional<Reservation> reservationOpt = reservationRepository.findByCode(confirmationCode);
-        
-        if (reservationOpt.isPresent() && reservationOpt.get().getStatus().equals("CONFIRMED")) {
-            Reservation reservation = reservationOpt.get();
-            reservation.setStatus("CHECKED_IN");
-            reservationRepository.update(reservation);
-            
-            Bill newBill = new Bill(reservation, tableId);
-            billRepository.save(newBill);
-            
-            return newBill;
-        }
-        return null;
-    }
+    // ------------------------------------------------------
+    // CANCEL RESERVATION
+    // ------------------------------------------------------
+    private static void cancelReservation(Message msg, ConnectionToClient client) {
+        try {
+            int reservationId = (int) msg.getContent();
 
-    public boolean tryMoveToWaitlist(LocalDateTime dateTime, int numberOfDiners, String customerPhone) {
-    	
-        waitlistRepository.addToWaitlist(dateTime, numberOfDiners, customerPhone);
-        messagingController.sendWaitlistConfirmation(customerPhone);
-        return true;
-    }
-    
-    public boolean handleNoShow(String code) {
-        Optional<Reservation> reservationOpt = reservationRepository.findByCode(code);
-        
-        if (reservationOpt.isPresent() && !reservationOpt.get().getStatus().equals("CHECKED_IN")) {
-            Reservation reservation = reservationOpt.get();
-            reservation.setStatus("NO_SHOW");
-            reservationRepository.update(reservation);
-            return true;
+            boolean success = Reservation_Repository.cancelReservation(reservationId);
+
+            MessageType responseType = success
+                    ? MessageType.RESERVATION_CANCELED
+                    : MessageType.RESERVATION_CANCEL_FAILED;
+
+            client.sendToClient(
+                new Message(responseType, reservationId)
+            );
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        return false;
-    }
-    
-    public boolean checkAvailability(LocalDateTime time, int diners) {
-        return tableRepository.findAvailableTable(time, diners).isPresent();
     }
 }
+
+
+
