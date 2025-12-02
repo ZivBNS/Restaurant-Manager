@@ -1,34 +1,33 @@
 package Data;
-
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Time;
+import java.util.ArrayList;
+import java.util.List;
 public class DB_Controller {
-	import java.sql.Connection;
-	import java.sql.DriverManager;
-	import java.sql.PreparedStatement;
-	import java.sql.ResultSet;
-	import java.sql.SQLException;
-	import java.sql.Statement;
-	import java.sql.Time;
-	import java.util.ArrayList;
-	import java.util.List;
-
-	public static void main(String[] args)
-		{
-        try 
-        {
-			Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/sys?allowLoadLocalInfile=true&serverTimezone=Asia/Jerusalem&useSSL=false", "root", "212009666");
-            System.out.println("SQL connection succeed");
+	public static void main(String[] args){
+  //      try 
+   //     {
+            System.out.println("!!!@@@@@@@@@");			
+        	Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/sys?allowLoadLocalInfile=true&serverTimezone=Asia/Jerusalem&useSSL=false", "root", "212009666");
+            System.out.println("SQL connection succeed!!!!!!!!!!@@@@@@@@@");
             createReservationTable(conn);
-            changeData(conn);
-            printFlights(conn);
-     	} catch (SQLException ex) 
+      /*      changeData(conn);
+            printFlights(conn);*/
+    // 	} catch (SQLException ex) 
      	    {          //handle any errors
+     	/*	
             System.out.println("SQLException: " + ex.getMessage());
             System.out.println("SQLState: " + ex.getSQLState());
             System.out.println("VendorError: " + ex.getErrorCode());
-            }
+            }*/
    	}
 	
-	public static void changeData(Connection con) {
+	/*public static void changeData(Connection con) {
 		List<Flight> flights = new ArrayList<>();
 		try 
 		{
@@ -42,12 +41,9 @@ public class DB_Controller {
 			ps.setString(2,b);
 			ps.executeUpdate();
 			
-		} catch (SQLException e) {e.printStackTrace();}
-		
+		} catch (SQLException e) {e.printStackTrace();}	
 	}
-
-	
-	
+	*/
 	//public static void printCourses(Connection con)
 	//{
 		/*Statement stmt;
@@ -65,7 +61,7 @@ public class DB_Controller {
 		} catch (SQLException e) {e.printStackTrace();}*/
 	//}
 	
-	public static void printFlights(Connection con)
+	/*public static void printFlights(Connection con)
 	{
 		Statement stmt;
 		try 
@@ -82,7 +78,7 @@ public class DB_Controller {
 			stmt.executeUpdate("UPDATE flights SET scheduled= '16:33:00' WHERE origin='paris' AND scheduled < '15:00:00'");
 		//	stmt.executeUpdate("UPDATE flights SET scheduled= '14:00' WHERE flight='KU101'");
 		} catch (SQLException e) {e.printStackTrace();}
-	}
+	}*/
 
 	
 	public static void createReservationTable(Connection con1){
