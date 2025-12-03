@@ -32,13 +32,13 @@ public class Client_Controller implements ChatIF {
 	 * @param host The host to connect to.
 	 * @param port The port to connect on.
 	 */
-	public Client_Controller(String host, int port) {
-		try {
+	public Client_Controller(String host, int port) throws IOException {
+		//try {
 			client = new ChatClient(host, port, this);
-		} catch (IOException exception) {
-			System.out.println("Error: Can't setup connection!" + " Terminating client.");
-			System.exit(1);
-		}
+		//} catch (IOException exception) {
+		//	System.out.println("Error: Can't setup connection!" + " Terminating client.");
+			//System.exit(1);
+		//}
 	}
 
 	// Instance methods ************************************************
@@ -110,17 +110,17 @@ public class Client_Controller implements ChatIF {
 	}
 
 
-	public static void main(String[] args) {
-		String host = "localhost";
+//	public static void main(String[] args) {
+//		String host = "localhost";
 
 		//try {
 		//	host = args[0];
 		//} catch (ArrayIndexOutOfBoundsException e) {
 		//	host = "localhost";
 		//}
-		Client_Controller chat = new Client_Controller(host, DEFAULT_PORT);
-		chat.accept(); // Wait for console data
-	}
+		//Client_Controller chat = new Client_Controller(host, DEFAULT_PORT);
+		//chat.accept(); // Wait for console data
+//	}
 
 
 }
