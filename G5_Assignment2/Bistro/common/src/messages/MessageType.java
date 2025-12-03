@@ -20,6 +20,8 @@ public enum MessageType {
     RESERVATION_CONFIRMED,
     RESERVATION_CANCELED,
     RESERVATION_CANCEL_FAILED,
+    RESERVATION_UPDATED,
+    RESERVATION_UPDATE_FAILED,
     
     // --- Restaurant Management and Status ---
     GET_TABLES_STATUS,      // Client requests current status of all tables
@@ -33,5 +35,6 @@ public enum MessageType {
     ERROR_RESPONSE,         // Server sends an error message (Content=String)
     SUCCESS_RESPONSE,        // Server confirms successful operation
     
-    TEXT_MESSAGE
+    TEXT_MESSAGE, 
+    
 }

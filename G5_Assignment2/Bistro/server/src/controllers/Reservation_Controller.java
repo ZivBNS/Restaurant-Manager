@@ -29,6 +29,10 @@ public class Reservation_Controller {
             case GET_RESERVATIONS_BY_USER: 
             	getReservationsByUser(msg, client);
                 break;
+                
+            case UPDATE_RESERVATION:
+            	updateReservation(msg, client);
+            	break;
 
             default:
                 System.out.println("Reservation_Controller: Unknown message type: " + msg.getType());
@@ -96,6 +100,26 @@ public class Reservation_Controller {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    
+    
+    /*
+     * UPDATE RESERVATION.
+     */
+    private static void updateReservation(Message msg, ConnectionToClient client) {
+    	try {
+    		
+    		Reservation reservation = (Reservation) msg.getContent();
+    		
+    		boolean success = reservationRepository.update(reservation);
+    		
+    		MessageType responseType = success ? MessageType.RESERVATION_UPDATED : MessageType.RESERVATION_UPDATE_FAILED;
+    		
+    		client.sendToClient(new Message(responseType, reservation));
+    		
+    	} catch(Exception e) {
+    		e.printStackTrace();
+    	}
     }
 }
 
