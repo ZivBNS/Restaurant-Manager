@@ -7,7 +7,8 @@ import Data.Reservation_Repository;
 import entities.Reservation;
 
 public class Reservation_Controller {
-
+	private static final Reservation_Repository reservationRepository =
+            Reservation_Repository.getInstance();
     public static void handleMessage(Message msg, ConnectionToClient client) {
 
         switch (msg.getType()) {
@@ -26,6 +27,7 @@ public class Reservation_Controller {
 
             default:
                 System.out.println("Reservation_Controller: Unknown message type: " + msg.getType());
+                break;
         }
     }
 
@@ -37,7 +39,7 @@ public class Reservation_Controller {
 
             Reservation reservation = (Reservation) msg.getContent();
 
-            boolean success = Reservation_Repository.createReservation(reservation);
+            boolean success = reservationRepository.set(reservation);
 
             if (success) {
                 client.sendToClient(
@@ -61,7 +63,7 @@ public class Reservation_Controller {
         try {
             int userId = (int) msg.getContent();
 
-            var reservations = Reservation_Repository.getReservationsByUser(userId);
+            var reservations = reservationRepository.getById(userId);
 
             client.sendToClient(
                 new Message(MessageType.RETURN_RESERVATIONS_BY_USER, reservations)
@@ -79,7 +81,7 @@ public class Reservation_Controller {
         try {
             int reservationId = (int) msg.getContent();
 
-            boolean success = Reservation_Repository.cancelReservation(reservationId);
+            boolean success = reservationRepository.deleteById(reservationId);
 
             MessageType responseType = success
                     ? MessageType.RESERVATION_CANCELED
