@@ -7,22 +7,27 @@ import Data.Reservation_Repository;
 import entities.Reservation;
 
 public class Reservation_Controller {
-	private static final Reservation_Repository reservationRepository =
-            Reservation_Repository.getInstance();
+	
+	private static final Reservation_Repository reservationRepository = Reservation_Repository.getInstance();
+	
+	
+    /*
+     * HANDLER FOR THE CLIENT REQUESTS.
+     */
     public static void handleMessage(Message msg, ConnectionToClient client) {
 
         switch (msg.getType()) {
 
-            case CREATE_RESERVATION:
-                createReservation(msg, client);
+            case CREATE_RESERVATION: 
+            	createReservation(msg, client);
                 break;
 
-            case CANCEL_RESERVATION:
-                cancelReservation(msg, client);
+            case CANCEL_RESERVATION: 
+            	cancelReservation(msg, client);
                 break;
 
-            case GET_RESERVATIONS_BY_USER:
-                getReservationsByUser(msg, client);
+            case GET_RESERVATIONS_BY_USER: 
+            	getReservationsByUser(msg, client);
                 break;
 
             default:
@@ -30,10 +35,11 @@ public class Reservation_Controller {
                 break;
         }
     }
-
-    // ------------------------------------------------------
-    // CREATE RESERVATION
-    // ------------------------------------------------------
+    
+    
+    /*
+     * CREATE RESERVATION.
+     */
     private static void createReservation(Message msg, ConnectionToClient client) {
         try {
 
@@ -42,54 +48,50 @@ public class Reservation_Controller {
             boolean success = reservationRepository.set(reservation);
 
             if (success) {
-                client.sendToClient(
-                    new Message(MessageType.RESERVATION_CONFIRMED, reservation)
-                );
+            	
+                client.sendToClient(new Message(MessageType.RESERVATION_CONFIRMED, reservation));
             } else {
-                client.sendToClient(
-                    new Message(MessageType.RESERVATION_FAILED, null)
-                );
+            	
+                client.sendToClient(new Message(MessageType.RESERVATION_FAILED, null));
             }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
-    // ------------------------------------------------------
-    // GET RESERVATIONS BY USER
-    // ------------------------------------------------------
+    
+    
+    /*
+     * GET RESERVATIONS BY USER.
+     */
     private static void getReservationsByUser(Message msg, ConnectionToClient client) {
         try {
+        	
             int userId = (int) msg.getContent();
 
             var reservations = reservationRepository.getById(userId);
 
-            client.sendToClient(
-                new Message(MessageType.RETURN_RESERVATIONS_BY_USER, reservations)
-            );
+            client.sendToClient( new Message(MessageType.RETURN_RESERVATIONS_BY_USER, reservations));
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
-    // ------------------------------------------------------
-    // CANCEL RESERVATION
-    // ------------------------------------------------------
+    
+    
+    /*
+     * CANCEL RESERVATION.
+     */
     private static void cancelReservation(Message msg, ConnectionToClient client) {
         try {
+        	
             int reservationId = (int) msg.getContent();
 
             boolean success = reservationRepository.deleteById(reservationId);
 
-            MessageType responseType = success
-                    ? MessageType.RESERVATION_CANCELED
-                    : MessageType.RESERVATION_CANCEL_FAILED;
+            MessageType responseType = success ? MessageType.RESERVATION_CANCELED : MessageType.RESERVATION_CANCEL_FAILED;
 
-            client.sendToClient(
-                new Message(responseType, reservationId)
-            );
+            client.sendToClient(new Message(responseType, reservationId));
 
         } catch (Exception e) {
             e.printStackTrace();
