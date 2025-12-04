@@ -2,7 +2,6 @@ package controllers;
 
 import messages.Message;
 import messages.MessageType;
-import ocsf.server.ConnectionToClient;
 import Data.Reservation_Repository;
 import entities.Reservation;
 import entities.Subscribed_Customer;
@@ -11,33 +10,28 @@ public class Reservation_Controller {
 	
 	private static final Reservation_Repository reservationRepository = Reservation_Repository.getInstance();
 	
-	
     /*
      * HANDLER FOR THE CLIENT REQUESTS.
      */
-    public static void handleMessage(Message msg, ConnectionToClient client) {
+    public static Message handleMessage(Message msg) {
 
         switch (msg.getType()) {
 
             case CREATE_RESERVATION: 
-            	createReservation(msg, client);
-                break;
+            	return createReservation(msg);
 
             case CANCEL_RESERVATION: 
-            	cancelReservation(msg, client);
-                break;
+            	return cancelReservation(msg);
 
             case GET_RESERVATIONS_BY_USER: 
-            	getReservationsByUser(msg, client);
-                break;
+            	return getReservationsByUser(msg);
                 
-            case UPDATE_RESERVATION:
-            	updateReservation(msg, client);
-            	break;
+            case UPDATE_RESERVATION_REQUEST:
+            	return updateReservation(msg);
 
             default:
                 System.out.println("Reservation_Controller: Unknown message type: " + msg.getType());
-                break;
+                return null;
         }
     }
     
@@ -45,23 +39,20 @@ public class Reservation_Controller {
     /*
      * CREATE RESERVATION.
      */
-    private static void createReservation(Message msg, ConnectionToClient client) {
+    private static Message createReservation(Message msg) {
         try {
-
             Reservation reservation = (Reservation) msg.getContent();
-
             boolean success = reservationRepository.set(reservation);
 
             if (success) {
-            	
-                client.sendToClient(new Message(MessageType.RESERVATION_CONFIRMED, reservation));
+                return new Message(MessageType.RESERVATION_CONFIRMED, reservation);
             } else {
-            	
-                client.sendToClient(new Message(MessageType.RESERVATION_FAILED, null));
+                return new Message(MessageType.RESERVATION_FAILED, null);
             }
 
         } catch (Exception e) {
             e.printStackTrace();
+            return null;
         }
     }
     
@@ -69,17 +60,18 @@ public class Reservation_Controller {
     /*
      * GET RESERVATIONS BY USER.
      */
-    private static void getReservationsByUser(Message msg, ConnectionToClient client) {
+    private static Message getReservationsByUser(Message msg) {
         try {
         	System.out.println("getReservationsByUser - Reservation_Controller");
             int userId = ((Subscribed_Customer)msg.getContent()).getSubscriberCode();
             var reservations = reservationRepository.getByUserId(userId);
-        	System.out.println(reservations.toString());
+        	System.out.println(reservations != null ? reservations.toString() : "No reservations found");
 
-            client.sendToClient( new Message(MessageType.RETURN_RESERVATIONS_BY_USER, reservations));
+            return new Message(MessageType.RETURN_RESERVATIONS_BY_USER, reservations);
 
         } catch (Exception e) {
             e.printStackTrace();
+            return null;
         }
     }
     
@@ -87,19 +79,16 @@ public class Reservation_Controller {
     /*
      * CANCEL RESERVATION.
      */
-    private static void cancelReservation(Message msg, ConnectionToClient client) {
+    private static Message cancelReservation(Message msg) {
         try {
-        	
             int reservationId = (int) msg.getContent();
-
             boolean success = reservationRepository.deleteById(reservationId);
-
             MessageType responseType = success ? MessageType.RESERVATION_CANCELED : MessageType.RESERVATION_CANCEL_FAILED;
-
-            client.sendToClient(new Message(responseType, reservationId));
+            return new Message(responseType, reservationId);
 
         } catch (Exception e) {
             e.printStackTrace();
+            return null;
         }
     }
     
@@ -107,22 +96,16 @@ public class Reservation_Controller {
     /*
      * UPDATE RESERVATION.
      */
-    private static void updateReservation(Message msg, ConnectionToClient client) {
+    private static Message updateReservation(Message msg) {
     	try {
-    		
     		Reservation reservation = (Reservation) msg.getContent();
-    		
     		boolean success = reservationRepository.update(reservation);
-    		
-    		MessageType responseType = success ? MessageType.RESERVATION_UPDATED : MessageType.RESERVATION_UPDATE_FAILED;
-    		
-    		client.sendToClient(new Message(responseType, reservation));
+    		MessageType responseType = success ? MessageType.RESERVATION_UPDATE_SUCCESS : MessageType.RESERVATION_UPDATE_FAILED;
+    		return new Message(responseType, reservation);
     		
     	} catch(Exception e) {
     		e.printStackTrace();
+    		return null;
     	}
     }
 }
-
-
-

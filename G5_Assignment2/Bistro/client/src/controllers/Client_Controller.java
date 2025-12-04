@@ -2,6 +2,7 @@ package controllers;
 
 import java.io.*;
 import gui.Customer_GUI;
+import entities.Reservation;
 import entities.Subscribed_Customer;
 import messages.Message;
 import messages.MessageType;
@@ -35,7 +36,16 @@ public class Client_Controller implements ChatIF {
 			System.out.println("Unexpected error while sending a reservation request!");
 		}
 	}
-
+	public void sendUpdateReservationRequest(Reservation reservationToUpdate) {
+        try {
+            Message msg = new Message(MessageType.UPDATE_RESERVATION_REQUEST, reservationToUpdate);
+            client.handleMessageFromClientUI(msg);
+            System.out.println("Update request sent for reservation ID: " + reservationToUpdate.getId());
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 	public void display(Object message) {
 
 		if (message instanceof Message) {
@@ -50,7 +60,10 @@ public class Client_Controller implements ChatIF {
 						Customer_GUI.instance.updateReservationsList(recivedMessage.getContent());
 					}
 					break;
-
+				case RESERVATION_UPDATE_SUCCESS:
+	                System.out.println("Update success! Refreshing list...");
+	                onShowReservationsRequest(); 
+	                break;
 				case LOGOUT_REQUEST:
 					break;
 

@@ -16,6 +16,8 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import java.io.IOException;
 
+import Data.DB_Controller;
+
 public class Server_GUI extends Application {
 
     private Server_Controller serverController;
@@ -94,6 +96,7 @@ public class Server_GUI extends Application {
     private void handleDisconnectAction(ActionEvent e) {
         if (serverController != null) {
             try {
+            	//DB_Controller.getInstance();
                 serverController.close(); //Calls AbstractServer's close()
             } catch (IOException ex) {
                 appendLog("Error closing server: " + ex.getMessage());

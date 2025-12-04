@@ -16,7 +16,7 @@ public class Client_GUI extends Application {
         
 
         primaryStage.setTitle("Restaurant Client");
-        primaryStage.setScene(new Scene(root, 600, 400));
+        primaryStage.setScene(new Scene(root, 450, 450));
         primaryStage.show();
     }
 

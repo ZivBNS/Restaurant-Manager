@@ -1,7 +1,7 @@
 package controllers;
 
 
-import entities.Reservation;
+import java.io.IOException;
 import entities.User;
 import gui.Server_GUI;
 import messages.Message;
@@ -52,37 +52,18 @@ public class Server_Controller extends AbstractServer {
 
                 case LOGOUT_REQUEST:
                     log("Client disconnected: " + client.getInetAddress());
-                    // TODO: Update 'isLoggedIn' status in DB
+                    //Update 'isLoggedIn' status in DB
                     break;
 
                 // --- Reservation Management ---
                 case CREATE_RESERVATION:
-                    Reservation res = (Reservation) clientMsg.getContent();
-                    // TODO: Check table availability (ReservationController)
-                    log("New reservation request for " + res.getNumDiners() + " people.");
-                    serverResponse = new Message(MessageType.SUCCESS_RESPONSE, "Reservation Confirmed");
-                    break;
-
                 case CANCEL_RESERVATION:
-                    // TODO: Update reservation status to 'CANCELLED' in DB
-                    serverResponse = new Message(MessageType.SUCCESS_RESPONSE, "Reservation Cancelled");
-                    break;
-                
-                case GET_RESERVATIONS_LIST:
-                    // TODO: get reservation status to  in DB
-                    serverResponse = new Message(MessageType.SUCCESS_RESPONSE, "Reservation Cancelled");
-                    break;
                 case GET_RESERVATIONS_BY_USER:
-                	System.out.println("switch GET_RESERVATIONS_BY_USER - Server_Controller");
-                    Reservation_Controller.handleMessage(clientMsg, client);
-                    serverResponse = new Message(MessageType.SUCCESS_RESPONSE, "Recived Reservation By User");
+                case UPDATE_RESERVATION_REQUEST:
+                    System.out.println("Handling Reservation Request: " + clientMsg.getType());
+                    serverResponse = Reservation_Controller.handleMessage(clientMsg);
                     break;
-                
-                case UPDATE_RESERVATION:
-                    // TODO: Update reservation information
-                    serverResponse = new Message(MessageType.SUCCESS_RESPONSE, "Reservation Updated");
-                    break;
-
+                    
                 // --- Waitlist Management ---
                 case JOIN_WAITLIST:
                     // TODO: Add WaitlistEntry to DB (WaitlistController)
@@ -112,7 +93,11 @@ public class Server_Controller extends AbstractServer {
 
             // 3. Send Response: If a response object was created, send it back
             if (serverResponse != null) {
-                client.sendToClient(serverResponse);
+                try {
+                    client.sendToClient(serverResponse);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
 
         } catch (Exception e) {

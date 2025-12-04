@@ -69,6 +69,10 @@ public class Reservation implements Serializable {
 		return id;
 	}
 
+	public void setDateOfPlacingOrder(LocalDateTime dateOfPlacingOrder) {
+		this.dateOfPlacingOrder = dateOfPlacingOrder;
+	}
+
 	public Casual_Customer getCustomer() {
 		return customer;
 	}
@@ -131,9 +135,17 @@ public class Reservation implements Serializable {
 
 	@Override
 	public String toString() {
-		return "Order number=" + id + ", Order Date=" + reservationTime + ", Diners=" + numDiners
-				+ ", Confirmation Code=" + confirmationCode + ", Subscriber ID=" + subscriberId
-				+ ", Date Of Placing Order=" + dateOfPlacingOrder;
+	    java.time.format.DateTimeFormatter dateFormatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");  
+	    //java.time.format.DateTimeFormatter timeFormatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm");
+	    String dateStr = "N/A";
+	    //String timeStr = "N/A";
+
+	    if (reservationTime != null) {
+	        dateStr = reservationTime.format(dateFormatter);
+	        //timeStr = reservationTime.format(timeFormatter);
+	    }
+	    return String.format("Date: %s | Guests: %d | Code: %d", 
+	                         dateStr, numDiners, confirmationCode);
 	}
 
 	public int getSubscriberId() {

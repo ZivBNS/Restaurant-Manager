@@ -114,9 +114,6 @@ public class Reservation_Repository implements Repository_Interface<Reservation>
 	}
 
 	
-	
-	
-	
 				//search by confirmation code, delete order from db if found, return true if succeed else false
 	public boolean deleteByCode(int confirmationCode) {	
 		String sqlDelete = "DELETE FROM `Order` WHERE confirmation_code = " + confirmationCode;
@@ -152,7 +149,7 @@ public class Reservation_Repository implements Repository_Interface<Reservation>
 	//if not exsit try to set the order in db. also will return true if inserted successfully.
 	@Override
 	public boolean update(Reservation objToUpdate) {
-		int id=objToUpdate.getId();
+		int id = objToUpdate.getId();
 		//search the order in db
 		String sqlGet = "SELECT * FROM `Order` WHERE order_number = " + id;
 		Reservation updateReservation = getOneOrderFromDb(sqlGet,id,"ID");
