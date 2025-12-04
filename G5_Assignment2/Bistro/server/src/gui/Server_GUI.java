@@ -96,7 +96,7 @@ public class Server_GUI extends Application {
     private void handleDisconnectAction(ActionEvent e) {
         if (serverController != null) {
             try {
-            	//DB_Controller.getInstance();
+            	DB_Controller.getInstance().closeConnection();
                 serverController.close(); //Calls AbstractServer's close()
             } catch (IOException ex) {
                 appendLog("Error closing server: " + ex.getMessage());

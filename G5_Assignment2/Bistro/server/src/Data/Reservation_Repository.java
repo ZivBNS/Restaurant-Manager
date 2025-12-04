@@ -144,9 +144,7 @@ public class Reservation_Repository implements Repository_Interface<Reservation>
 
 	
 	
-	
-	//function to update exsisting order. gets reservation and return true if updated successfully,
-	//if not exsit try to set the order in db. also will return true if inserted successfully.
+	/*
 	@Override
 	public boolean update(Reservation objToUpdate) {
 		int id = objToUpdate.getId();
@@ -170,6 +168,34 @@ public class Reservation_Repository implements Repository_Interface<Reservation>
 		}
 		else return this.set(objToUpdate);
 	}
+	*/
+	
+	//function to update exsisting order. gets reservation and return true if updated successfully,
+	//if not exsist ((or nothing updated)) returns false 
+
+	public boolean update(Reservation objToUpdate) {
+	    String sql = "UPDATE `Order` SET number_of_guests = ?, order_date = ? WHERE order_number = ?";
+
+	    try {
+	    	PreparedStatement stmt = db.getConnection().prepareStatement(sql);
+	        stmt.setInt(1, objToUpdate.getNumDiners());
+	        stmt.setDate(2, Date.valueOf(objToUpdate.getReservationTime().toLocalDate()));
+	        stmt.setInt(3, objToUpdate.getId());
+
+	        int changed = stmt.executeUpdate();
+	        System.out.println("Rows updated: " + changed);
+
+	        if (changed>0) return true; 
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("Failed to update order!!");
+		}
+	
+		return false;
+		
+	}
+	
+	
 	
 
 	
@@ -182,21 +208,26 @@ public class Reservation_Repository implements Repository_Interface<Reservation>
 	
 	
 	//testing
-	public static void main(String[] args) {
-		System.out.println("@@@@@@@@");
-		
+	public static void main(String[] args) {		
 		Reservation_Repository rr = new Reservation_Repository();
-		rr.db.createTables();
-		Reservation res0=new Reservation(null, LocalDateTime.now(), 4);
-		Reservation res1=new Reservation(null, LocalDateTime.now(), 6);
+		Reservation res0=new Reservation(null, LocalDateTime.of(2025, 12, 6, 8, 40) , 4);
+		Reservation res1=new Reservation(null, LocalDateTime.now(), 7);
 		Reservation res2=new Reservation(null, LocalDateTime.now(), 8);
 		Reservation res3=new Reservation(null, LocalDateTime.now(), 10);
 		Reservation res4=new Reservation(null, LocalDateTime.now(), 12);
-		rr.set(res0);
-		rr.set(res1);
-		rr.set(res2);
-		rr.set(res3);
-		rr.set(res4);
+		Reservation res5=new Reservation(null, LocalDateTime.now(), 12);
+		Reservation res6=new Reservation(null, LocalDateTime.now(), 12);
+		res6.setReservationTime(LocalDateTime.of(2025, 12, 12, 8, 40));
+		res6.setNumDiners(101);
+		if (rr.update(res6)==false) System.out.println("FAILED");;
+		rr.update(res1);
+		rr.update(res1);
+		rr.update(res1);
+		//		rr.set(res0);
+//		rr.set(res1);
+//		rr.set(res2);
+//		rr.set(res3);
+//		rr.set(res4);
 //		Reservation r1 = rr.getById(0);
 //		Reservation s1 = rr.getById(1);
 //		Reservation t1 = rr.getByCode(100002);
