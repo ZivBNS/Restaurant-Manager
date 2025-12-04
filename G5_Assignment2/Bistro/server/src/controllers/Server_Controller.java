@@ -68,6 +68,16 @@ public class Server_Controller extends AbstractServer {
                     serverResponse = new Message(MessageType.SUCCESS_RESPONSE, "Reservation Cancelled");
                     break;
                 
+                case GET_RESERVATIONS_LIST:
+                    // TODO: get reservation status to  in DB
+                    serverResponse = new Message(MessageType.SUCCESS_RESPONSE, "Reservation Cancelled");
+                    break;
+                case GET_RESERVATIONS_BY_USER:
+                	System.out.println("switch GET_RESERVATIONS_BY_USER - Server_Controller");
+                    Reservation_Controller.handleMessage(clientMsg, client);
+                    serverResponse = new Message(MessageType.SUCCESS_RESPONSE, "Recived Reservation By User");
+                    break;
+                
                 case UPDATE_RESERVATION:
                     // TODO: Update reservation information
                     serverResponse = new Message(MessageType.SUCCESS_RESPONSE, "Reservation Updated");

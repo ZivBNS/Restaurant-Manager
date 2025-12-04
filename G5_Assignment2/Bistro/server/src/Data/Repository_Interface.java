@@ -1,6 +1,5 @@
 package Data;
 
-import entities.Reservation;
 
 public interface Repository_Interface<T> {	
 	public boolean set(T objToSet);

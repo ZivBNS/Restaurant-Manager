@@ -1,14 +1,16 @@
 package entities;
 
-public abstract class Subscribed_Customer extends Casual_Customer implements User {
+import java.io.Serializable;
 
+public class Subscribed_Customer extends Casual_Customer implements User,Serializable {
+
+	private static final long serialVersionUID = 1L;
 	private String username;
 	private String password;
 	private int subscriberCode;
 	private String digitalCard;
 
-	public Subscribed_Customer(int id, String firstName, String lastName, String phone, String email, String username,
-			String password, int subscriberCode) {
+	public Subscribed_Customer(int id, String firstName, String lastName, String phone, String email, String username,String password, int subscriberCode) {
 		super(phone, email);
 		this.username = username;
 		this.password = password;
@@ -17,7 +19,7 @@ public abstract class Subscribed_Customer extends Casual_Customer implements Use
 	}
 
 	private String generateDigitalCard(int id) {
-		return "CARD-" + id;
+		return "00000" + id;
 	}
 
 	@Override

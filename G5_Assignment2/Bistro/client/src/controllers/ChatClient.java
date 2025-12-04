@@ -2,6 +2,10 @@
 package controllers;
 import ocsf.client.*;
 import java.io.*;
+import java.util.ArrayList;
+
+import entities.Reservation;
+import messages.Message;
 
 
 public class ChatClient extends AbstractClient
@@ -43,7 +47,11 @@ public class ChatClient extends AbstractClient
    */
   public void handleMessageFromServer(Object msg) 
   {
-    clientUI.display("Message from server: " + msg);
+//	  Message messageFromServer = (Message)msg;
+//	  System.out.println("Recived Message from server - ChatClient");
+//	  System.out.println(messageFromServer.getContent());
+	  clientUI.display(msg);
+    
   }
 
   /**
@@ -55,13 +63,12 @@ public class ChatClient extends AbstractClient
   {
     try
     {
-    	clientUI.display("trying to send a messege to the server");
+    	clientUI.display("trying to send a messege to the server - ChatClient");
     	sendToServer(message);
     }
     catch(IOException e)
     {
-      clientUI.display
-        ("Could not send message to server.  Terminating client." + e.toString());
+      clientUI.display("Could not send message to server.  Terminating client." + e.toString());
       quit();
     }
   }

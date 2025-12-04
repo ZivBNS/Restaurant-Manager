@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import entities.Reservation;
 
 public class Reservation_Repository implements Repository_Interface<Reservation>{
-	private DB_Controller db=DB_Controller.getInstance();
+	private DB_Controller db = DB_Controller.getInstance();
     private static Reservation_Repository ReservationRepositoryInstance = new Reservation_Repository();
 
 	private Reservation_Repository(){
@@ -25,6 +25,7 @@ public class Reservation_Repository implements Repository_Interface<Reservation>
 	
 	@Override    //search id in table order, returns reservation from db if exist, otherwise null
 	public Reservation getById(int id) {
+    	System.out.println("getById - Reservation_Repository");
 		String sqlGet = "SELECT * FROM `Order` WHERE order_number = " + id;
 		return this.getOneOrderFromDb(sqlGet, id, "Id");
 	}
@@ -181,13 +182,14 @@ public class Reservation_Repository implements Repository_Interface<Reservation>
 	
 	
 	
-	/*
+	
 	
 	//testing
 	public static void main(String[] args) {
 		System.out.println("@@@@@@@@");
 		
-		Reservation_Repository rr = new Reservation_Repository();	
+		Reservation_Repository rr = new Reservation_Repository();
+		rr.db.createTables();
 		Reservation res0=new Reservation(null, LocalDateTime.now(), 4);
 		Reservation res1=new Reservation(null, LocalDateTime.now(), 6);
 		Reservation res2=new Reservation(null, LocalDateTime.now(), 8);
@@ -198,21 +200,21 @@ public class Reservation_Repository implements Repository_Interface<Reservation>
 		rr.set(res2);
 		rr.set(res3);
 		rr.set(res4);
-		Reservation r1 = rr.getById(0);
-		Reservation s1 = rr.getById(1);
-		Reservation t1 = rr.getByCode(100002);
-		Reservation d1 = rr.getByCode(100001);
-
-		System.out.println("TRY1: "+ r1);
-		System.out.println("TRY2: "+ s1);
-		System.out.println("TRY3: "+ t1);
-		System.out.println("TRY4: "+ d1);
-		
-		t1.setSubscriberId(9);
-		t1.setNumDiners(1);
-		rr.update(t1);
-		System.out.println("TRY5: "+ t1);
-	}*/
+//		Reservation r1 = rr.getById(0);
+//		Reservation s1 = rr.getById(1);
+//		Reservation t1 = rr.getByCode(100002);
+//		Reservation d1 = rr.getByCode(100001);
+//
+//		System.out.println("TRY1: "+ r1);
+//		System.out.println("TRY2: "+ s1);
+//		System.out.println("TRY3: "+ t1);
+//		System.out.println("TRY4: "+ d1);
+//		
+//		t1.setSubscriberId(9);
+//		t1.setNumDiners(1);
+//		rr.update(t1);
+//		System.out.println("TRY5: "+ t1);
+	}
 }
 
 

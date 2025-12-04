@@ -1,12 +1,14 @@
 package entities;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
-public class Reservation {
-	private static int idCreator=0;
-	private static int confCodeCreator=100000;
+public class Reservation implements Serializable {
 
-	
+	private static final long serialVersionUID = 1L;
+	private static int idCreator = 0;
+	private static int confCodeCreator = 100000;
+
 	private final int id;
 	private Casual_Customer customer;
 	private Restaurant_Table assignedTable;
@@ -28,33 +30,34 @@ public class Reservation {
 		this.status = "PENDING";
 		this.bill = null;
 		this.confirmationCode = confCodeCreator++;
-		dateOfPlacingOrder=dateOfPlacingOrder.now();
+		dateOfPlacingOrder = LocalDateTime.now();
 	}
 
 	// exist reservation
-	public Reservation(Casual_Customer customer, Restaurant_Table table, LocalDateTime time, int diners,
-			String code ,Bill bill, String status) {
+	public Reservation(Casual_Customer customer, Restaurant_Table table, LocalDateTime time, int diners, String code,
+			Bill bill, String status) {
 		this.id = idCreator++;
 		this.customer = customer;
 		this.assignedTable = table;
 		this.reservationTime = time;
 		this.numDiners = diners;
 		this.confirmationCode = confCodeCreator++;
-		this.bill= bill;
+		this.bill = bill;
 		this.status = status;
-		dateOfPlacingOrder=dateOfPlacingOrder.now();
+		dateOfPlacingOrder = LocalDateTime.now();
 	}
-	//get from db
-	public Reservation(int orderId, LocalDateTime orderDate, int diners,
-		int confCode , int subId, LocalDateTime dateOfPlacingOrder) {
+
+	// get from db
+	public Reservation(int orderId, LocalDateTime orderDate, int diners, int confCode, int subId,
+			LocalDateTime dateOfPlacingOrder) {
 		this.id = orderId;
 		this.reservationTime = orderDate;
 		this.numDiners = diners;
 		this.confirmationCode = confCode;
-		this.subscriberId=subId;
-		this.dateOfPlacingOrder=dateOfPlacingOrder;
+		this.subscriberId = subId;
+		this.dateOfPlacingOrder = dateOfPlacingOrder;
 	}
-	
+
 	public Reservation() {
 		this.id = idCreator++;
 		this.confirmationCode = confCodeCreator++;
@@ -117,19 +120,20 @@ public class Reservation {
 	public void setBill(Bill bill) {
 		this.bill = bill;
 	}
-	
+
 	public LocalDateTime getDateOfPlacingOrder() {
 		return dateOfPlacingOrder;
 	}
-	
+
 	public void setSubscriberId(int id) {
-		subscriberId=id;
+		subscriberId = id;
 	}
 
 	@Override
 	public String toString() {
-		return "Reservation [Code=" + confirmationCode + ", Time=" + reservationTime + ", Diners=" + numDiners
-				+ ", Status=" + status + "]";
+		return "Order number=" + id + ", Order Date=" + reservationTime + ", Diners=" + numDiners
+				+ ", Confirmation Code=" + confirmationCode + ", Subscriber ID=" + subscriberId
+				+ ", Date Of Placing Order=" + dateOfPlacingOrder;
 	}
 
 	public int getSubscriberId() {

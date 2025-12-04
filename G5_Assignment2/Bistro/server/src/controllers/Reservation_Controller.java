@@ -5,6 +5,7 @@ import messages.MessageType;
 import ocsf.server.ConnectionToClient;
 import Data.Reservation_Repository;
 import entities.Reservation;
+import entities.Subscribed_Customer;
 
 public class Reservation_Controller {
 	
@@ -70,10 +71,10 @@ public class Reservation_Controller {
      */
     private static void getReservationsByUser(Message msg, ConnectionToClient client) {
         try {
-        	
-            int userId = (int) msg.getContent();
-
-            var reservations = reservationRepository.getById(userId);
+        	System.out.println("getReservationsByUser - Reservation_Controller");
+            int userId = ((Subscribed_Customer)msg.getContent()).getSubscriberCode();
+            var reservations = reservationRepository.getByUserId(userId);
+        	System.out.println(reservations.toString());
 
             client.sendToClient( new Message(MessageType.RETURN_RESERVATIONS_BY_USER, reservations));
 
