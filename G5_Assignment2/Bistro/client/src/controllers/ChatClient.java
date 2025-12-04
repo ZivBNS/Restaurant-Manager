@@ -2,10 +2,6 @@
 package controllers;
 import ocsf.client.*;
 import java.io.*;
-import java.util.ArrayList;
-
-import entities.Reservation;
-import messages.Message;
 
 
 public class ChatClient extends AbstractClient

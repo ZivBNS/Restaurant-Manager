@@ -10,14 +10,14 @@ public class Message implements Serializable {
     private Object content;     // The data payload (Reservation object, User object, String)
 
     
-    //Full Constructor: Used when a command includes data (e.g., LOGIN_REQUEST + User object).
+    //Full Constructor: Used when a command includes data.
     public Message(MessageType type, Object content) {
         this.type = type;
         this.content = content;
     }
 
     
-    //Command-Only Constructor: Used for simple requests (e.g., GET_TABLES_STATUS).
+    //Command-Only Constructor: Used for simple requests
     public Message(MessageType type) {
         this.type = type;
         this.content = null;

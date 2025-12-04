@@ -28,7 +28,6 @@ import javafx.util.Callback;
 public class Customer_GUI implements Initializable {
 	public static Customer_GUI instance;
 	private static Client_Controller controller;
-	private JavaFX_Adapter adapter;
 
 	// root and panes
 	@FXML private Parent rootPane;
@@ -130,8 +129,6 @@ public class Customer_GUI implements Initializable {
 
 	    try {
 	        controller = new Client_Controller(host, port);
-	        adapter = new JavaFX_Adapter(controller);
-	        adapter.attachCustomerGUI(this);
 
 	        //switch UI
 	        showMainPane();
@@ -153,7 +150,7 @@ public class Customer_GUI implements Initializable {
 			Stage stage = (Stage) rootPane.getScene().getWindow();
 			stage.getScene().setRoot(newView);
 
-			adapter.requestShowReservations();
+			controller.onShowReservationsRequest();
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -181,7 +178,7 @@ public class Customer_GUI implements Initializable {
         }
 
         try {
-            java.time.LocalDate newDate = datePicker.getValue();
+            LocalDate newDate = datePicker.getValue();
             
             if (newDate == null) {
                 System.out.println("Please select a date.");
@@ -192,7 +189,6 @@ public class Customer_GUI implements Initializable {
             selectedRes.setReservationTime(newDateTime);
             selectedRes.setNumDiners(Integer.parseInt(visitorsField.getText()));
 
-            // 5. שליחה לשרת
             if (controller != null) {
                 controller.sendUpdateReservationRequest(selectedRes);
             }
