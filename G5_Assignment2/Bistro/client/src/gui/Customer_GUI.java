@@ -233,4 +233,9 @@ public class Customer_GUI implements Initializable {
 	        }
 	    });
 	}
+	public static void requestLogout() {
+	    if (controller != null) {
+	        controller.logout();
+	    }
+	}
 }

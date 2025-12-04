@@ -14,6 +14,7 @@ public class Client_Controller implements ChatIF {
 
 	public Client_Controller(String host, int port) throws IOException {
 		try {
+			System.out.println(host);
 			client = new ChatClient(host, port, this);
 		} catch (IOException exception) {
 			System.out.println("Error: Can't setup connection!" + " Terminating client");
@@ -46,6 +47,17 @@ public class Client_Controller implements ChatIF {
             e.printStackTrace();
         }
     }
+	public void logout() {
+	    try {
+	        Message msg = new Message(MessageType.LOGOUT_REQUEST, null);
+	        client.handleMessageFromClientUI(msg); 
+	        
+	        System.out.println("Logout request sent to server.");
+	        client.quit();
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	}
 	public void display(Object message) {
 
 		if (message instanceof Message) {

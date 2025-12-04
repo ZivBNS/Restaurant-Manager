@@ -20,7 +20,6 @@ public class Server_Controller extends AbstractServer {
         this.gui = gui;
     }
 
-    
     @Override
     protected void handleMessageFromClient(Object msg, ConnectionToClient client) {
         // 1. Input Validation: Check if message is valid
@@ -52,6 +51,11 @@ public class Server_Controller extends AbstractServer {
 
                 case LOGOUT_REQUEST:
                     log("Client disconnected: " + client.getInetAddress());
+                    try {
+                        client.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     //Update 'isLoggedIn' status in DB
                     break;
 
