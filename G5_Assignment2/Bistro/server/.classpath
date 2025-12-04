@@ -48,7 +48,7 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/Bistro/server/lib/mysql-connector-j-9.5.0.jar">
+	<classpathentry kind="lib" path="C:/Users/zivbs/OneDrive/Documents/לימודים תואר/GitHub/FixMyTypo/Restaurant-Manager/G5_Assignment2/Bistro/server/lib/mysql-connector-j-9.5.0.jar">
 		<attributes>
 			<attribute name="module" value="true"/>
 		</attributes>

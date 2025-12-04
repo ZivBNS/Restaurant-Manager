@@ -52,7 +52,12 @@ public class Customer_GUI implements Initializable {
         }
         if (portField != null) {
             portField.setText("5555");
-            showConnectPane();
+            
+            if (controller != null) {
+                showMainPane();
+            } else {
+                showConnectPane();
+            }
         }
 
         if (datePicker != null) {
@@ -79,6 +84,10 @@ public class Customer_GUI implements Initializable {
         }
 
         if (statusList != null) {
+        	Label emptyMessage = new Label("You do not have reservations");
+            emptyMessage.setStyle("-fx-font-size: 16px; -fx-text-fill: gray; -fx-font-weight: bold;");           
+            statusList.setPlaceholder(emptyMessage);
+            
             statusList.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Reservation>() {
                 @Override
                 public void changed(ObservableValue<? extends Reservation> observable, Reservation oldValue, Reservation newValue) {
@@ -182,6 +191,10 @@ public class Customer_GUI implements Initializable {
             
             if (newDate == null) {
                 System.out.println("Please select a date.");
+                return;
+            }
+            if(Integer.parseInt(visitorsField.getText()) < 1){
+            	System.out.println("Number of visitor must be bigger then 0");
                 return;
             }
             LocalTime originalTime = selectedRes.getReservationTime().toLocalTime();
