@@ -5,12 +5,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ArrayList;
 
 import entities.Reservation;
-
+//this class uses single-tone
 public class Reservation_Repository implements Repository_Interface<Reservation>{
 	private DB_Controller db = DB_Controller.getInstance();
     private static Reservation_Repository ReservationRepositoryInstance = new Reservation_Repository();
@@ -25,7 +24,6 @@ public class Reservation_Repository implements Repository_Interface<Reservation>
 	
 	@Override    //search id in table order, returns reservation from db if exist, otherwise null
 	public Reservation getById(int id) {
-    	System.out.println("getById - Reservation_Repository");
 		String sqlGet = "SELECT * FROM `Order` WHERE order_number = " + id;
 		return this.getOneOrderFromDb(sqlGet, id, "Id");
 	}
@@ -34,9 +32,11 @@ public class Reservation_Repository implements Repository_Interface<Reservation>
 				//search confirmation code in table order, returns reservation from db if exist, otherwise null
 	public Reservation getByCode(int confimrationCode) {
 		String sqlGet = "SELECT * FROM `Order` WHERE confirmation_code = " + confimrationCode;
-		return getOneOrderFromDb(sqlGet, confimrationCode, "Confirmation code");
+		return this.getOneOrderFromDb(sqlGet, confimrationCode, "Confirmation code");
 	}
 
+	
+				//search user id in table order, returns all reservations from db if exist as list, otherwise null
 	public List<Reservation> getByUserId(int userId) {
 		String sqlGet = "SELECT * FROM `Order` WHERE subscriber_id = " + userId;
 		List<Reservation> lst = getListOfOrdersFromDb(sqlGet, userId, "Subscriber ID");	
@@ -47,7 +47,8 @@ public class Reservation_Repository implements Repository_Interface<Reservation>
 		return lst;
 	}
 
-	
+				//these 3 functions are helping get orders from db.
+				//1st get sql statement and returns one reservation
 	private Reservation getOneOrderFromDb(String sqlGet,int key,String typeOfKey) {
 		List<Reservation> reservations = getListOfOrdersFromDb(sqlGet, key, typeOfKey);
 		if (reservations.isEmpty()) {
@@ -56,7 +57,7 @@ public class Reservation_Repository implements Repository_Interface<Reservation>
 		}
 		return reservations.get(0);
 	}
-	
+	//2st get sql statement and returns list of reservations
 	private List<Reservation> getListOfOrdersFromDb(String sqlGet,int key,String typeOfKey) {
 		Statement stmt;
 		ResultSet rs;
@@ -70,7 +71,7 @@ public class Reservation_Repository implements Repository_Interface<Reservation>
 			return null;
 		}
 	}
-	
+	//3rd
 	private List<Reservation> orderTranslator(ResultSet rs) throws SQLException {
 		ArrayList<Reservation> reservations = new ArrayList<Reservation>();
 		while (rs.next()) {
@@ -125,7 +126,8 @@ public class Reservation_Repository implements Repository_Interface<Reservation>
 		String sqlDelete = "DELETE FROM `Order` WHERE order_number = " + id;
 		return this.deleteFromDb(sqlDelete, id, "ID");
 	}
-	
+		
+				//function to help delete order from db
 	private boolean deleteFromDb(String sqlDelete,int key,String typeOfKey) {
 		try {
 			Statement st=db.getConnection().createStatement();
@@ -141,38 +143,9 @@ public class Reservation_Repository implements Repository_Interface<Reservation>
 	    }
 	    return false;
 	}
-
-	
-	
-	/*
-	@Override
-	public boolean update(Reservation objToUpdate) {
-		int id = objToUpdate.getId();
-		//search the order in db
-		String sqlGet = "SELECT * FROM `Order` WHERE order_number = " + id;
-		Reservation updateReservation = getOneOrderFromDb(sqlGet,id,"ID");
-		//if exist, set new data from the updated order
-		if (updateReservation!=null) {
-			updateReservation.setReservationTime(objToUpdate.getReservationTime());
-			updateReservation.setNumDiners(objToUpdate.getNumDiners());
-			updateReservation.setSubscriberId(objToUpdate.getSubscriberId());
-			String sqlDelete = "DELETE FROM `Order` WHERE order_number = " + id;
-			//if there was error and the order was not deleted,
-			//the system cant push another order with same id
-			if (this.deleteFromDb(sqlDelete, id, "ID"))
-				return this.set(updateReservation); //if succeed to delete, can set the updated reservation
-			else {
-				System.out.println("there is issue with deleting the previous version of the order");
-				return false;
-			}
-		}
-		else return this.set(objToUpdate);
-	}
-	*/
 	
 	//function to update exsisting order. gets reservation and return true if updated successfully,
 	//if not exsist ((or nothing updated)) returns false 
-
 	public boolean update(Reservation objToUpdate) {
 	    String sql = "UPDATE `Order` SET number_of_guests = ?, order_date = ? WHERE order_number = ?";
 
@@ -206,7 +179,7 @@ public class Reservation_Repository implements Repository_Interface<Reservation>
 	
 	
 	
-	
+/*	
 	//testing
 	public static void main(String[] args) {		
 		Reservation_Repository rr = new Reservation_Repository();
@@ -223,26 +196,26 @@ public class Reservation_Repository implements Repository_Interface<Reservation>
 		rr.update(res1);
 		rr.update(res1);
 		rr.update(res1);
-		//		rr.set(res0);
-//		rr.set(res1);
-//		rr.set(res2);
-//		rr.set(res3);
-//		rr.set(res4);
-//		Reservation r1 = rr.getById(0);
-//		Reservation s1 = rr.getById(1);
-//		Reservation t1 = rr.getByCode(100002);
-//		Reservation d1 = rr.getByCode(100001);
-//
-//		System.out.println("TRY1: "+ r1);
-//		System.out.println("TRY2: "+ s1);
-//		System.out.println("TRY3: "+ t1);
-//		System.out.println("TRY4: "+ d1);
-//		
-//		t1.setSubscriberId(9);
-//		t1.setNumDiners(1);
-//		rr.update(t1);
-//		System.out.println("TRY5: "+ t1);
-	}
+				rr.set(res0);
+		rr.set(res1);
+		rr.set(res2);
+		rr.set(res3);
+		rr.set(res4);
+		Reservation r1 = rr.getById(0);
+		Reservation s1 = rr.getById(1);
+		Reservation t1 = rr.getByCode(100002);
+		Reservation d1 = rr.getByCode(100001);
+
+		System.out.println("TRY1: "+ r1);
+		System.out.println("TRY2: "+ s1);
+		System.out.println("TRY3: "+ t1);
+		System.out.println("TRY4: "+ d1);
+		
+		t1.setSubscriberId(9);
+		t1.setNumDiners(1);
+		rr.update(t1);
+		System.out.println("TRY5: "+ t1);
+	}*/
 }
 
 

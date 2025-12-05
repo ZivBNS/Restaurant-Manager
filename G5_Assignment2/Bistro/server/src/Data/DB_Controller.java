@@ -7,6 +7,8 @@ public class DB_Controller {
 	private Connection con;
 	private static DB_Controller instance;
 	
+	// db using single-tone pattern
+	// connection started when first time get help from db and ends when server is disconnecting
 	private DB_Controller() {
 		try {
 			//con = DriverManager.getConnection("jdbc:mysql://localhost:3306/bistro?allowLoadLocalInfile=true&serverTimezone=Asia/Jerusalem&useSSL=false", "root", "zaqwsxcde321");
@@ -28,6 +30,7 @@ public class DB_Controller {
         return con;
     }
     
+    // server use this method to close connection when exit.
     public boolean closeConnection() {
     	try {
 			con.close();
