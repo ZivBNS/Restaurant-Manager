@@ -87,9 +87,12 @@ public class Customer_GUI implements Initializable {
         	Label emptyMessage = new Label("You do not have reservations");
             emptyMessage.setStyle("-fx-font-size: 16px; -fx-text-fill: gray; -fx-font-weight: bold;");           
             statusList.setPlaceholder(emptyMessage);
-            
+            //explanation for the line of code below :
+            //listView ->  selected row -> currently selected reservation -> add listener -> anonymous class 
             statusList.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Reservation>() {
                 @Override
+                //? extends Reservation - the subclass of reservation which is the reservation we selected
+                //ObservableValue - the currently selected value 
                 public void changed(ObservableValue<? extends Reservation> observable, Reservation oldValue, Reservation newValue) {
                     if (newValue != null) {
                         if (datePicker != null) {
@@ -213,20 +216,21 @@ public class Customer_GUI implements Initializable {
         }
 	}
 	public void updateReservationsList(Object data) {
-	    Platform.runLater(new Runnable() {
+		//
+	    Platform.runLater(new Runnable() {		//runLater - run later on the JavaFX thread
 	        @Override
 	        public void run() {
 	            if (statusList != null) {
 	                statusList.getItems().clear();
 
 	                if (data instanceof ArrayList) {
-	                    ArrayList<?> list = (ArrayList<?>) data;
+	                    ArrayList<?> list = (ArrayList<?>) data;	//if data is arrayList make it of any type (wildcard)
 	                    for (Object item : list) {
 	                        if (item instanceof Reservation) {
 	                            statusList.getItems().add((Reservation) item);
 	                        }
 	                    }
-	                } else if (data instanceof Reservation) {
+	                } else if (data instanceof Reservation) {	//if data is a single reservation
 	                    statusList.getItems().add((Reservation) data);
 	                }
 	            }
