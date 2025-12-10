@@ -43,9 +43,7 @@ public class ChatClient extends AbstractClient
    */
   public void handleMessageFromServer(Object msg) 
   {
-//	  Message messageFromServer = (Message)msg;
-//	  System.out.println("Recived Message from server - ChatClient");
-//	  System.out.println(messageFromServer.getContent());
+
 	  clientUI.display(msg);
     
   }

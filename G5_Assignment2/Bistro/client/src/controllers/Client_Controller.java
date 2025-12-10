@@ -22,9 +22,6 @@ public class Client_Controller implements ChatIF {
 		}
 	}
 
-	public void onEditReservationRequest(String reservationId) {
-		System.out.println("Editing reservation: " + reservationId);
-	}
 
 	public void onShowReservationsRequest() {
 		Subscribed_Customer S_customer = new Subscribed_Customer(212121212, "Oshri", "Sabag", "05212345678",
@@ -37,6 +34,7 @@ public class Client_Controller implements ChatIF {
 			System.out.println("Unexpected error while sending a reservation request!");
 		}
 	}
+	
 	public void sendUpdateReservationRequest(Reservation reservationToUpdate) {
         try {
             Message msg = new Message(MessageType.UPDATE_RESERVATION_REQUEST, reservationToUpdate);
@@ -76,8 +74,7 @@ public class Client_Controller implements ChatIF {
 	                System.out.println("Update success! Refreshing list...");
 	                onShowReservationsRequest(); 
 	                break;
-				case LOGOUT_REQUEST:
-					break;
+				
 
 				default:
 					break;

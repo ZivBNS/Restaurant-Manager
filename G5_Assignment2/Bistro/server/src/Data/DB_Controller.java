@@ -32,6 +32,8 @@ public class DB_Controller {
     
     // server use this method to close connection when exit.
     public boolean closeConnection() {
+    	if(con == null)
+    		return true;
     	try {
 			con.close();
 		} catch (SQLException e) {
