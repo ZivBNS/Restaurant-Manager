@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.effect.DropShadow?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.TilePane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane fx:id="managerRoot" maxHeight="-Infinity"
+	maxWidth="-Infinity" minHeight="600.0" minWidth="900.0"
+	style="-fx-background-color: #ecf0f1;"
+	xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="gui.Workers_GUI">
+
+	<top>
+		<VBox alignment="CENTER">
+			<padding>
+				<Insets bottom="20.0" top="30.0" />
+			</padding>
+			<Label text="Employee Panel" textFill="#2c3e50">
+				<font>
+					<Font name="Segoe UI Light" size="48.0" />
+				</font>
+			</Label>
+			<Separator maxWidth="300.0" />
+		</VBox>
+	</top>
+
+	<center>
+		<TilePane alignment="CENTER" hgap="30.0" prefColumns="3"
+			prefTileHeight="150.0" prefTileWidth="250.0" vgap="30.0"
+			BorderPane.alignment="CENTER">
+			<padding>
+				<Insets bottom="40.0" left="40.0" right="40.0" top="10.0" />
+			</padding>
+
+			<Button fx:id="btnManageDiners"
+				maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+				mnemonicParsing="false"
+				style="-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand;"
+				text="Manage Customers" textFill="#34495e">
+				<font>
+					<Font name="Segoe UI Bold" size="18.0" />
+				</font>
+				<effect>
+					<DropShadow color="#0000001a" height="10.0" radius="4.5"
+						width="10.0" />
+				</effect>
+			</Button>
+
+			<Button fx:id="btnManageTables"
+				maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+				mnemonicParsing="false"
+				style="-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand;"
+				text="Manage Tables" textFill="#34495e">
+				<font>
+					<Font name="Segoe UI Bold" size="18.0" />
+				</font>
+				<effect>
+					<DropShadow color="#0000001a" height="10.0" radius="4.5"
+						width="10.0" />
+				</effect>
+			</Button>
+
+			<Button fx:id="btnManageUsers"
+				maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+				mnemonicParsing="false"
+				style="-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand;"
+				text="Manage Users" textFill="#34495e">
+				<font>
+					<Font name="Segoe UI Bold" size="18.0" />
+				</font>
+				<effect>
+					<DropShadow color="#0000001a" height="10.0" radius="4.5"
+						width="10.0" />
+				</effect>
+			</Button>
+
+			<Button fx:id="btnReports" maxHeight="1.7976931348623157E308"
+				maxWidth="1.7976931348623157E308" mnemonicParsing="false"
+				style="-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand;"
+				text="View Reports" textFill="#e67e22">
+				<font>
+					<Font name="Segoe UI Bold" size="18.0" />
+				</font>
+				<effect>
+					<DropShadow color="#0000001a" height="10.0" radius="4.5"
+						width="10.0" />
+				</effect>
+				<graphic>
+				</graphic>
+			</Button>
+
+			<Button fx:id="btnManageOrders"
+				maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+				mnemonicParsing="false"
+				style="-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand;"
+				text="Manage Orders" textFill="#34495e">
+				<font>
+					<Font name="Segoe UI Bold" size="18.0" />
+				</font>
+				<effect>
+					<DropShadow color="#0000001a" height="10.0" radius="4.5"
+						width="10.0" />
+				</effect>
+			</Button>
+
+			<Button fx:id="btnManageWaitlist"
+				maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+				mnemonicParsing="false"
+				style="-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand;"
+				text="Manage Waitlist" textFill="#34495e">
+				<font>
+					<Font name="Segoe UI Bold" size="18.0" />
+				</font>
+				<effect>
+					<DropShadow color="#0000001a" height="10.0" radius="4.5"
+						width="10.0" />
+				</effect>
+			</Button>
+
+		</TilePane>
+	</center>
+
+	<bottom>
+		<HBox alignment="CENTER_LEFT">
+			<padding>
+				<Insets bottom="20" left="20" right="20" top="20" />
+			</padding>
+			<Button fx:id="btnLogout"
+				style="-fx-background-color: transparent; -fx-text-fill: #c0392b; -fx-underline: true; -fx-cursor: hand;"
+				text="&lt; Log Out" />
+		</HBox>
+	</bottom>
+
+</BorderPane>

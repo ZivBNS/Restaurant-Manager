@@ -64,7 +64,7 @@ public class Client_Controller implements ChatIF {
 	public void logout() {
 	    try {
 	        Message msg = new Message(MessageType.LOGOUT_REQUEST, null);
-	        client.handleMessageFromClientUI(msg); 
+            sendComplexObject(msg);
 	        
 	        System.out.println("Logout request sent to server.");
 	        client.quit();

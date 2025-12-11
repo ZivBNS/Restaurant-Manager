@@ -1,8 +1,6 @@
 package entities;
 
-import java.io.Serializable;
-
-public class Subscribed_Customer extends Casual_Customer implements User,Serializable {
+public class Subscribed_Customer extends Casual_Customer implements User {
 
 	private static final long serialVersionUID = 1L;
 	private String username;

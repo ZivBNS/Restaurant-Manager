@@ -25,6 +25,12 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 
+
+// ----------------------------------------------------------------
+//המחלקה לא בשימוש כרגע!!!!!!
+//לא מחקתי אותה כדי שלא נאבד את הקוד שעשינו
+//----------------------------------------------------------
+
 public class Customer_GUI implements Initializable {
 	public static Customer_GUI instance;
 	private static Client_Controller controller;
@@ -172,7 +178,7 @@ public class Customer_GUI implements Initializable {
 	@FXML
 	private void onBackToCustomerClicked() {
 		try {
-			FXMLLoader loader = new FXMLLoader(getClass().getResource("Customer_GUI.fxml"));
+			FXMLLoader loader = new FXMLLoader(getClass().getResource("ConnectToServer.fxml"));
 			Parent originalView = loader.load();
 
 			Stage stage = (Stage) rootPane.getScene().getWindow();
