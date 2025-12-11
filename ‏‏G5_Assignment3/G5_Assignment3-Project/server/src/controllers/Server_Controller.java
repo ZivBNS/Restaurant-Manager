@@ -2,6 +2,8 @@ package controllers;
 
 
 import java.io.IOException;
+
+import utils.KryoUtil;
 import entities.User;
 import gui.Server_GUI;
 import messages.Message;
@@ -22,13 +24,15 @@ public class Server_Controller extends AbstractServer {
 
     @Override
     protected void handleMessageFromClient(Object msg, ConnectionToClient client) {
-        // 1. Input Validation: Check if message is valid
-        if (msg == null || !(msg instanceof Message)) {
+        //deserialize using kryo
+    	Object receivedMessageDeserialized = KryoUtil.deserialize((byte[]) msg);
+    	// 1. Input Validation: Check if message is valid
+        if (receivedMessageDeserialized == null || !(receivedMessageDeserialized instanceof Message)) {
             log("Error: Invalid message format from " + client);
             return;
         }
 
-        Message clientMsg = (Message) msg;
+        Message clientMsg = (Message) receivedMessageDeserialized;
         Message serverResponse = null;
 
         log("Processing command: " + clientMsg.getType());
@@ -98,7 +102,12 @@ public class Server_Controller extends AbstractServer {
             // 3. Send Response: If a response object was created, send it back
             if (serverResponse != null) {
                 try {
-                    client.sendToClient(serverResponse);
+       	         // Convert to bytes using Kryo
+	       	         byte[] payload = KryoUtil.serialize(serverResponse);
+	       	         
+	       	         // Send the byte array using OCSF
+	       	         client.sendToClient(payload); 
+                   
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

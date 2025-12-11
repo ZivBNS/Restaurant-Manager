@@ -1,6 +1,8 @@
 package controllers;
 
 import java.io.*;
+
+import utils.KryoUtil;
 import gui.Customer_GUI;
 import entities.Reservation;
 import entities.Subscribed_Customer;
@@ -28,7 +30,8 @@ public class Client_Controller implements ChatIF {
 				"test@test.com", "OshriSabge", "123456", 0);
 		try {
 			Message message = new Message(MessageType.GET_RESERVATIONS_BY_USER, S_customer);
-			client.handleMessageFromClientUI(message);
+			//client.handleMessageFromClientUI(message);
+			sendComplexObject(message);
 
 		} catch (Exception ex) {
 			System.out.println("Unexpected error while sending a reservation request!");
@@ -38,13 +41,26 @@ public class Client_Controller implements ChatIF {
 	public void sendUpdateReservationRequest(Reservation reservationToUpdate) {
         try {
             Message msg = new Message(MessageType.UPDATE_RESERVATION_REQUEST, reservationToUpdate);
-            client.handleMessageFromClientUI(msg);
+            //client.handleMessageFromClientUI(msg);
+            sendComplexObject(msg);
             System.out.println("Update request sent for reservation ID: " + reservationToUpdate.getId());
             
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+	 public void sendComplexObject(Object obj) {
+	     try {
+	         // Convert to bytes using Kryo
+	         byte[] payload = KryoUtil.serialize(obj);
+	         
+	         // Send the byte array using OCSF
+	         client.handleMessageFromClientUI(payload); 
+	         
+	     } catch (Exception e) {
+	         e.printStackTrace();
+	     }
+	 }
 	public void logout() {
 	    try {
 	        Message msg = new Message(MessageType.LOGOUT_REQUEST, null);
@@ -58,8 +74,9 @@ public class Client_Controller implements ChatIF {
 	}
 	public void display(Object message) {
 
-		if (message instanceof Message) {
-			Message recivedMessage = (Message) message;
+		if (message instanceof byte[]) {
+			Object receivedMessageDeserialized = KryoUtil.deserialize((byte[]) message);
+			Message recivedMessage = (Message) receivedMessageDeserialized;
 			try {
 				switch (recivedMessage.getType()) {
 

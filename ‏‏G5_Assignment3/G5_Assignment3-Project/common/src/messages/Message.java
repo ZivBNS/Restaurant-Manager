@@ -3,7 +3,7 @@ package messages;
 import java.io.Serializable;
 
 
-public class Message implements Serializable {
+public class Message {
     
     private static final long serialVersionUID = 1L; // Required for Serialization
     private MessageType type;   // The command being requested/sent

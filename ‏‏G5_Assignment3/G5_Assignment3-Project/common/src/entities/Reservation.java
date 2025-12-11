@@ -3,7 +3,7 @@ package entities;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-public class Reservation implements Serializable {
+public class Reservation {
 
 	private static final long serialVersionUID = 1L;
 	private static int idCreator = 0;
