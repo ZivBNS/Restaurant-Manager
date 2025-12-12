@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controllers.CasualCustomer_Controller"
+            prefWidth="400" prefHeight="500">
+
+    <children>
+
+        <!-- Title -->
+        <Label text="Casual Customer Menu:"
+               style="-fx-font-size: 24px; -fx-font-weight: bold;"
+               AnchorPane.topAnchor="40"
+               AnchorPane.leftAnchor="60"/>
+
+        <!-- New Order Button -->
+        <Button text="New Order"
+                prefWidth="280"
+                onAction="#openNewOrder"
+                AnchorPane.topAnchor="110"
+                AnchorPane.leftAnchor="60"/>
+
+        <!-- View Order Button -->
+        <Button text="View Order"
+                prefWidth="280"
+                AnchorPane.topAnchor="160"
+                AnchorPane.leftAnchor="60"/>
+
+        <!-- Cancel Order Button -->
+        <Button text="Cancel Order"
+                prefWidth="280"
+                AnchorPane.topAnchor="210"
+                AnchorPane.leftAnchor="60"/>
+
+        <!-- Edit Order Button -->
+        <Button text="Edit Order"
+                prefWidth="280"
+                AnchorPane.topAnchor="260"
+                AnchorPane.leftAnchor="60"/>
+
+        <!-- Bill Payment Button -->
+        <Button text="Bill Payment"
+                prefWidth="280"
+                onAction="#onBillPaymentClicked"
+                AnchorPane.topAnchor="310"
+                AnchorPane.leftAnchor="60"/>
+                
+         <!-- Back Button -->
+        <Button text="Back"
+                prefWidth="50"
+                style="-fx-background-color: #4CAF50; -fx-text-fill: white;"
+                onAction="#onBackClicked"
+                AnchorPane.topAnchor="380"
+                AnchorPane.leftAnchor="60"/>
+
+    </children>
+</AnchorPane>
+
+
+

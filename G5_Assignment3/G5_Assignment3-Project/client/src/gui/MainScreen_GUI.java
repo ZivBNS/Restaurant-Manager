@@ -6,6 +6,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -147,4 +148,23 @@ public class MainScreen_GUI {
             e.printStackTrace();
         }
     }
+    
+    @FXML
+	private void openGuestMenu(ActionEvent event) {
+	    try {
+	        FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/CasualCustomer.fxml"));
+	        Parent root = loader.load();
+
+	        // Get current window (Stage)
+	        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+
+	        // Replace the scene in the same window
+	        stage.setScene(new Scene(root));
+	        stage.setTitle("CasualCustomer");
+	        stage.show();
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	}
 }
