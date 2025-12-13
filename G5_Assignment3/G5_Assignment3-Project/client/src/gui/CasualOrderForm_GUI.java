@@ -1,4 +1,4 @@
-package controllers;
+package gui;
 
 import java.time.LocalTime;
 import javafx.fxml.FXML;
@@ -10,7 +10,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 
-public class CasualOrderForm_Controller {
+public class CasualOrderForm_GUI {
 
     
     @FXML private DatePicker datePicker;

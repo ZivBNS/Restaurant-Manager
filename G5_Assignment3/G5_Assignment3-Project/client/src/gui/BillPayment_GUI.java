@@ -1,4 +1,4 @@
-package controllers;
+package gui;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -10,7 +10,7 @@ import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import javafx.event.ActionEvent;
 
-public class BillPayment_Controller {
+public class BillPayment_GUI {
 
     @FXML
     private TextField paymentField;
