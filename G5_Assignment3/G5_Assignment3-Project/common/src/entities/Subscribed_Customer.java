@@ -3,6 +3,7 @@ package entities;
 public class Subscribed_Customer extends Casual_Customer implements User {
 
 	private static final long serialVersionUID = 1L;
+	private String fullName;
 	private String username;
 	private String password;
 	private int subscriberCode;
@@ -14,6 +15,7 @@ public class Subscribed_Customer extends Casual_Customer implements User {
 		this.password = password;
 		this.subscriberCode = subscriberCode;
 		this.digitalCard = generateDigitalCard(subscriberCode);
+		fullName="sss";
 	}
 
 	private String generateDigitalCard(int id) {
@@ -60,6 +62,14 @@ public class Subscribed_Customer extends Casual_Customer implements User {
 	public String toString() {
 		return "Subscribed_Customer [username=" + username + ", password=" + password + ", subscriberCode="
 				+ subscriberCode + ", digitalCard=" + digitalCard + "]";
+	}
+
+	public String getFullName() {
+		return fullName;
+	}
+
+	public void setFullName(String fullName) {
+		this.fullName = fullName;
 	}
 
 }

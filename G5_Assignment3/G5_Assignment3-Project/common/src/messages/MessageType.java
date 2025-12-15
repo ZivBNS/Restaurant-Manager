@@ -24,6 +24,36 @@ public enum MessageType {
     UPDATE_RESERVATION_REQUEST,
     UPDATE_RESERVATION_SUCCESS,
     
+    //***********************************added by oshri***//
+    // --- Register new user account ---
+    REGISTER_USER_REQUEST,
+    REGISTER_USER_SUCCESS,
+    REGISTER_USER_FAILED,
+    
+    // --- get and set user details ---
+    GET_USER_DETAILS,
+    RETURN_USER_DETAILS,
+    UPDATE_USER_DETAILS_REQUEST,
+    UPDATE_USER_DETAILS_SUCCESS,
+    
+    // --- restaurant waitlist management ---
+    WAITLIST_JOINED_SUCCESS,
+    WAITLIST_JOINED_FAILED,
+    WAITLIST_TABLE_READY,
+    WAITLIST_CANCEL_REQUEST,
+    
+    // ---check in and out messages ---
+    RESERVATION_CHECK_IN,
+    RESERVATION_CHECK_OUT,
+    
+    // --- bill request ---
+    BILL_REQUEST,
+    BILL_RETURN_DETAILS,
+    BILL_PAYMENT_SUCCESS,
+    BILL_PAYMENT_FAILED,
+    //***************************************************//
+
+    
     // --- Restaurant Management and Status ---
     GET_TABLES_STATUS,      // Client requests current status of all tables
     UPDATE_TABLE_STATUS,    // Rep/Manager changes a table's status
