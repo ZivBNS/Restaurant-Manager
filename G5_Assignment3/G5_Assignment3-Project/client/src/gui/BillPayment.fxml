@@ -60,11 +60,10 @@
             <!-- Back Button -->
             <Button text="Back"
                     prefWidth="100"
+                    style="-fx-background-color: #2980b9; -fx-text-fill: white;"
                     onAction="#onBackClicked" />
 
         </VBox>
 
     </children>
 </AnchorPane>
-
-

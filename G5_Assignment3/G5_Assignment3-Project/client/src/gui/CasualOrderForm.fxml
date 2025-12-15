@@ -68,6 +68,7 @@
 
             <!-- Back Button -->
             <Button text="Back"
+                    style="-fx-background-color: #2980b9; -fx-text-fill: white;"
                     prefWidth="100"
                     onAction="#onBackClicked" />
 

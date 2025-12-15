@@ -2,20 +2,23 @@
 
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Separator?>
 
 <AnchorPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="gui.CasualCustomer_GUI"
+            fx:controller="gui.EditCasualCustomerOrder_GUI"
             prefWidth="400" prefHeight="500"
             style="-fx-background-color: #f7f7f7;">
 
     <children>
 
-        <!-- Centered Page Title -->
-        <Label text="Casual Customer"
+        <!-- Page Title -->
+        <Label text="Edit Order"
                AnchorPane.topAnchor="20"
                AnchorPane.leftAnchor="0"
                AnchorPane.rightAnchor="0"
@@ -24,8 +27,8 @@
                       -fx-font-weight: bold;
                       -fx-text-fill: #2c3e50;" />
 
-        <!-- Card Container -->
-        <VBox spacing="18"
+        <!-- Card -->
+        <VBox spacing="16"
               AnchorPane.topAnchor="70"
               AnchorPane.leftAnchor="40"
               AnchorPane.rightAnchor="40"
@@ -36,26 +39,36 @@
                   -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 20, 0, 0, 4);
               ">
 
-            <!-- Menu Header (Guest Login style) -->
+            <!-- Section Header -->
             <VBox spacing="10" alignment="CENTER">
-                <Label text="Menu"
-                       style="-fx-font-size: 26px;
+                <Label text="Order Details"
+                       style="-fx-font-size: 24px;
                               -fx-font-weight: 600;
                               -fx-text-fill: #2c3e50;" />
                 <Separator prefWidth="200" opacity="0.6"/>
             </VBox>
 
-            <!-- Menu Buttons -->
-            <Button text="New Order"  prefWidth="280" onAction="#openNewOrder"/>
-            <Button text="View Order" prefWidth="280" onAction="#onViewOrderClicked"/>
-            <Button text="Cancel Order" prefWidth="280" onAction="#onCancelOrderClicked"/>
-            <Button text="Edit Order" prefWidth="280" onAction="#onEditOrderClicked"/>
+            <!-- Editable Fields -->
+            <TextField fx:id="guestsField"
+                       promptText="Number of Guests"
+                       prefWidth="280"/>
 
-            <Button text="Bill Payment" prefWidth="280" onAction="#onBillPaymentClicked"/>
+            <DatePicker fx:id="datePicker"
+                        prefWidth="280"/>
 
-            <!-- Back Button -->
+            <ComboBox fx:id="timeCombo"
+                      promptText="Select Time"
+                      prefWidth="280"/>
+
+            <!-- Save -->
+            <Button text="Save Changes"
+                    prefWidth="280"
+                    style="-fx-background-color: #27ae60; -fx-text-fill: white;"
+                    onAction="#onSaveChanges"/>
+
+            <!-- Back -->
             <Button text="Back"
-                    prefWidth="80"
+                    prefWidth="100"
                     style="-fx-background-color: #2980b9; -fx-text-fill: white;"
                     onAction="#onBackClicked"/>
 
@@ -63,5 +76,3 @@
 
     </children>
 </AnchorPane>
-
-

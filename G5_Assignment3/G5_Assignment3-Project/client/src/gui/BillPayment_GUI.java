@@ -56,6 +56,7 @@ public class BillPayment_GUI {
 
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(previousScreen));
+            stage.setTitle("Casual Customer Menu");
             stage.show();
 
         } catch (Exception e) {

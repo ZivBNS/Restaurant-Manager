@@ -49,6 +49,7 @@ public class CasualOrderForm_GUI {
             Stage stage = (Stage) timeCombo.getScene().getWindow();
 
             stage.setScene(new Scene(root));
+            stage.setTitle("Casual Customer Menu");
         } catch (Exception e) {
             e.printStackTrace();
         }
