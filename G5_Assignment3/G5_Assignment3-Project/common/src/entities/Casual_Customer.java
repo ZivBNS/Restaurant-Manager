@@ -31,7 +31,10 @@ public class Casual_Customer implements Serializable   {
 
 	@Override
 	public String toString() {
-		return "Casual_Customer [phone=" + phone + ", email=" + email + "]";
+		String s="Casual_Customer [";
+		if (phone!=null) s+="phone: "+ phone + ", ";
+		if (email!=null) s+= "email: " + email; 
+		s+="]";
+		return s;
 	}
-    
 }

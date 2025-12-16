@@ -2,13 +2,12 @@ package entities;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Opening_Hours {
-
-	private int id;
 
 	// Map to store standard weekly operating hours.
 	// Key: DayOfWeek (e.g., MONDAY), Value: TimeRange object.
@@ -18,19 +17,13 @@ public class Opening_Hours {
 	// Key: Specific Date (LocalDate), Value: TimeRange (or null if closed).
 	private Map<LocalDate, TimeRange> exceptionSchedule;
 
-	public Opening_Hours(int id) {
-		this.id = id;
+	public Opening_Hours() {
 		// Initialize Maps to avoid NullPointerExceptions later
 		this.regularSchedule = new HashMap<>();
 		this.exceptionSchedule = new HashMap<>();
 
 		// Populate the standard schedule upon object creation
 		initializeDefaultSchedule();
-	}
-
-	public Opening_Hours() {
-		this.regularSchedule = new HashMap<>();
-		this.exceptionSchedule = new HashMap<>();
 	}
 
 	// --- Inner Helper Class to Represent a Time Window ---
@@ -74,7 +67,7 @@ public class Opening_Hours {
 	 * 
 	 * @return true if the restaurant is currently open, false otherwise.
 	 */
-	public boolean isOpen(java.time.LocalDateTime dateTime) {
+	public boolean isOpen(LocalDateTime dateTime) {
 		LocalDate date = dateTime.toLocalDate();
 		LocalTime time = dateTime.toLocalTime();
 
@@ -122,13 +115,7 @@ public class Opening_Hours {
 	}
 
 	// --- Getters and Setters ---
-	public int getId() {
-		return id;
-	}
 
-	public void setId(int id) {
-		this.id = id;
-	}
 
 	public Map<DayOfWeek, TimeRange> getRegularSchedule() {
 		return regularSchedule;

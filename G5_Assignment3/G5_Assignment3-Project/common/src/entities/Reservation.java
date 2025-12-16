@@ -3,108 +3,148 @@ package entities;
 import java.time.LocalDateTime;
 
 public class Reservation {
+    private int id;
+    private Integer userId; 
+    private Integer tableId;
+    private String phone;
+    private String email;
+    private LocalDateTime orderStartTime;
+    private LocalDateTime orderEndTime;
+    private LocalDateTime actualArrivalTime;
+    private LocalDateTime actualDepartureTime;
+    private int numberOfDiners;
+    private int confirmationCode; 
+    private String status; 
+    private LocalDateTime creationTime; 
 
-	private static int idCreator = 0;
-	private static int confCodeCreator = 100000;
+    //constructor for db to use
+    public Reservation(int id, Integer userId, Integer tableId, String phone, String email, 
+                       LocalDateTime orderStartTime, LocalDateTime orderEndTime, 
+                       LocalDateTime actualArrivalTime, LocalDateTime actualDepartureTime, 
+                       int numberOfDiners, int confirmationCode, String status, LocalDateTime creationTime) {
+        
+        this.id = id;
+        this.userId = userId;
+        this.tableId = tableId;
+        this.phone = phone;
+        this.email = email;
+        this.orderStartTime = orderStartTime;
+        this.orderEndTime = orderEndTime;
+        this.actualArrivalTime = actualArrivalTime;
+        this.actualDepartureTime = actualDepartureTime;
+        this.numberOfDiners = numberOfDiners;
+        this.confirmationCode = confirmationCode;
+        this.status = status;
+        this.creationTime = creationTime;
+    }
 
-	private final int id;
-	private Casual_Customer customer;
-	private Restaurant_Table assignedTable;
-	private LocalDateTime reservationTime;
-	private int numDiners;
-	private final int confirmationCode;
-	private Bill bill;
-	private String status;
-	private int subscriberId;
-	private LocalDateTime dateOfPlacingOrder;
-
-	// new reservation
-	public Reservation(Casual_Customer customer, LocalDateTime reservationTime, int numDiners) {
-		this.id = idCreator++;
-		this.customer = customer;
-		this.reservationTime = reservationTime;
-		this.numDiners = numDiners;
-		this.assignedTable = null;
-		this.status = "PENDING";
-		this.bill = null;
-		this.confirmationCode = confCodeCreator++;
-		dateOfPlacingOrder = LocalDateTime.now();
-	}
-
-	// exist reservation
-	public Reservation(Casual_Customer customer, Restaurant_Table table, LocalDateTime time, int diners, String code,
-			Bill bill, String status) {
-		this.id = idCreator++;
-		this.customer = customer;
-		this.assignedTable = table;
-		this.reservationTime = time;
-		this.numDiners = diners;
-		this.confirmationCode = confCodeCreator++;
-		this.bill = bill;
-		this.status = status;
-		dateOfPlacingOrder = LocalDateTime.now();
-	}
-
-	// get from db
-	public Reservation(int orderId, LocalDateTime orderDate, int diners, int confCode, int subId,
-			LocalDateTime dateOfPlacingOrder) {
-		this.id = orderId;
-		this.reservationTime = orderDate;
-		this.numDiners = diners;
-		this.confirmationCode = confCode;
-		this.subscriberId = subId;
-		this.dateOfPlacingOrder = dateOfPlacingOrder;
-	}
-
-	public Reservation() {
-		this.id = idCreator++;
-		this.confirmationCode = confCodeCreator++;
-	}
-
-	// --- Getters and Setters ---
+    //constructor to insert data to db
+    public Reservation(Integer userId, String phone, String email, 
+                       LocalDateTime orderStartTime, LocalDateTime orderEndTime, 
+                       int numberOfDiners, int confirmationCode) {
+        
+        this.userId = userId;
+        this.phone = phone;
+        this.email = email;
+        this.orderStartTime = orderStartTime;
+        this.orderEndTime = orderEndTime;
+        this.numberOfDiners = numberOfDiners;
+        this.confirmationCode = confirmationCode;
+        
+        id = 0;
+        status = "Pending";
+        tableId = null;
+        actualArrivalTime = null;
+        actualDepartureTime = null;
+        creationTime = LocalDateTime.now(); 
+    }
 
 	public int getId() {
 		return id;
 	}
 
-	public void setDateOfPlacingOrder(LocalDateTime dateOfPlacingOrder) {
-		this.dateOfPlacingOrder = dateOfPlacingOrder;
+	public void setId(int id) {
+		this.id = id;
 	}
 
-	public Casual_Customer getCustomer() {
-		return customer;
+	public Integer getUserId() {
+		return userId;
 	}
 
-	public void setCustomer(Casual_Customer customer) {
-		this.customer = customer;
+	public void setUserId(Integer userId) {
+		this.userId = userId;
 	}
 
-	public Restaurant_Table getAssignedTable() {
-		return assignedTable;
+	public Integer getTableId() {
+		return tableId;
 	}
 
-	public void setAssignedTable(Restaurant_Table assignedTable) {
-		this.assignedTable = assignedTable;
+	public void setTableId(Integer tableId) {
+		this.tableId = tableId;
 	}
 
-	public LocalDateTime getReservationTime() {
-		return reservationTime;
+	public String getPhone() {
+		return phone;
 	}
 
-	public void setReservationTime(LocalDateTime reservationTime) {
-		this.reservationTime = reservationTime;
+	public void setPhone(String phone) {
+		this.phone = phone;
 	}
 
-	public int getNumDiners() {
-		return numDiners;
+	public String getEmail() {
+		return email;
 	}
 
-	public void setNumDiners(int numDiners) {
-		this.numDiners = numDiners;
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public LocalDateTime getOrderStartTime() {
+		return orderStartTime;
+	}
+
+	public void setOrderStartTime(LocalDateTime orderStartTime) {
+		this.orderStartTime = orderStartTime;
+	}
+
+	public LocalDateTime getOrderEndTime() {
+		return orderEndTime;
+	}
+
+	public void setOrderEndTime(LocalDateTime orderEndTime) {
+		this.orderEndTime = orderEndTime;
+	}
+
+	public LocalDateTime getActualArrivalTime() {
+		return actualArrivalTime;
+	}
+
+	public void setActualArrivalTime(LocalDateTime actualArrivalTime) {
+		this.actualArrivalTime = actualArrivalTime;
+	}
+
+	public LocalDateTime getActualDepartureTime() {
+		return actualDepartureTime;
+	}
+
+	public void setActualDepartureTime(LocalDateTime actualDepartureTime) {
+		this.actualDepartureTime = actualDepartureTime;
+	}
+
+	public int getNumberOfDiners() {
+		return numberOfDiners;
+	}
+
+	public void setNumberOfDiners(int numberOfDiners) {
+		this.numberOfDiners = numberOfDiners;
 	}
 
 	public int getConfirmationCode() {
 		return confirmationCode;
+	}
+
+	public void setConfirmationCode(int confirmationCode) {
+		this.confirmationCode = confirmationCode;
 	}
 
 	public String getStatus() {
@@ -115,38 +155,16 @@ public class Reservation {
 		this.status = status;
 	}
 
-	public Bill getBill() {
-		return bill;
+	public LocalDateTime getCreationTime() {
+		return creationTime;
 	}
 
-	public void setBill(Bill bill) {
-		this.bill = bill;
+	public void setCreationTime(LocalDateTime creationTime) {
+		this.creationTime = creationTime;
 	}
-
-	public LocalDateTime getDateOfPlacingOrder() {
-		return dateOfPlacingOrder;
-	}
-
-	public void setSubscriberId(int id) {
-		subscriberId = id;
-	}
-
-	@Override
-	public String toString() {
-	    java.time.format.DateTimeFormatter dateFormatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");  
-	    //java.time.format.DateTimeFormatter timeFormatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm");
-	    String dateStr = "N/A";
-	    //String timeStr = "N/A";
-
-	    if (reservationTime != null) {
-	        dateStr = reservationTime.format(dateFormatter);
-	        //timeStr = reservationTime.format(timeFormatter);
-	    }
-	    return String.format("Date: %s | Guests: %d | Code: %d", 
-	                         dateStr, numDiners, confirmationCode);
-	}
-
-	public int getSubscriberId() {
-		return subscriberId;
-	}
+    
+    @Override
+    public String toString() {
+    	return "Reservation [Confirmation code: "+confirmationCode+", Order date: "+orderStartTime+", number of diners: "+numberOfDiners+"]";
+    }
 }

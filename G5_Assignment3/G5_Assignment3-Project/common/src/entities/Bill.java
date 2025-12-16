@@ -1,55 +1,67 @@
 package entities;
 
+import messages.Message;
+
 public class Bill {
+	private final double UserDiscountRate=0.15;
+    private double totalAmount=0.0;
+    private double discountRate=0.0;    
+    private String status="";
+    private String billDetails="";
+    private Reservation reservation;
 
-    private int id;
-    private double totalAmount;
-    private double finalAmount;    
-    private boolean isPaid;          
-    
-    private Reservation reservation; //optional
+    public Bill(Reservation reservation,double totalAmount, String billDetails) {
+    	this(reservation);
+    	this.totalAmount = totalAmount;
+    	this.billDetails=billDetails;
 
-    public Bill(int id, double totalAmount, Reservation reservation) {
-        this.id = id;
-        this.totalAmount = totalAmount;
-        this.reservation = reservation;
-        this.isPaid = false;
-        
-        calculateFinalAmount();
     }
-    
-    public Bill() {}
+    public Bill(Reservation reservation) {
+        this.reservation = reservation;
+        if(reservation.getUserId()!=null) discountRate=UserDiscountRate;    
+    }    
 
     //discount cal
-    public void calculateFinalAmount() {
-        if (reservation != null && reservation.getCustomer() instanceof Subscribed_Customer) {
-            this.finalAmount = this.totalAmount * 0.9;
-        } else {
-            this.finalAmount = this.totalAmount;
-        }
+    public double calculateFinalAmount() {
+            return this.totalAmount*(1-discountRate);
     }
 
     // --- Getters and Setters ---
+	public double getTotalAmount() {
+		return totalAmount;
+	}
+	public void setTotalAmount(double totalAmount) {
+		this.totalAmount = totalAmount;
+	}
+	public double getDiscountRate() {
+		return discountRate;
+	}
+	public void setDiscountRate(double discountRate) {
+		this.discountRate = discountRate;
+	}
+	public String getStatus() {
+		return status;
+	}
+	public void setStatus(String status) {
+		this.status = status;
+	}
+	public String getBillDetails() {
+		return billDetails;
+	}
+	public void setBillDetails(String billDetails) {
+		this.billDetails = billDetails;
+	}
+	public Reservation getReservation() {
+		return reservation;
+	}
+	public void setReservation(Reservation reservation) {
+		this.reservation = reservation;
+	}
 
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
-
-    public double getTotalAmount() { return totalAmount; }
-    public void setTotalAmount(double totalAmount) { 
-        this.totalAmount = totalAmount; 
-        calculateFinalAmount();
-    }
-
-    public double getFinalAmount() { return finalAmount; }
-
-    public boolean isPaid() { return isPaid; }
-    public void setPaid(boolean paid) { isPaid = paid; }
     
-    public Reservation getReservation() { return reservation; }
-    public void setReservation(Reservation reservation) { this.reservation = reservation; }
-
+    
     @Override
     public String toString() {
-        return "Bill [Amount=" + finalAmount + ", Paid=" + isPaid + "]";
+        return "Bill [Amount: " + calculateFinalAmount() + ",Ordered: "+billDetails +", Status: " + status + "]";
     }
 }

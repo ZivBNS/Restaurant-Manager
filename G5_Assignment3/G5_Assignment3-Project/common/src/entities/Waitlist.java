@@ -4,70 +4,47 @@ import java.time.LocalDateTime;
 
 public class Waitlist {
 
-    private int waitlistId;
-    private Casual_Customer customer;
-    private int numDiners;        
-    private String confirmationCode; 
-    private LocalDateTime entryTime;
+    private int id=-1;
+    private Reservation reservation;
     private String status;
+    private LocalDateTime creationTime;
+    private LocalDateTime tableFreedTime;
 
-    public Waitlist(int waitlistId, Casual_Customer customer, int numDiners, String confirmationCode) {
-        this.waitlistId = waitlistId;
-        this.customer = customer;
-        this.numDiners = numDiners;
-        this.confirmationCode = confirmationCode;
-        this.entryTime = LocalDateTime.now(); 
-        this.status = "WAITING";
+    //read from db
+    public Waitlist(int id, Reservation reservation, String status, LocalDateTime creationTime, LocalDateTime tableFreedTime) {
+        this.id = id;
+        this.reservation = reservation;
+        this.status = status;
+        this.creationTime = creationTime;
+        this.tableFreedTime = tableFreedTime;
     }
 
-    // בנאי ריק (מומלץ לעבודה עם DB)
-    public Waitlist() {
-        this.entryTime = LocalDateTime.now();
+    //create new to insert to db
+    public Waitlist(Reservation reservation) {
+        this.reservation = reservation;
         this.status = "WAITING";
+        this.creationTime = LocalDateTime.now();
+        this.tableFreedTime = null;
     }
-
-    // --- Getters and Setters ---
     
-    public int getWaitlistId() {
-        return waitlistId;
+    // --- Getters and Setters ---
+
+    public int getId() {
+        return id;
     }
 
-    public void setWaitlistId(int waitlistId) {
-        this.waitlistId = waitlistId;
+    public void setId(int id) {
+        this.id = id;
     }
 
-    public Casual_Customer getCustomer() {
-        return customer;
+    public Reservation getReservation() {
+        return reservation;
     }
 
-    public void setCustomer(Casual_Customer customer) {
-        this.customer = customer;
+    public void setReservation(Reservation reservation) {
+        this.reservation = reservation;
     }
-
-    public int getNumDiners() {
-        return numDiners;
-    }
-
-    public void setNumDiners(int numDiners) {
-        this.numDiners = numDiners;
-    }
-
-    public String getConfirmationCode() {
-        return confirmationCode;
-    }
-
-    public void setConfirmationCode(String confirmationCode) {
-        this.confirmationCode = confirmationCode;
-    }
-
-    public LocalDateTime getEntryTime() {
-        return entryTime;
-    }
-
-    public void setEntryTime(LocalDateTime entryTime) {
-        this.entryTime = entryTime;
-    }
-
+    
     public String getStatus() {
         return status;
     }
@@ -76,8 +53,36 @@ public class Waitlist {
         this.status = status;
     }
 
+    public LocalDateTime getCreationTime() {
+        return creationTime;
+    }
+
+    public void setCreationTime(LocalDateTime creationTime) {
+        this.creationTime = creationTime;
+    }
+
+    public LocalDateTime getTableFreedTime() {
+        return tableFreedTime;
+    }
+
+    public void setTableFreedTime(LocalDateTime tableFreedTime) {
+        this.tableFreedTime = tableFreedTime;
+    }
+
+    @Override
+    public String toString() {
+        return "Waitlist [ID=" + id + ", OrderID=" + (reservation != null ? reservation.getId() : "N/A") + ", Status=" + status + "]";
+    }
+}
+
+
+
+
+/*
+
     @Override
     public String toString() {
         return "WaitlistEntry [ID=" + waitlistId + ", Diners=" + numDiners + ", Status=" + status + "]";
     }
 }
+*/

@@ -1,25 +1,29 @@
 package entities;
 
 public class Subscribed_Customer extends Casual_Customer implements User {
+	public static int subscriberCodeGenerator=100000;
 
 	private static final long serialVersionUID = 1L;
-	private String fullName;
+	
+	private String firstName;
+	private String lastName;
 	private String username;
 	private String password;
-	private int subscriberCode;
 	private String digitalCard;
+	private int subscriberCode;
 
-	public Subscribed_Customer(int id, String firstName, String lastName, String phone, String email, String username,String password, int subscriberCode) {
+	public Subscribed_Customer(String firstName, String lastName, String phone, String email, String username,String password) {
 		super(phone, email);
 		this.username = username;
 		this.password = password;
-		this.subscriberCode = subscriberCode;
+		this.subscriberCode = subscriberCodeGenerator++;
 		this.digitalCard = generateDigitalCard(subscriberCode);
-		fullName="sss";
+		this.firstName=firstName;
+		this.lastName=lastName;
 	}
 
 	private String generateDigitalCard(int id) {
-		return "00000" + id;
+		return "00" + subscriberCode;
 	}
 
 	@Override
@@ -43,12 +47,9 @@ public class Subscribed_Customer extends Casual_Customer implements User {
 	}
 
 	public int getSubscriberCode() {
-		return subscriberCode;
+		return subscriberCode++;
 	}
 
-	public void setSubscriberCode(int subscriberCode) {
-		this.subscriberCode = subscriberCode;
-	}
 
 	public String getDigitalCard() {
 		return digitalCard;
@@ -64,12 +65,21 @@ public class Subscribed_Customer extends Casual_Customer implements User {
 				+ subscriberCode + ", digitalCard=" + digitalCard + "]";
 	}
 
-	public String getFullName() {
-		return fullName;
+	public String getFirstName() {
+		return firstName;
 	}
 
-	public void setFullName(String fullName) {
-		this.fullName = fullName;
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
 	}
+
+	public String getLastName() {
+		return lastName;
+	}
+
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
+	}
+
 
 }

@@ -23,6 +23,8 @@ public class Restaurant {
 		this.name = "Bistro"; // Default name
 		this.tables = new ArrayList<>();
 		this.openingHours = new Opening_Hours();
+		//צריך לאתחל נתונים: לייבא הכל מהד"ב אם קיים, גם את כל השולחנות, וגם את השעות פעילות
+		//במקום 2 השורות שלמעלה, עליי
 	}
 
 	// --- Static Accessor Method ---
@@ -34,7 +36,7 @@ public class Restaurant {
 	}
 
 	public void addTable(Restaurant_Table table) {
-		this.tables.add(table);
+		tables.add(table);
 	}
 
 	public Restaurant_Table getTableByNumber(int tableNumber) {

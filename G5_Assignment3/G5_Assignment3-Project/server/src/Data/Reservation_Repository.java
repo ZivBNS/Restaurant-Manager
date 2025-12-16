@@ -10,7 +10,7 @@ import java.util.ArrayList;
 
 import entities.Reservation;
 //this class uses single-tone
-public class Reservation_Repository implements Repository_Interface<Reservation>{
+public class Reservation_Repository /*implements Repository_Interface<Reservation>*/{
 	private DB_Controller db = DB_Controller.getInstance();
     private static Reservation_Repository ReservationRepositoryInstance = new Reservation_Repository();
 
@@ -20,7 +20,7 @@ public class Reservation_Repository implements Repository_Interface<Reservation>
 	public static Reservation_Repository getInstance() {
 		return ReservationRepositoryInstance;
 	}
-	
+	/*
 	
 	@Override    //search id in table order, returns reservation from db if exist, otherwise null
 	public Reservation getById(int id) {
@@ -87,12 +87,12 @@ public class Reservation_Repository implements Repository_Interface<Reservation>
 		return reservations;
 	}
 	
-	
+	*/
 	
 	
 	    /*set new reservation in db, if there is order with
 		same id returns false, else set the order and return true*/
-	@Override     
+	/*	@Override     
 	public boolean set(Reservation objToSet) {
 		String sqlSet = "INSERT INTO `order` (order_number, order_date, number_of_guests,"
 				+ " confirmation_code, subscriber_id, date_of_placing_order) VALUES (?, ?, ?, ?, ?, ?)";
@@ -168,16 +168,7 @@ public class Reservation_Repository implements Repository_Interface<Reservation>
 		
 	}
 	
-	
-	
-
-	
-	
-	
-	
-	
-	
-	
+	*/
 	
 /*	
 	//testing

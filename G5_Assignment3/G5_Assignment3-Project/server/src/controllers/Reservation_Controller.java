@@ -40,7 +40,8 @@ public class Reservation_Controller {
      * CREATE RESERVATION.
      */
     private static Message createReservation(Message msg) {
-        try {
+		return null;
+       /* try {
             Reservation reservation = (Reservation) msg.getContent();
             boolean success = reservationRepository.set(reservation);
 
@@ -53,7 +54,7 @@ public class Reservation_Controller {
         } catch (Exception e) {
             e.printStackTrace();
             return null;
-        }
+        }*/
     }
     
     
@@ -61,7 +62,8 @@ public class Reservation_Controller {
      * GET RESERVATIONS BY USER.
      */
     private static Message getReservationsByUser(Message msg) {
-        try {
+		return null;
+     /*   try {
         	System.out.println("getReservationsByUser - Reservation_Controller");
             int userId = ((Subscribed_Customer)msg.getContent()).getSubscriberCode();
             var reservations = reservationRepository.getByUserId(userId);
@@ -72,7 +74,7 @@ public class Reservation_Controller {
         } catch (Exception e) {
             e.printStackTrace();
             return null;
-        }
+        }*/
     }
     
     
@@ -80,7 +82,8 @@ public class Reservation_Controller {
      * CANCEL RESERVATION.
      */
     private static Message cancelReservation(Message msg) {
-        try {
+		return null;
+       /* try {
             int reservationId = (int) msg.getContent();
             boolean success = reservationRepository.deleteById(reservationId);
             MessageType responseType = success ? MessageType.RESERVATION_CANCELED : MessageType.RESERVATION_CANCEL_FAILED;
@@ -89,7 +92,7 @@ public class Reservation_Controller {
         } catch (Exception e) {
             e.printStackTrace();
             return null;
-        }
+        }*/
     }
     
     
@@ -97,7 +100,8 @@ public class Reservation_Controller {
      * UPDATE RESERVATION.
      */
     private static Message updateReservation(Message msg) {
-    	try {
+		return null;
+    	/*try {
     		Reservation reservation = (Reservation) msg.getContent();
     		boolean success = reservationRepository.update(reservation);
     		MessageType responseType = success ? MessageType.RESERVATION_UPDATE_SUCCESS : MessageType.RESERVATION_UPDATE_FAILED;
@@ -106,6 +110,6 @@ public class Reservation_Controller {
     	} catch(Exception e) {
     		e.printStackTrace();
     		return null;
-    	}
+    	}*/
     }
 }

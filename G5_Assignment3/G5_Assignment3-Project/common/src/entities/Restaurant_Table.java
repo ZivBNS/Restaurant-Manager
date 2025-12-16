@@ -3,70 +3,56 @@ package entities;
 
 public class Restaurant_Table {
 
-    public static final String STATUS_AVAILABLE = "AVAILABLE"; 
-    public static final String STATUS_OCCUPIED = "OCCUPIED";   
-    public static final String STATUS_RESERVED = "RESERVED";
-
-    private int id;        
-    private int tableNumber;    
-    private int seats;         
-    private String status;
-
-    public Restaurant_Table(int id, int tableNumber, int seats) {
+    private int id=-1;
+    private int tableNumber=-1;
+    private int size;         
+    private boolean isActive = true;
+    
+    public Restaurant_Table(int id,int tableNumber, int size,boolean isActive) {
         this.id = id;
-        this.tableNumber = tableNumber;
-        this.seats = seats;
-        this.status = STATUS_AVAILABLE; // כשיוצרים שולחן, הוא מתחיל כפנוי
+        this.setTableNumber(tableNumber);
+        this.size=size;
+        this.isActive=isActive;
     }
 
-    public Restaurant_Table(int id, int tableNumber, int seats, String status) {
-        this.id = id;
-        this.tableNumber = tableNumber;
-        this.seats = seats;
-        this.status = status;
+    public Restaurant_Table(int size) {
+        this.size = size;
     }
-
-    public Restaurant_Table() {}
-
-
+        
     public int getId() {
-        return id;
-    }
+		return id;
+	}
 
-    public void setId(int id) {
-        this.id = id;
-    }
+	public void setId(int id) {
+		this.id = id;
+	}
 
-    public int getTableNumber() {
-        return tableNumber;
-    }
+	public int getSize() {
+		return size;
+	}
 
-    public void setTableNumber(int tableNumber) {
-        this.tableNumber = tableNumber;
-    }
+	public void setSize(int size) {
+		this.size = size;
+	}
 
-    public int getSeats() {
-        return seats;
-    }
+	public boolean isActive() {
+		return isActive;
+	}
 
-    public void setSeats(int seats) {
-        this.seats = seats;
-    }
+	public void setActive(boolean isActive) {
+		this.isActive = isActive;
+	}
 
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public boolean isAvailable() {
-        return STATUS_AVAILABLE.equals(this.status);
-    }
-
-    @Override
+	@Override
     public String toString() {
-        return "Table " + tableNumber + " [Seats: " + seats + ", Status: " + status + "]";
+        return "Table number " + id + " [Seats: " + size + ", Status: " + ((isActive)?"active":"not active") + "]";
     }
+
+	public int getTableNumber() {
+		return tableNumber;
+	}
+
+	public void setTableNumber(int tableNumber) {
+		this.tableNumber = tableNumber;
+	}
 }
