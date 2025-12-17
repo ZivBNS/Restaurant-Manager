@@ -3,6 +3,12 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.mysql.cj.xdevapi.Table;
+
+import entities.Restaurant_Table;
 
 public class DB_Controller {
 	private Connection con;
@@ -51,6 +57,7 @@ public class DB_Controller {
 //if we will need to make more tables
 
 public static void main(String[] args) {
+	int i;
 	Statement stmt;
 	DB_Controller db=DB_Controller.getInstance();
 	try {
@@ -74,6 +81,22 @@ public static void main(String[] args) {
 		}
 		stmt.executeUpdate("INSERT INTO OpeningHours (DayOfWeek, OpenTime, CloseTime) VALUES ('Friday', '08:00:00', '14:00:00')");
 		stmt.executeUpdate("INSERT INTO OpeningHours (DayOfWeek, OpenTime, CloseTime) VALUES ('Saturday', '20:00:00', '23:00:00')");
+		System.out.println("inserted DEFAULT data to OPENING HOURS");
+
+		//create default tables for the first time
+		//4 tables for 2,4 tables for 4, 2 tables for 8
+		List<Restaurant_Table> rTables= new ArrayList<Restaurant_Table>();
+		for (i = 0; i < 4; i++) {
+			rTables.add(new Restaurant_Table(2));
+			rTables.add(new Restaurant_Table(4));
+			if (i<2) rTables.add(new Restaurant_Table(8));
+		}
+		i=1;
+		for (Restaurant_Table rt:rTables) 
+			stmt.executeUpdate("INSERT INTO Tables (TableNumber, Size, IsActive) VALUES ("+ (i++) +", "+ rt.getSize() +", true)");
+		System.out.println("inserted DEFAULT data to TABLES");
+
+		
 		
 		System.out.println("Created successfully, all the cavod");
 	}

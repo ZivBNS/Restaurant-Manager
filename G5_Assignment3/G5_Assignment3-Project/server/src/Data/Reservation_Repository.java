@@ -13,12 +13,60 @@ import entities.Reservation;
 public class Reservation_Repository /*implements Repository_Interface<Reservation>*/{
 	private DB_Controller db = DB_Controller.getInstance();
     private static Reservation_Repository ReservationRepositoryInstance = new Reservation_Repository();
-
+    private List<Reservation> activeReservations=new ArrayList<Reservation>();
 	private Reservation_Repository(){
 	}
 
 	public static Reservation_Repository getInstance() {
 		return ReservationRepositoryInstance;
+	}
+	//puts the next confimiration code to generate for new reservations in Reservation class
+	public void init() {
+		int maxCode = 100000;
+		String query = "SELECT MAX(ConfirmationCode) FROM Reservations";
+
+		try (Statement stmt = db.getConnection().createStatement();
+		     ResultSet rs = stmt.executeQuery(query)) {
+		    
+		    if (rs.next()) {
+		        maxCode = rs.getInt(1);
+		    }
+		    
+		    Reservation.setConfirmationCodeGenerator((maxCode!=0)? maxCode+1 : 100000);
+	        System.out.println("Successfully loaded next CONFIRMATION codeinto Reservation - confirmation code generator");
+	        System.out.println("next CONFIRMATION code: " + ((maxCode!=0)? maxCode+1 : 100000));
+
+		} catch (SQLException e) {
+		    System.err.println("Database error while fetching MAX code: " + e.getMessage());
+		    e.printStackTrace();
+		}
+		
+		
+	    String sql = "SELECT * FROM Reservations WHERE DATE(ReservationStartTime) = CURDATE() AND ReservationStartTime > NOW() AND ActualArrivalTime IS NULL ORDER BY ReservationStartTime ASC";
+
+	    try (Statement stmt = db.getConnection().createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
+	        while (rs.next()) {
+	        	activeReservations.add(new Reservation(
+	                rs.getInt("ID"),
+	                (Integer) rs.getObject("UserID"),
+	                (Integer) rs.getObject("TableID"),
+	                rs.getString("Phone"),
+	                rs.getString("Email"),
+	                rs.getTimestamp("ReservationStartTime").toLocalDateTime(),
+	                rs.getTimestamp("ReservationEndTime").toLocalDateTime(),
+	                rs.getTimestamp("ActualArrivalTime") != null ? rs.getTimestamp("ActualArrivalTime").toLocalDateTime() : null,
+	                rs.getTimestamp("ActualDepartureTime") != null ? rs.getTimestamp("ActualDepartureTime").toLocalDateTime() : null,
+	                rs.getInt("NumberOfDiners"),
+	                rs.getInt("ConfirmationCode"),
+	                rs.getString("Status"),
+	                rs.getTimestamp("CreationTime").toLocalDateTime()
+	            ));
+	        }
+	        System.out.println("Successfully loaded all RESERVATIONS FOR TODAY into Reservation_Repository");
+	    } catch (SQLException e) {
+	        System.err.println("Database error: " + e.getMessage());
+	        e.printStackTrace();
+	    }		
 	}
 	/*
 	

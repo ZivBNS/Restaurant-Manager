@@ -1,135 +1,172 @@
 package gui;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.BorderPane;
+import javafx.scene.control.*;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.*;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
-
+import javafx.stage.StageStyle;
+import javafx.util.Duration;
 import java.io.IOException;
-
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-
 
 public class Terminal_GUI {
 
-    // Root Pane
     @FXML private BorderPane terminalRoot;
+    @FXML private AnchorPane welcomeView;
+    @FXML private VBox terminalView;
+    @FXML private Label lblUserGreeting, lblScanCode;
+    @FXML private StackPane actionFormsContainer;
 
-    // Buttons
-    @FXML private Button btnJoinWaitlist;
-    @FXML private Button btnPayBill;
-    @FXML private Button btnLeaveWaitlist;
-    @FXML private Button btnCancelRes;
-    @FXML private Button backBtn;
+    @FXML private VBox checkInForm, instantForm, payBillForm, cancelForm, billDetailsBox;
+    @FXML private Button btnCheckIn, btnInstantBooking, btnPayBill, btnCancelRes, backBtn;
 
-    // Login Section
-    @FXML private TextField termUserField;
-    @FXML private PasswordField termPassField;
-    @FXML private Button termLoginBtn;
-    @FXML private Label termErrorLabel;
+    @FXML private TextField checkInCodeField, instNameField, instPhoneField, instEmailField, payBillCodeField, cancelCodeField;
+    @FXML private Label checkInStatusLabel, instStatusLabel, cancelStatusLabel, payBillStatusLabel, lblBillInfo;
+    @FXML private Spinner<Integer> instDinersSpinner;
+    @FXML private Button btnGoToPayment, btnSubmitCheckIn, btnSubmitInstant, btnFetchBill, btnSubmitCancel;
 
-    /**
-     * Called automatically by JavaFX after the FXML is loaded.
-     * We use this to bind actions to the buttons.
-     */
+    @FXML private TextField welcomeUserField;
+    @FXML private PasswordField welcomePassField;
+    @FXML private Button btnWelcomeLogin, btnContinueAsGuest;
+
+    private Timeline inactivityTimer;
+
     @FXML
     public void initialize() {
-        System.out.println("Terminal Screen Initialized.");
+        instDinersSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 10, 2));
 
-        // --- Bind Button Actions (Using Anonymous Inner Classes as requested) ---
+        // Navigation
+        btnContinueAsGuest.setOnAction(e -> showTerminal(null));
+        btnWelcomeLogin.setOnAction(e -> handleSubscriberLogin());
 
-        // 1. Join Waitlist
-        btnJoinWaitlist.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                System.out.println("Action: Join Waitlist clicked.");
-                // TODO: Open a popup dialog to get Name/Phone/Diners
-                // Client_Controller.getInstance().sendToServer(new Message(MessageType.JOIN_WAITLIST, data));
+        // Form Toggling & Highlighting
+        btnCheckIn.setOnAction(e -> { toggleForm(checkInForm); highlightButton(btnCheckIn); });
+        btnInstantBooking.setOnAction(e -> { toggleForm(instantForm); highlightButton(btnInstantBooking); });
+        btnPayBill.setOnAction(e -> { toggleForm(payBillForm); highlightButton(btnPayBill); });
+        btnCancelRes.setOnAction(e -> { toggleForm(cancelForm); highlightButton(btnCancelRes); });
+
+        // Submit Actions
+        btnSubmitCheckIn.setOnAction(e -> handleStatus(checkInCodeField, checkInStatusLabel, "Success! Please go to Table 5."));
+        btnSubmitInstant.setOnAction(e -> handleInstantBookingSubmit());
+        btnFetchBill.setOnAction(e -> {
+            if (payBillCodeField.getText().isEmpty()) {
+                handleStatus(payBillCodeField, payBillStatusLabel, "");
+            } else {
+                billDetailsBox.setVisible(true);
+                payBillStatusLabel.setVisible(false);
+            }
+        });
+        btnSubmitCancel.setOnAction(e -> handleStatus(cancelCodeField, cancelStatusLabel, "Reservation successfully cancelled."));
+        btnGoToPayment.setOnAction(e -> openCreditCardPopup());
+
+        // Back Button
+        backBtn.setOnAction(e -> {
+            if (welcomeView.isVisible()) {
+                loadScreen("MainScreen.fxml");
+            } else {
+                resetToWelcome();
             }
         });
 
-        // 2. Pay Bill
-        btnPayBill.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                System.out.println("Action: Pay Bill clicked.");
-                // TODO: Open a popup to enter Table Number
-            }
-        });
-
-        // 3. Leave Waitlist
-        btnLeaveWaitlist.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                System.out.println("Action: Leave Waitlist clicked.");
-                // TODO: Request phone number to identify the waiter
-            }
-        });
-
-        // 4. Cancel Reservation
-        btnCancelRes.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                System.out.println("Action: Cancel Reservation clicked.");
-                // TODO: Ask for Reservation ID
-            }
-        });
-
-        // 5. Back Button
-        backBtn.setOnAction(new EventHandler<ActionEvent>() {
-        	@Override
-            public void handle(ActionEvent event) {
-                System.out.println("Logging out...");
-                try {
-                    //MainScreen
-                    FXMLLoader loader = new FXMLLoader(getClass().getResource("MainScreen.fxml"));
-                    Parent root = loader.load();
-                    Stage stage = (Stage) backBtn.getScene().getWindow();
-                    stage.setScene(new Scene(root));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-
-        // 6. Subscriber Login Logic
-        termLoginBtn.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                handleSubscriberLogin();
-            }
-        });
+        // Inactivity Timer
+      //  setupTimer();
     }
 
-    /**
-     * Logic for the Subscriber Login card.
-     */
-    private void handleSubscriberLogin() {
-        String username = termUserField.getText();
-        String password = termPassField.getText();
+    private void handleInstantBookingSubmit() {
+        String name = instNameField.getText().trim();
+        boolean hasContact = !instPhoneField.getText().trim().isEmpty() || !instEmailField.getText().trim().isEmpty();
 
-        // 1. Client-Side Validation
-        if (username.isEmpty() || password.isEmpty()) {
-            termErrorLabel.setText("Please enter both username and password.");
-            termErrorLabel.setVisible(true);
+        if (name.isEmpty()) {
+            handleStatus(instNameField, instStatusLabel, "");
             return;
         }
 
-        // 2. Clear error
-        termErrorLabel.setVisible(false);
-        System.out.println("Attempting Login for Subscriber: " + username);
+        if (!hasContact) {
+            instStatusLabel.setText("Error: Provide Phone or Email!");
+            instStatusLabel.setStyle("-fx-text-fill: #e74c3c;");
+            instStatusLabel.setVisible(true);
+        } else {
+            instStatusLabel.setText("Booking Successful! Code: 8821. Wait for SMS/Email.");
+            instStatusLabel.setStyle("-fx-text-fill: #27ae60;");
+            instStatusLabel.setVisible(true);
+        }
+    }
 
-        // 3. Create User Object (Mock)
-        // User loginUser = new User(username, password);
+    private void handleStatus(TextField field, Label statusLabel, String successMsg) {
+        if (field.getText().isEmpty()) {
+            statusLabel.setText("Please wait... Checking data...");
+            statusLabel.setStyle("-fx-text-fill: #e67e22;");
+        } else {
+            statusLabel.setText(successMsg);
+            statusLabel.setStyle("-fx-text-fill: #27ae60;");
+        }
+        statusLabel.setVisible(true);
+    }
 
-        // 4. Send to Server
-        // Client_Controller.getInstance().sendToServer(new Message(MessageType.LOGIN_REQUEST, loginUser));
+    private void highlightButton(Button selected) {
+        Button[] btns = {btnCheckIn, btnInstantBooking, btnPayBill, btnCancelRes};
+        for (Button b : btns) b.setStyle("-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand;");
+        selected.setStyle("-fx-background-color: #dcdde1; -fx-background-radius: 10; -fx-border-color: #34495e; -fx-border-width: 2; -fx-cursor: hand;");
+    }
+
+    private void toggleForm(VBox formToShow) {
+        VBox[] forms = {checkInForm, instantForm, payBillForm, cancelForm};
+        for (VBox f : forms) f.setVisible(false);
+        formToShow.setVisible(true);
+        billDetailsBox.setVisible(false);
+    }
+
+    private void showTerminal(String name) {
+        lblUserGreeting.setText(name == null ? "Please choose an action" : "Hello, " + name);
+        welcomeView.setVisible(false);
+        terminalView.setVisible(true);
+        toggleForm(checkInForm);
+        highlightButton(btnCheckIn);
+    }
+
+    private void resetToWelcome() {
+        welcomeView.setVisible(true);
+        terminalView.setVisible(false);
+        welcomeUserField.clear();
+        welcomePassField.clear();
+    }
+
+    private void setupTimer() {
+        inactivityTimer = new Timeline(new KeyFrame(Duration.seconds(30), e -> resetToWelcome()));
+        inactivityTimer.setCycleCount(1);
+        terminalRoot.addEventFilter(MouseEvent.ANY, e -> inactivityTimer.playFromStart());
+        terminalRoot.addEventFilter(KeyEvent.ANY, e -> inactivityTimer.playFromStart());
+        inactivityTimer.play();
+    }
+
+    private void handleSubscriberLogin() {
+        if (!welcomeUserField.getText().isEmpty() && !welcomePassField.getText().isEmpty()) {
+            showTerminal(welcomeUserField.getText());
+        }
+    }
+
+    private void openCreditCardPopup() {
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("CreditCardPopup.fxml"));
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.initStyle(StageStyle.UNDECORATED);
+            stage.setScene(new Scene(root));
+            stage.showAndWait();
+        } catch (IOException e) { e.printStackTrace(); }
+    }
+
+    private void loadScreen(String fxml) {
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource(fxml));
+            ((Stage) backBtn.getScene().getWindow()).setScene(new Scene(root));
+        } catch (IOException e) { e.printStackTrace(); }
     }
 }

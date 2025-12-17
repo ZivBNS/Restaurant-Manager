@@ -6,5 +6,6 @@ public interface Repository_Interface<T> {
 	public boolean update(T objToUpdate);
     public boolean deleteById(int confimrationCode);
 	public T getById(int id);
+	public void init();
 
 }

@@ -26,8 +26,8 @@ public class Client_Controller implements ChatIF {
 
 
 	public void onShowReservationsRequest() {
-		Subscribed_Customer S_customer = new Subscribed_Customer(212121212, "Oshri", "Sabag", "05212345678",
-				"test@test.com", "OshriSabge", "123456", 0);
+		Subscribed_Customer S_customer = new Subscribed_Customer("Oshri", "Sabag", "05212345678",
+				"test@test.com", "OshriSabag", "123456");
 		try {
 			Message message = new Message(MessageType.GET_RESERVATIONS_BY_USER, S_customer);
 			//client.handleMessageFromClientUI(message);

@@ -101,12 +101,14 @@ public class Customer_GUI implements Initializable {
                 //ObservableValue - the currently selected value 
                 public void changed(ObservableValue<? extends Reservation> observable, Reservation oldValue, Reservation newValue) {
                     if (newValue != null) {
-                        if (datePicker != null) {
+                        //שמתי בהערה כדי שלא יהיו בגאים כשמריצים
+
+                    	/*      if (datePicker != null) {
                             datePicker.setValue(newValue.getReservationTime().toLocalDate());
                         }
                         if (visitorsField != null) {
                             visitorsField.setText(String.valueOf(newValue.getNumDiners()));
-                        }
+                        }*/
                     }
                 }
             });
@@ -206,11 +208,12 @@ public class Customer_GUI implements Initializable {
             	System.out.println("Number of visitor must be bigger then 0");
                 return;
             }
-            LocalTime originalTime = selectedRes.getReservationTime().toLocalTime();
+            //שמתי בהערה כדי שלא יהיו בגאים כשמריצים
+            /*   LocalTime originalTime = selectedRes.getReservationTime().toLocalTime();
             LocalDateTime newDateTime = LocalDateTime.of(newDate, originalTime);
             selectedRes.setReservationTime(newDateTime);
             selectedRes.setNumDiners(Integer.parseInt(visitorsField.getText()));
-
+*/
             if (controller != null) {
                 controller.sendUpdateReservationRequest(selectedRes);
             }

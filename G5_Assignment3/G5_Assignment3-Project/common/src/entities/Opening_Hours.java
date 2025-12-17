@@ -124,4 +124,43 @@ public class Opening_Hours {
 	public Map<LocalDate, TimeRange> getExceptionSchedule() {
 		return exceptionSchedule;
 	}
+	
+	@Override
+	public String toString() {
+	    StringBuilder sb = new StringBuilder();
+	    sb.append("=== Restaurant Operating Hours ===\n");
+
+	    DayOfWeek[] weekOrder = {
+	        DayOfWeek.SUNDAY, DayOfWeek.MONDAY, DayOfWeek.TUESDAY, 
+	        DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY
+	    };
+
+	    sb.append("--- Regular Weekly Schedule ---\n");
+	    for (DayOfWeek day : weekOrder) {
+	        sb.append(String.format("%-10s: ", day.toString()));
+	        if (regularSchedule.containsKey(day)) {
+	            sb.append(regularSchedule.get(day).toString());
+	        } else {
+	            sb.append("Closed");
+	        }
+	        sb.append("\n");
+	    }
+
+	    if (!exceptionSchedule.isEmpty()) {
+	        sb.append("\n--- Special Date Exceptions ---\n");
+	        exceptionSchedule.entrySet().stream()
+	            .sorted(Map.Entry.comparingByKey())
+	            .forEach(entry -> {
+	                sb.append(String.format("Date: %s | Hours: ", entry.getKey().toString()));
+	                if (entry.getValue() != null) {
+	                    sb.append(entry.getValue().toString());
+	                } else {
+	                    sb.append("Closed All Day");
+	                }
+	                sb.append("\n");
+	            });
+	    }
+
+	    return sb.toString();
+	}
 }

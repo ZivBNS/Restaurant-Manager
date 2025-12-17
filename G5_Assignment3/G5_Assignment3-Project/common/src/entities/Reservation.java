@@ -3,7 +3,9 @@ package entities;
 import java.time.LocalDateTime;
 
 public class Reservation {
-    private int id;
+    private static int confirmationCodeGenerator=100001; 
+
+	private int id;
     private Integer userId; 
     private Integer tableId;
     private String phone;
@@ -41,7 +43,7 @@ public class Reservation {
     //constructor to insert data to db
     public Reservation(Integer userId, String phone, String email, 
                        LocalDateTime orderStartTime, LocalDateTime orderEndTime, 
-                       int numberOfDiners, int confirmationCode) {
+                       int numberOfDiners) {
         
         this.userId = userId;
         this.phone = phone;
@@ -49,7 +51,7 @@ public class Reservation {
         this.orderStartTime = orderStartTime;
         this.orderEndTime = orderEndTime;
         this.numberOfDiners = numberOfDiners;
-        this.confirmationCode = confirmationCode;
+        this.confirmationCode = getConfirmationCodeGenerator();
         
         id = 0;
         status = "Pending";
@@ -167,4 +169,12 @@ public class Reservation {
     public String toString() {
     	return "Reservation [Confirmation code: "+confirmationCode+", Order date: "+orderStartTime+", number of diners: "+numberOfDiners+"]";
     }
+
+	public static int getConfirmationCodeGenerator() {
+		return confirmationCodeGenerator++;
+	}
+
+	public static void setConfirmationCodeGenerator(int confirmationCodeGenerator) {
+		Reservation.confirmationCodeGenerator = confirmationCodeGenerator;
+	}
 }

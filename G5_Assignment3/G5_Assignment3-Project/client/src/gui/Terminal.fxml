@@ -1,171 +1,148 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.PasswordField?>
-<?import javafx.scene.control.Separator?>
-<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.*?>
 <?import javafx.scene.effect.DropShadow?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.TilePane?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane fx:id="terminalRoot" maxHeight="-Infinity"
-	maxWidth="-Infinity" minHeight="600.0" minWidth="900.0"
-	style="-fx-background-color: #ecf0f1;"
-	xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-	fx:controller="gui.Terminal_GUI">
+<BorderPane fx:id="terminalRoot" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="600.0" minWidth="900.0" prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #ecf0f1;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.Terminal_GUI">
+   <top>
+      <VBox alignment="CENTER" BorderPane.alignment="CENTER">
+         <padding><Insets bottom="10.0" top="20.0" /></padding>
+         <children>
+            <Label text="Terminal" textFill="#2c3e50"><font><Font name="Segoe UI Light" size="48.0" /></font></Label>
+            <Separator maxWidth="200.0" />
+         </children>
+      </VBox>
+   </top>
+   <center>
+      <StackPane fx:id="mainStack" BorderPane.alignment="CENTER">
+         <children>
+            <AnchorPane fx:id="welcomeView">
+               <children>
+                  <VBox alignment="CENTER" spacing="25.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                     <children>
+                        <Label text="Welcome" textFill="#2c3e50"><font><Font name="Segoe UI Bold" size="32.0" /></font></Label>
+                        <VBox alignment="CENTER" maxWidth="350.0" spacing="15.0" style="-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 15;">
+                           <effect><DropShadow color="#0000001a" radius="10" /></effect>
+                           <children>
+                              <Label text="Subscriber Login" textFill="#34495e"><font><Font name="Segoe UI Bold" size="24.0" /></font></Label>
+                              <TextField fx:id="welcomeUserField" promptText="Username" />
+                              <PasswordField fx:id="welcomePassField" promptText="Password" />
+                              <Button fx:id="btnWelcomeLogin" maxWidth="Infinity" style="-fx-background-color: #34495e; -fx-text-fill: white; -fx-cursor: hand;" text="Login" />
+                              <Label fx:id="welcomeErrorLabel" textFill="#e74c3c" visible="false"><font><Font size="10.0" /></font></Label>
+                           </children>
+                        </VBox>
+                        <Button fx:id="btnContinueAsGuest" style="-fx-background-color: transparent; -fx-text-fill: #2980b9; -fx-underline: true; -fx-cursor: hand;" text="Continue as Guest (No Subscription)"><font><Font size="16.0" /></font></Button>
+                     </children>
+                  </VBox>
+                  <Label fx:id="lblScanCode" style="-fx-cursor: hand;" text="SCAN CODE" textFill="#2980b9" AnchorPane.bottomAnchor="20.0" AnchorPane.rightAnchor="30.0"><font><Font name="Segoe UI Bold" size="14.0" /></font></Label>
+               </children>
+            </AnchorPane>
+            
+            <VBox fx:id="terminalView" alignment="TOP_CENTER" spacing="20.0" visible="false">
+               <padding><Insets top="20.0" /></padding>
+               <children>
+                  <Label fx:id="lblUserGreeting" text="Please choose an action" textFill="#34495e"><font><Font name="Segoe UI Semibold" size="24.0" /></font></Label>
+                  <HBox alignment="CENTER" spacing="15.0">
+                     <children>
+                        <VBox alignment="CENTER" spacing="5.0">
+                           <children>
+                              <Label text="I have reservation" textFill="#7f8c8d"><font><Font name="Segoe UI Bold" size="12.0" /></font></Label>
+                              <Button fx:id="btnCheckIn" minHeight="100.0" minWidth="160.0" style="-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand;" text="Check IN" textFill="#27ae60" wrapText="true"><font><Font name="Segoe UI Bold" size="18.0" /></font><effect><DropShadow color="#0000001a" radius="5" /></effect></Button>
+                           </children>
+                        </VBox>
+                        <VBox alignment="CENTER" spacing="5.0">
+                           <children>
+                              <Label text="Don't have reservation?" textFill="#7f8c8d"><font><Font name="Segoe UI Bold" size="12.0" /></font></Label>
+                              <Button fx:id="btnInstantBooking" minHeight="100.0" minWidth="160.0" style="-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand;" text="Instant Booking" textFill="#e67e22" wrapText="true"><font><Font name="Segoe UI Bold" size="18.0" /></font><effect><DropShadow color="#0000001a" radius="5" /></effect></Button>
+                           </children>
+                        </VBox>
+                        <VBox alignment="CENTER" spacing="5.0">
+                           <children>
+                              <Label text="Bill payment" textFill="#7f8c8d"><font><Font name="Segoe UI Bold" size="12.0" /></font></Label>
+                              <Button fx:id="btnPayBill" minHeight="100.0" minWidth="160.0" style="-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand;" text="Pay Bill" textFill="#2980b9" wrapText="true"><font><Font name="Segoe UI Bold" size="18.0" /></font><effect><DropShadow color="#0000001a" radius="5" /></effect></Button>
+                           </children>
+                        </VBox>
+                        <VBox alignment="CENTER" spacing="5.0">
+                           <children>
+                              <Label text="I regreted" textFill="#7f8c8d"><font><Font name="Segoe UI Bold" size="12.0" /></font></Label>
+                              <Button fx:id="btnCancelRes" minHeight="100.0" minWidth="160.0" style="-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand;" text="Cancel Res / Waitlist" textFill="#c0392b" wrapText="true"><font><Font name="Segoe UI Bold" size="16.0" /></font><effect><DropShadow color="#0000001a" radius="5" /></effect></Button>
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
 
-	<top>
-		<VBox alignment="CENTER">
-			<padding>
-				<Insets bottom="20.0" top="30.0" />
-			</padding>
-			<Label text="Terminal" textFill="#2c3e50">
-				<font>
-					<Font name="Segoe UI Light" size="58.0" />
-				</font>
-			</Label>
-			<Separator maxWidth="200.0" />
-		</VBox>
-	</top>
+                  <StackPane fx:id="actionFormsContainer" maxWidth="700.0" minHeight="300.0" style="-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 20;">
+                     <effect><DropShadow color="#0000001a" radius="10" /></effect>
+                     <children>
+                        <VBox fx:id="checkInForm" alignment="CENTER" spacing="15.0" visible="false">
+                           <children>
+                              <Label text="Enter Confirmation Code for Check-In" textFill="#2c3e50"><font><Font name="Segoe UI Bold" size="16.0" /></font></Label>
+                              <TextField fx:id="checkInCodeField" maxWidth="250.0" promptText="e.g. 12345" />
+                              <Button fx:id="btnSubmitCheckIn" style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-cursor: hand;" text="Complete Check-In" />
+                              <Label fx:id="checkInStatusLabel" textAlignment="CENTER" wrapText="true" />
+                           </children>
+                        </VBox>
 
-	<center>
-		<TilePane alignment="CENTER" hgap="30.0" vgap="30.0"
-			prefColumns="3" prefTileHeight="220.0" prefTileWidth="260.0"
-			BorderPane.alignment="CENTER">
-			<padding>
-				<Insets bottom="40.0" left="40.0" right="40.0" top="10.0" />
-			</padding>
+                        <VBox fx:id="instantForm" alignment="CENTER" spacing="10.0" visible="false">
+                           <children>
+                              <Label text="Instant Booking Details" textFill="#2c3e50"><font><Font name="Segoe UI Bold" size="16.0" /></font></Label>
+                              <Label text="Please provide at least one: Phone or Email" textFill="#7f8c8d"><font><Font name="Segoe UI Italic" size="12.0" /></font></Label>
+                              <GridPane hgap="10.0" vgap="10.0" alignment="CENTER">
+                                 <children>
+                                    <Label text="Name:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                    <TextField fx:id="instNameField" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                    <Label text="Diners:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                    <Spinner fx:id="instDinersSpinner" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                    <Label text="Phone:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                                    <TextField fx:id="instPhoneField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                    <Label text="Email:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                                    <TextField fx:id="instEmailField" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                 </children>
+                              </GridPane>
+                              <Button fx:id="btnSubmitInstant" style="-fx-background-color: #e67e22; -fx-text-fill: white; -fx-cursor: hand;" text="Book Now" />
+                              <Label fx:id="instStatusLabel" textAlignment="CENTER" wrapText="true" />
+                           </children>
+                        </VBox>
 
-			<Button fx:id="btnJoinWaitlist"
-				maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
-				mnemonicParsing="false"
-				style="-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand;"
-				text="Check IN (Join Waitlist)" textFill="#27ae60">
-				<font>
-					<Font name="Segoe UI" size="20.0" />
-				</font>
-				<effect>
-					<DropShadow color="#0000001a" height="10.0" radius="4.5"
-						width="10.0" />
-				</effect>
-			</Button>
+                        <VBox fx:id="payBillForm" alignment="CENTER" spacing="15.0" visible="false">
+                           <children>
+                              <Label text="Enter Code to View Bill" textFill="#2c3e50"><font><Font name="Segoe UI Bold" size="16.0" /></font></Label>
+                              <TextField fx:id="payBillCodeField" maxWidth="250.0" promptText="e.g. 12345" />
+                              <VBox fx:id="billDetailsBox" alignment="CENTER" spacing="5.0" visible="false">
+                                 <children>
+                                    <Label fx:id="lblBillInfo" text="Total: $150.00" />
+                                    <Button fx:id="btnGoToPayment" style="-fx-background-color: #2980b9; -fx-text-fill: white; -fx-cursor: hand;" text="Pay with Credit Card" />
+                                 </children>
+                              </VBox>
+                              <Button fx:id="btnFetchBill" style="-fx-cursor: hand;" text="View Bill" />
+                              <Label fx:id="payBillStatusLabel" textAlignment="CENTER" wrapText="true" />
+                           </children>
+                        </VBox>
 
-			<VBox alignment="CENTER" maxHeight="1.7976931348623157E308"
-				maxWidth="1.7976931348623157E308"
-				style="-fx-background-color: white; -fx-background-radius: 10;">
-				<effect>
-					<DropShadow color="#0000001a" height="10.0" radius="4.5"
-						width="10.0" />
-				</effect>
-				<children>
-					<Label text="[ Scan Code ]" textFill="#7f8c8d">
-						<font>
-							<Font name="Segoe UI Bold" size="18.0" />
-						</font>
-					</Label>
-					<Label text="Simulate Tag Reader" textFill="#bdc3c7">
-						<font>
-							<Font size="12.0" />
-						</font>
-					</Label>
-				</children>
-			</VBox>
-
-			<Button fx:id="btnPayBill" maxHeight="1.7976931348623157E308"
-				maxWidth="1.7976931348623157E308" mnemonicParsing="false"
-				style="-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand;"
-				text="Pay Bill" textFill="#2980b9">
-				<font>
-					<Font name="Segoe UI" size="20.0" />
-				</font>
-				<effect>
-					<DropShadow color="#0000001a" height="10.0" radius="4.5"
-						width="10.0" />
-				</effect>
-			</Button>
-
-			<Button fx:id="btnLeaveWaitlist"
-				maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
-				mnemonicParsing="false"
-				style="-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand;"
-				text="Leave Waitlist" textFill="#e67e22">
-				<font>
-					<Font name="Segoe UI" size="20.0" />
-				</font>
-				<effect>
-					<DropShadow color="#0000001a" height="10.0" radius="4.5"
-						width="10.0" />
-				</effect>
-			</Button>
-
-			<VBox alignment="CENTER" maxHeight="1.7976931348623157E308"
-				maxWidth="1.7976931348623157E308" spacing="10.0"
-				style="-fx-background-color: white; -fx-background-radius: 10;">
-				<effect>
-					<DropShadow color="#0000001a" height="10.0" radius="4.5"
-						width="10.0" />
-				</effect>
-				<padding>
-					<Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
-				</padding>
-				<children>
-					<Label text="Subscriber Login" textFill="#2c3e50">
-						<font>
-							<Font name="Segoe UI Bold" size="16.0" />
-						</font>
-					</Label>
-					<TextField fx:id="termUserField" promptText="Username"
-						style="-fx-background-radius: 5;" />
-					<PasswordField fx:id="termPassField"
-						promptText="Password" style="-fx-background-radius: 5;" />
-					<Button fx:id="termLoginBtn"
-						maxWidth="1.7976931348623157E308" mnemonicParsing="false"
-						style="-fx-background-color: #34495e; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;"
-						text="Login">
-						<font>
-							<Font name="Segoe UI Bold" size="12.0" />
-						</font>
-					</Button>
-					<Label fx:id="termErrorLabel" text="Error Message"
-						textFill="#e74c3c" visible="false">
-						<font>
-							<Font size="10.0" />
-						</font>
-					</Label>
-				</children>
-			</VBox>
-
-			<Button fx:id="btnCancelRes"
-				maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
-				mnemonicParsing="false"
-				style="-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand;"
-				text="Cancel Reservation" textFill="#c0392b">
-				<font>
-					<Font name="Segoe UI" size="20.0" />
-				</font>
-				<effect>
-					<DropShadow color="#0000001a" height="10.0" radius="4.5"
-						width="10.0" />
-				</effect>
-			</Button>
-
-		</TilePane>
-	</center>
-
-	<bottom>
-		<HBox alignment="CENTER_LEFT">
-			<padding>
-				<Insets bottom="20" left="20" right="20" top="20" />
-			</padding>
-			<Button fx:id="backBtn"
-				style="-fx-background-color: transparent; -fx-text-fill: #7f8c8d; -fx-underline: true; -fx-cursor: hand;"
-				text="&lt; Back to Main" />
-		</HBox>
-	</bottom>
-
+                        <VBox fx:id="cancelForm" alignment="CENTER" spacing="15.0" visible="false">
+                           <children>
+                              <Label text="Enter Code to Cancel Reservation" textFill="#2c3e50"><font><Font name="Segoe UI Bold" size="16.0" /></font></Label>
+                              <TextField fx:id="cancelCodeField" maxWidth="250.0" promptText="e.g. 12345" />
+                              <Button fx:id="btnSubmitCancel" style="-fx-background-color: #c0392b; -fx-text-fill: white; -fx-cursor: hand;" text="Confirm Cancellation" />
+                              <Label fx:id="cancelStatusLabel" textAlignment="CENTER" wrapText="true" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </StackPane>
+               </children>
+            </VBox>
+         </children>
+      </StackPane>
+   </center>
+   <bottom>
+      <HBox alignment="CENTER_LEFT" BorderPane.alignment="CENTER">
+         <padding><Insets bottom="20" left="20" right="20" top="20" /></padding>
+         <children>
+            <Button fx:id="backBtn" style="-fx-background-color: transparent; -fx-text-fill: #7f8c8d; -fx-underline: true; -fx-cursor: hand;" text="Return to Home Screen" />
+         </children>
+      </HBox>
+   </bottom>
 </BorderPane>

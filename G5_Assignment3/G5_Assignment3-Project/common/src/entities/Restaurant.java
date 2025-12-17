@@ -1,6 +1,5 @@
 package entities;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -11,7 +10,7 @@ public class Restaurant {
 
 	// The single instance of the class
 	private static Restaurant instance;
-
+	private static int biggestTableSize;
 	private int id;
 	private String name;
 
@@ -21,10 +20,6 @@ public class Restaurant {
 	// --- Private Constructor (Singleton) ---
 	private Restaurant() {
 		this.name = "Bistro"; // Default name
-		this.tables = new ArrayList<>();
-		this.openingHours = new Opening_Hours();
-		//צריך לאתחל נתונים: לייבא הכל מהד"ב אם קיים, גם את כל השולחנות, וגם את השעות פעילות
-		//במקום 2 השורות שלמעלה, עליי
 	}
 
 	// --- Static Accessor Method ---
@@ -85,5 +80,13 @@ public class Restaurant {
 	@Override
 	public String toString() {
 		return "Restaurant: " + name + " [Total Tables: " + tables.size() + "]";
+	}
+
+	public static int getBiggestTableSize() {
+		return biggestTableSize;
+	}
+
+	public static void setBiggestTableSize(int biggestTableSize) {
+		Restaurant.biggestTableSize = biggestTableSize;
 	}
 }

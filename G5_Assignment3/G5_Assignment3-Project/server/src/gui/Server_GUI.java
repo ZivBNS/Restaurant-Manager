@@ -19,6 +19,10 @@ import javafx.stage.WindowEvent;
 import java.io.IOException;
 
 import Data.DB_Controller;
+import Data.OpeningHours_Repository;
+import Data.Reservation_Repository;
+import Data.Table_Repository;
+import Data.Waitlist_Repository;
 
 public class Server_GUI extends Application {
 
@@ -117,6 +121,11 @@ public class Server_GUI extends Application {
 			appendLog("Error: Could not listen on port " + port);
 			serverController = null;
 		}
+		
+		OpeningHours_Repository.getInstance().init();
+		Waitlist_Repository.getInstance().init();
+		Reservation_Repository.getInstance().init();
+		Table_Repository.getInstance().init();
 	}
 
 	public void appendLog(String str) {
