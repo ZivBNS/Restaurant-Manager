@@ -5,9 +5,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.mysql.cj.xdevapi.Table;
-
 import entities.Restaurant_Table;
 
 public class DB_Controller {
@@ -18,8 +15,8 @@ public class DB_Controller {
 	// connection started when first time get help from db and ends when server is disconnecting
 	private DB_Controller() {
 		try {
-			//con = DriverManager.getConnection("jdbc:mysql://localhost:3306/bistro?allowLoadLocalInfile=true&serverTimezone=Asia/Jerusalem&useSSL=false", "root", "zaqwsxcde321");
-			con = DriverManager.getConnection("jdbc:mysql://localhost:3306/bistro?allowLoadLocalInfile=true&serverTimezone=Asia/Jerusalem&useSSL=false", "root", "212009666");
+			con = DriverManager.getConnection("jdbc:mysql://localhost:3306/bistro?allowLoadLocalInfile=true&serverTimezone=Asia/Jerusalem&useSSL=false", "root", "zaqwsxcde321");
+			//con = DriverManager.getConnection("jdbc:mysql://localhost:3306/bistro?allowLoadLocalInfile=true&serverTimezone=Asia/Jerusalem&useSSL=false", "root", "212009666");
 			System.out.println("Connection Succeed");
 		} catch (SQLException e) {
 			e.printStackTrace();

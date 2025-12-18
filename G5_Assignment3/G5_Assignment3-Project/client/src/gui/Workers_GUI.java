@@ -69,7 +69,26 @@ public class Workers_GUI {
         btnManageOrders.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                System.out.println("Go to: Orders Screen");
+                /**
+                 * Navigates the employee to the Order Management Dashboard.
+                 * Loads the ManageOrders.fxml created for administrative CRUD operations.
+                 */
+                System.out.println("Go to: Orders Management Dashboard");
+                try {
+                    // Load the FXML for the management panel
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/ManageOrders.fxml"));
+                    Parent root = loader.load();
+
+                    // Retrieve the current stage from the button and switch scenes
+                    Stage stage = (Stage) btnManageOrders.getScene().getWindow();
+                    stage.setScene(new Scene(root));
+                    stage.setTitle("Employee Dashboard - Order Management");
+                    stage.show();
+                    
+                } catch (IOException e) {
+                    System.err.println("Navigation Error: Failed to load ManageOrders.fxml");
+                    e.printStackTrace();
+                }
             }
         });
 

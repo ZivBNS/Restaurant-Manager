@@ -1,67 +1,57 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.shape.Line?>
+<?import javafx.scene.effect.DropShadow?>
 
-<AnchorPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="gui.CasualCustomer_GUI"
-            prefWidth="400" prefHeight="500"
-            style="-fx-background-color: #f7f7f7;">
+<AnchorPane prefHeight="600.0" prefWidth="450.0" 
+            style="-fx-background-color: linear-gradient(to bottom right, #f8f9fa, #e9ecef);" 
+            xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" 
+            fx:controller="gui.CasualCustomer_GUI">
 
     <children>
-
-        <!-- Centered Page Title -->
-        <Label text="Casual Customer"
-               AnchorPane.topAnchor="20"
-               AnchorPane.leftAnchor="0"
-               AnchorPane.rightAnchor="0"
-               alignment="CENTER"
-               style="-fx-font-size: 26px;
-                      -fx-font-weight: bold;
-                      -fx-text-fill: #2c3e50;" />
-
-        <!-- Card Container -->
-        <VBox spacing="18"
-              AnchorPane.topAnchor="70"
-              AnchorPane.leftAnchor="40"
-              AnchorPane.rightAnchor="40"
-              style="
-                  -fx-background-color: white;
-                  -fx-background-radius: 16;
-                  -fx-padding: 30;
-                  -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 20, 0, 0, 4);
-              ">
-
-            <!-- Menu Header (Guest Login style) -->
-            <VBox spacing="10" alignment="CENTER">
-                <Label text="Menu"
-                       style="-fx-font-size: 26px;
-                              -fx-font-weight: 600;
-                              -fx-text-fill: #2c3e50;" />
-                <Separator prefWidth="200" opacity="0.6"/>
-            </VBox>
-
-            <!-- Menu Buttons -->
-            <Button text="New Order"  prefWidth="280" onAction="#openNewOrder"/>
-            <Button text="View Order" prefWidth="280" onAction="#onViewOrderClicked"/>
-            <Button text="Cancel Order" prefWidth="280" onAction="#onCancelOrderClicked"/>
-            <Button text="Edit Order" prefWidth="280" onAction="#onEditOrderClicked"/>
-
-            <Button text="Bill Payment" prefWidth="280" onAction="#onBillPaymentClicked"/>
-
-            <!-- Back Button -->
-            <Button text="Back"
-                    prefWidth="80"
-                    style="-fx-background-color: #2980b9; -fx-text-fill: white;"
-                    onAction="#onBackClicked"/>
-
+        <VBox alignment="CENTER" spacing="8" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="40">
+            <Label text="Bistro Service" 
+                   style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #2c3e50; -fx-font-family: 'Segoe UI';" />
+            <Label text="How can we help you today?" 
+                   style="-fx-font-size: 14px; -fx-text-fill: #7f8c8d;" />
+            <Region prefHeight="10" />
         </VBox>
 
+        <VBox spacing="20" alignment="CENTER" 
+              AnchorPane.leftAnchor="40" AnchorPane.rightAnchor="40" AnchorPane.topAnchor="150"
+              style="-fx-background-color: white; -fx-background-radius: 20; -fx-padding: 40;">
+            
+            <effect>
+                <DropShadow color="rgba(0,0,0,0.1)" radius="15" offsetX="0" offsetY="5" />
+            </effect>
+
+            <Button fx:id="btnNewOrder" text="➕ Create New Reservation" 
+                    onAction="#openNewOrder" prefHeight="55.0" prefWidth="300.0"
+                    style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-background-radius: 12; -fx-cursor: hand;" />
+
+            <Button fx:id="btnViewOrders" text="📅 View &amp; Edit My Orders" 
+                    onAction="#onViewReservations" prefHeight="55.0" prefWidth="300.0"
+                    style="-fx-background-color: #2980b9; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-background-radius: 12; -fx-cursor: hand;" />
+
+            <Button fx:id="btnPayBill" text="💳 Pay My Bill" 
+                    onAction="#onBillPaymentClicked" prefHeight="55.0" prefWidth="300.0"
+                    style="-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-background-radius: 12; -fx-cursor: hand;" />
+
+            <Separator prefWidth="200.0">
+                <padding>
+                    <Insets top="10" bottom="10" />
+                </padding>
+            </Separator>
+
+            <Button text="Sign Out" onAction="#onBackClicked"
+                    style="-fx-background-color: transparent; -fx-text-fill: #e74c3c; -fx-font-weight: bold; -fx-cursor: hand;" />
+        </VBox>
+
+        <Label text="Bistro Management System v1.0" 
+               AnchorPane.bottomAnchor="20" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" 
+               alignment="CENTER" style="-fx-font-size: 10px; -fx-text-fill: #bdc3c7;" />
     </children>
 </AnchorPane>
-
-

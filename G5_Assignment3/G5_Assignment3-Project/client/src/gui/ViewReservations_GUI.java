@@ -1,0 +1,309 @@
+package gui;
+
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+import entities.Opening_Hours;
+import entities.Opening_Hours.TimeRange;
+import entities.Reservation;
+import entities.Restaurant;
+import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.Stage;
+import javafx.util.Callback;
+import messages.Message;
+import messages.MessageType;
+
+/**
+ * Controller for viewing and managing user reservations. 
+ * Provides dynamic editing with local validation and real-time availability checks.
+ */
+public class ViewReservations_GUI {
+	public static ViewReservations_GUI instance;
+
+	@FXML private TableView<Reservation> reservationsTable;
+	@FXML private TableColumn<Reservation, Integer> colCode;
+	@FXML private TableColumn<Reservation, String> colDate, colTime;
+	@FXML private TableColumn<Reservation, Integer> colGuests;
+
+	@FXML private DatePicker editDatePicker;
+	@FXML private ComboBox<String> editTimeCombo;
+	@FXML private TextField editGuestsField;
+
+	private ObservableList<Reservation> masterData = FXCollections.observableArrayList();
+	private final DateTimeFormatter displayFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+
+	@FXML
+	public void initialize() {
+		instance = this;
+		setupTable();
+		restrictDatePickerRange();
+
+		// Request opening hours from the server
+		ConnectToServer_GUI.clientController.sendGetOpeningHoursRequest();
+		refreshTableData();
+
+		// Listener for table selection using Anonymous Inner Class
+		reservationsTable.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Reservation>() {
+			@Override
+			public void changed(ObservableValue<? extends Reservation> obs, Reservation oldVal, Reservation newVal) {
+				if (newVal != null) {
+					populateEditFields(newVal);
+				}
+			}
+		});
+
+		// Listener for DatePicker changes to update available slots
+		editDatePicker.valueProperty().addListener(new ChangeListener<LocalDate>() {
+			@Override
+			public void changed(ObservableValue<? extends LocalDate> obs, LocalDate oldVal, LocalDate newVal) {
+				if (newVal != null) {
+					// Load hours without a specific selection (for manual date change)
+					loadDynamicHours(newVal, null);
+				}
+			}
+		});
+	}
+
+	/**
+	 * Maps TableView columns to Reservation entity properties.
+	 */
+	private void setupTable() {
+		reservationsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
+		colCode.setCellValueFactory(new PropertyValueFactory<>("confirmationCode"));
+		colDate.setCellValueFactory(new PropertyValueFactory<>("formattedDate"));
+		colTime.setCellValueFactory(new PropertyValueFactory<>("formattedTime"));
+		colGuests.setCellValueFactory(new PropertyValueFactory<>("numberOfDiners"));
+		reservationsTable.setItems(masterData);
+	}
+
+	/**
+	 * Populates the hours ComboBox based on DB hours.
+	 * Fixed: Now accepts an optional timeToSelect to handle selection during Platform.runLater cycle.
+	 */
+	public void loadDynamicHours(final LocalDate selectedDate, final String timeToSelect) {
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				editTimeCombo.getItems().clear();
+				Opening_Hours oh = Restaurant.getInstance().getOpeningHours();
+
+				if (oh == null) {
+					ConnectToServer_GUI.clientController.sendGetOpeningHoursRequest();
+					return;
+				}
+
+				LocalTime open = null, close = null;
+				if (oh.getExceptionSchedule().containsKey(selectedDate)) {
+					TimeRange range = oh.getExceptionSchedule().get(selectedDate);
+					if (range != null) { open = range.getOpenTime(); close = range.getCloseTime(); }
+				} else {
+					DayOfWeek day = selectedDate.getDayOfWeek();
+					if (oh.getRegularSchedule().containsKey(day)) {
+						TimeRange range = oh.getRegularSchedule().get(day);
+						open = range.getOpenTime(); close = range.getCloseTime();
+					}
+				}
+
+				if (open != null && close != null) {
+					LocalTime firstAvailable = open;
+					LocalTime lastSlot = close.minusHours(2);
+					boolean isMidnightCrossing = !close.isAfter(open);
+
+					if (selectedDate.equals(LocalDate.now())) {
+						LocalTime bufferTime = roundToNext30Min(LocalTime.now().plusHours(1));
+						boolean skip = isMidnightCrossing ? (bufferTime.isAfter(open) || bufferTime.isBefore(close)) : bufferTime.isAfter(open);
+						if (skip) firstAvailable = bufferTime;
+					}
+
+					LocalTime t = firstAvailable;
+					int safety = 0;
+					while (safety < 48) {
+						boolean isValid = isMidnightCrossing ? (!t.isBefore(open) || !t.isAfter(lastSlot)) : (!t.isBefore(open) && !t.isAfter(lastSlot));
+						if (isValid) {
+							editTimeCombo.getItems().add(String.format("%02d:%02d", t.getHour(), t.getMinute()));
+						} else break;
+						if (t.equals(lastSlot)) break;
+						t = t.plusMinutes(30);
+						safety++;
+					}
+					
+					// Selection fix: Set value only after items are re-added
+					if (timeToSelect != null) {
+						editTimeCombo.setValue(timeToSelect);
+					}
+				}
+			}
+		});
+	}
+
+	private LocalTime roundToNext30Min(LocalTime time) {
+		int min = time.getMinute();
+		if (min == 0) return time.withSecond(0).withNano(0);
+		if (min <= 30) return time.withMinute(30).withSecond(0).withNano(0);
+		return time.plusHours(1).withMinute(0).withSecond(0).withNano(0);
+	}
+
+	/**
+	 * Populates edit fields when an order is selected.
+	 */
+	private void populateEditFields(Reservation res) {
+		editDatePicker.setValue(res.getOrderStartTime().toLocalDate());
+		String timeStr = String.format("%02d:%02d", res.getOrderStartTime().getHour(), res.getOrderStartTime().getMinute());
+		
+		// Load hours and pass the specific time to select
+		loadDynamicHours(res.getOrderStartTime().toLocalDate(), timeStr);
+		editGuestsField.setText(String.valueOf(res.getNumberOfDiners()));
+	}
+
+	/**
+	 * Validates input and sends an update request to the server.
+	 */
+	@FXML
+	void onUpdateClicked(ActionEvent event) {
+		Reservation selected = reservationsTable.getSelectionModel().getSelectedItem();
+		if (selected == null) return;
+
+		// 1. Validation: Check empty fields
+		if (editDatePicker.getValue() == null || editTimeCombo.getValue() == null || editGuestsField.getText().trim().isEmpty()) {
+			showErrorAlert("Input Error", "All fields are required for the update.");
+			return;
+		}
+
+		int diners;
+		try {
+			// 2. Validation: Numeric check (no letters)
+			diners = Integer.parseInt(editGuestsField.getText().trim());
+		} catch (NumberFormatException e) {
+			showErrorAlert("Input Error", "Number of guests must be a valid number.");
+			return;
+		}
+
+		// 3. Validation: Minimum 1 guest
+		if (diners < 1) {
+			showErrorAlert("Input Error", "At least one diner is required.");
+			return;
+		}
+
+		try {
+			LocalTime time = LocalTime.parse(editTimeCombo.getValue());
+			LocalDateTime newStart = LocalDateTime.of(editDatePicker.getValue(), time);
+
+			selected.setOrderStartTime(newStart);
+			selected.setOrderEndTime(newStart.plusHours(2));
+			selected.setNumberOfDiners(diners);
+
+			Message msg = new Message(MessageType.UPDATE_RESERVATION_REQUEST, selected);
+			ConnectToServer_GUI.clientController.sendComplexObject(msg);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Helper method to display error alerts.
+	 */
+	private void showErrorAlert(String title, String content) {
+		Alert alert = new Alert(Alert.AlertType.WARNING);
+		alert.setTitle(title);
+		alert.setHeaderText(null);
+		alert.setContentText(content);
+		alert.showAndWait();
+	}
+
+	public void showNoTableAlert(final LocalDateTime suggested) {
+		if (suggested == null) {
+			showErrorAlert("Fully Booked", "No tables available for the rest of the day.");
+			return;
+		}
+
+		Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+		alert.setTitle("Availability Conflict");
+		alert.setContentText("Nearest available time: " + suggested.format(displayFormatter) + ".\nUpdate to this time?");
+
+		alert.showAndWait().ifPresent(new java.util.function.Consumer<ButtonType>() {
+			@Override
+			public void accept(ButtonType response) {
+				if (response == ButtonType.OK) {
+					editDatePicker.setValue(suggested.toLocalDate());
+					loadDynamicHours(suggested.toLocalDate(), String.format("%02d:%02d", suggested.getHour(), suggested.getMinute()));
+					onUpdateClicked(null);
+				}
+			}
+		});
+	}
+
+	public void showSuccessAlert() {
+		Alert alert = new Alert(Alert.AlertType.INFORMATION, "Reservation updated successfully!", ButtonType.OK);
+		alert.showAndWait();
+	}
+
+	private void restrictDatePickerRange() {
+		final LocalDate minDate = LocalDate.now();
+		final LocalDate maxDate = LocalDate.now().plusMonths(1);
+		editDatePicker.setDayCellFactory(new Callback<DatePicker, DateCell>() {
+			@Override
+			public DateCell call(final DatePicker datePicker) {
+				return new DateCell() {
+					@Override
+					public void updateItem(LocalDate item, boolean empty) {
+						super.updateItem(item, empty);
+						if (item != null && (item.isBefore(minDate) || item.isAfter(maxDate))) {
+							setDisable(true);
+							setStyle("-fx-background-color: #eeeeee;");
+						}
+					}
+				};
+			}
+		});
+	}
+
+	private void refreshTableData() {
+		Object id = (User_Session.getLoggedInUser() != null) ? User_Session.getLoggedInUser() : User_Session.getCasualPhone();
+		ConnectToServer_GUI.clientController.sendGetReservationsRequest(id);
+	}
+
+	@FXML
+	void onDeleteClicked(ActionEvent event) {
+		final Reservation selected = reservationsTable.getSelectionModel().getSelectedItem();
+		if (selected == null) return;
+		Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Confirm cancellation?");
+		alert.showAndWait().ifPresent(new java.util.function.Consumer<ButtonType>() {
+			@Override
+			public void accept(ButtonType r) {
+				if (r == ButtonType.OK) {
+					Message msg = new Message(MessageType.CANCEL_RESERVATION, selected.getId());
+					ConnectToServer_GUI.clientController.sendComplexObject(msg);
+				}
+			}
+		});
+	}
+
+	@FXML
+	void onBackClicked(ActionEvent event) {
+		try {
+			Parent root = FXMLLoader.load(getClass().getResource("/gui/CasualCustomer.fxml"));
+			Stage stage = (Stage) reservationsTable.getScene().getWindow();
+			stage.setScene(new Scene(root));
+		} catch (Exception e) { e.printStackTrace(); }
+	}
+
+	public void updateTable(List<Reservation> list) {
+		masterData.setAll(list);
+	}
+}

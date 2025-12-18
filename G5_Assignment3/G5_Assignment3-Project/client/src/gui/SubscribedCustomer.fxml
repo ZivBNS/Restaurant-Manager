@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.effect.DropShadow?>
+
+<AnchorPane prefHeight="650.0" prefWidth="500.0" 
+            style="-fx-background-color: linear-gradient(to bottom right, #f8f9fa, #dfe6e9);" 
+            xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" 
+            fx:controller="gui.SubscribedCustomer_GUI">
+
+    <children>
+        <VBox alignment="CENTER" spacing="8" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="30">
+            <Label fx:id="welcomeLabel" text="Welcome Back, Subscriber!" 
+                   style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" />
+            <Label text="Bistro Member Dashboard" 
+                   style="-fx-font-size: 14px; -fx-text-fill: #95a5a6;" />
+        </VBox>
+
+        <VBox spacing="15" alignment="CENTER" 
+              AnchorPane.leftAnchor="40" AnchorPane.rightAnchor="40" AnchorPane.topAnchor="130"
+              style="-fx-background-color: white; -fx-background-radius: 20; -fx-padding: 35;">
+            
+            <effect>
+                <DropShadow color="rgba(0,0,0,0.12)" radius="20" offsetX="0" offsetY="8" />
+            </effect>
+
+            <Button onAction="#onNewReservation" prefHeight="55.0" prefWidth="320.0"
+                    text="➕ New Reservation" 
+                    style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-background-radius: 12; -fx-cursor: hand;" />
+
+            <Button onAction="#onManageReservations" prefHeight="55.0" prefWidth="320.0"
+                    text="📅 Manage My Reservations" 
+                    style="-fx-background-color: #2980b9; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-background-radius: 12; -fx-cursor: hand;" />
+
+            <Button onAction="#onUpdateProfile" prefHeight="55.0" prefWidth="320.0"
+                    text="👤 Update Personal Details" 
+                    style="-fx-background-color: #8e44ad; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-background-radius: 12; -fx-cursor: hand;" />
+
+            <Button onAction="#onPayBill" prefHeight="55.0" prefWidth="320.0"
+                    text="💳 Pay My Bill" 
+                    style="-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-background-radius: 12; -fx-cursor: hand;" />
+
+            <Separator prefWidth="250.0">
+                <padding><Insets top="10" bottom="5" /></padding>
+            </Separator>
+
+            <Button text="Sign Out" onAction="#onLogout"
+                    style="-fx-background-color: transparent; -fx-text-fill: #e74c3c; -fx-font-weight: bold; -fx-cursor: hand;" />
+        </VBox>
+
+        <Label text="Bistro Member Services" 
+               AnchorPane.bottomAnchor="20" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" 
+               alignment="CENTER" style="-fx-font-size: 11px; -fx-text-fill: #bdc3c7;" />
+    </children>
+</AnchorPane>

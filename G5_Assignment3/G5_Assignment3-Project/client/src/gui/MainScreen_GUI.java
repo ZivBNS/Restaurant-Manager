@@ -1,6 +1,8 @@
 package gui;
 
 import java.io.IOException;
+
+import entities.Subscribed_Customer;
 import javafx.application.Platform; // Added for Platform.exit()
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -149,22 +151,96 @@ public class MainScreen_GUI {
         }
     }
     
+    /**
+     * Triggered when a guest clicks the login button.
+     * Validates the input and saves it to the static User_Session.
+     */
     @FXML
-	private void openGuestMenu(ActionEvent event) {
-	    try {
-	        FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/CasualCustomer.fxml"));
-	        Parent root = loader.load();
+    private void openGuestMenu(ActionEvent event) {
+        String contactInfo = guestContactField.getText().trim();
 
-	        // Get current window (Stage)
-	        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        if (contactInfo.isEmpty()) {
+            System.out.println("Error: Please enter a phone or email.");
+            return;
+        }
 
-	        // Replace the scene in the same window
-	        stage.setScene(new Scene(root));
-	        stage.setTitle("CasualCustomer");
-	        stage.show();
+        // 1. Save data to User_Session based on the selected RadioButton
+        if (radioPhone.isSelected()) {
+            User_Session.setCasualData(contactInfo, null);
+        } else {
+            User_Session.setCasualData(null, contactInfo);
+        }
 
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	    }
-	}
+        // 2. Proceed to the next screen
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/CasualCustomer.fxml"));
+            Parent root = loader.load();
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Casual Customer Menu");
+            stage.show();
+            
+            System.out.println("MainScreen: Casual Session Started: " + contactInfo);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    /**
+     * Triggered when a subscriber clicks the login button.
+     * Handles authentication and navigation to the Subscriber Dashboard.
+     */
+    @FXML
+    void onSubscriberLoginClick(ActionEvent event) {
+        String username = subUsernameField.getText().trim();
+        String password = subPasswordField.getText();
+
+        // 1. Basic Validation
+        if (username.isEmpty() || password.isEmpty()) {
+            subErrorLabel.setText("Please enter username and password.");
+            subErrorLabel.setVisible(true);
+            return;
+        }
+
+        System.out.println("Subscriber Login Attempt: " + username);
+
+        // --- PLACEHOLDER FOR SERVER VALIDATION ---
+        // TODO: Send login request to server (e.g., clientController.login(username, password))
+        // and wait for a response message from the server.
+        // For now, we bypass validation and proceed to the dashboard:
+        boolean loginSuccessful = true; 
+        // -----------------------------------------
+
+        if (loginSuccessful) {
+            try {
+            	
+                // 2. --------CHANGE THIS AFTER USER VALIDTION----------
+                 Subscribed_Customer mockUser = new Subscribed_Customer("User", "Test", "1234567890", "user@test.com", "a", "a");
+                 User_Session.setLoggedInUser(mockUser);
+
+                // 3. Load the Subscribed Customer Dashboard
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/SubscribedCustomer.fxml"));
+                Parent root = loader.load();
+                
+                // Get current window (Stage)
+                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                
+                // Switch scene
+                stage.setScene(new Scene(root));
+                stage.setTitle("Bistro - Member Dashboard");
+                stage.show();
+
+                System.out.println("Login Success: Switched to Subscriber Dashboard");
+
+            } catch (IOException e) {
+                System.err.println("Error loading SubscribedCustomer.fxml");
+                e.printStackTrace();
+                subErrorLabel.setText("System error loading dashboard.");
+                subErrorLabel.setVisible(true);
+            }
+        } else {
+            // Handle failed login
+            subErrorLabel.setText("Invalid username or password.");
+            subErrorLabel.setVisible(true);
+        }
+    }
 }

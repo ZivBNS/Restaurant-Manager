@@ -136,7 +136,7 @@
 				<Button fx:id="subLoginBtn" maxWidth="1.7976931348623157E308"
 					mnemonicParsing="false"
 					style="-fx-background-color: #2980b9; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;"
-					text="Login">
+					onAction="#onSubscriberLoginClick" text="Login">
 					<font>
 						<Font name="Segoe UI Bold" size="14.0" />
 					</font>

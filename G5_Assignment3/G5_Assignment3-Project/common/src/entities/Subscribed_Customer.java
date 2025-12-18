@@ -47,7 +47,7 @@ public class Subscribed_Customer extends Casual_Customer implements User {
 	}
 
 	public int getSubscriberCode() {
-		return subscriberCode++;
+		return subscriberCode;
 	}
 
 
@@ -59,11 +59,6 @@ public class Subscribed_Customer extends Casual_Customer implements User {
 		this.digitalCard = digitalCard;
 	}
 
-	@Override
-	public String toString() {
-		return "Subscribed_Customer [username=" + username + ", password=" + password + ", subscriberCode="
-				+ subscriberCode + ", digitalCard=" + digitalCard + "]";
-	}
 
 	public String getFirstName() {
 		return firstName;
@@ -80,6 +75,14 @@ public class Subscribed_Customer extends Casual_Customer implements User {
 	public void setLastName(String lastName) {
 		this.lastName = lastName;
 	}
+
+	@Override
+	public String toString() {
+		return "Subscribed_Customer [firstName=" + firstName + ", lastName=" + lastName + ", username=" + username
+				+ ", password=" + password + ", digitalCard=" + digitalCard + ", subscriberCode=" + subscriberCode
+				+ "]";
+	}
+	
 
 
 }

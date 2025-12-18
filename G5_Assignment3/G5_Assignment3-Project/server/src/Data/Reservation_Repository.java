@@ -1,264 +1,280 @@
 package Data;
 
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.ArrayList;
-
 import entities.Reservation;
-//this class uses single-tone
-public class Reservation_Repository /*implements Repository_Interface<Reservation>*/{
-	private DB_Controller db = DB_Controller.getInstance();
-    private static Reservation_Repository ReservationRepositoryInstance = new Reservation_Repository();
-    private List<Reservation> activeReservations=new ArrayList<Reservation>();
-	private Reservation_Repository(){
-	}
 
-	public static Reservation_Repository getInstance() {
-		return ReservationRepositoryInstance;
-	}
-	//puts the next confimiration code to generate for new reservations in Reservation class
-	public void init() {
-		int maxCode = 100000;
-		String query = "SELECT MAX(ConfirmationCode) FROM Reservations";
+/**
+ * Repository class for managing database operations for the 'reservations' table.
+ * Implements the Singleton pattern to ensure a single point of access to reservation data.
+ */
+public class Reservation_Repository {
 
-		try (Statement stmt = db.getConnection().createStatement();
-		     ResultSet rs = stmt.executeQuery(query)) {
-		    
-		    if (rs.next()) {
-		        maxCode = rs.getInt(1);
-		    }
-		    
-		    Reservation.setConfirmationCodeGenerator((maxCode!=0)? maxCode+1 : 100000);
-	        System.out.println("Successfully loaded next CONFIRMATION codeinto Reservation - confirmation code generator");
-	        System.out.println("next CONFIRMATION code: " + ((maxCode!=0)? maxCode+1 : 100000));
+    private DB_Controller db = DB_Controller.getInstance();
+    private static Reservation_Repository reservationRepositoryInstance = new Reservation_Repository();
+    private List<Reservation> activeReservations = new ArrayList<>();
+    
+    // Server-side counter for unique confirmation codes
+    private static int confirmationCodeGenerator = 100000;
 
-		} catch (SQLException e) {
-		    System.err.println("Database error while fetching MAX code: " + e.getMessage());
-		    e.printStackTrace();
-		}
-		
-		
-	    String sql = "SELECT * FROM Reservations WHERE DATE(ReservationStartTime) = CURDATE() AND ReservationStartTime > NOW() AND ActualArrivalTime IS NULL ORDER BY ReservationStartTime ASC";
+    /**
+     * Private constructor for Singleton pattern.
+     */
+    private Reservation_Repository() {}
 
-	    try (Statement stmt = db.getConnection().createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
-	        while (rs.next()) {
-	        	activeReservations.add(new Reservation(
-	                rs.getInt("ID"),
-	                (Integer) rs.getObject("UserID"),
-	                (Integer) rs.getObject("TableID"),
-	                rs.getString("Phone"),
-	                rs.getString("Email"),
-	                rs.getTimestamp("ReservationStartTime").toLocalDateTime(),
-	                rs.getTimestamp("ReservationEndTime").toLocalDateTime(),
-	                rs.getTimestamp("ActualArrivalTime") != null ? rs.getTimestamp("ActualArrivalTime").toLocalDateTime() : null,
-	                rs.getTimestamp("ActualDepartureTime") != null ? rs.getTimestamp("ActualDepartureTime").toLocalDateTime() : null,
-	                rs.getInt("NumberOfDiners"),
-	                rs.getInt("ConfirmationCode"),
-	                rs.getString("Status"),
-	                rs.getTimestamp("CreationTime").toLocalDateTime()
-	            ));
-	        }
-	        System.out.println("Successfully loaded all RESERVATIONS FOR TODAY into Reservation_Repository");
-	    } catch (SQLException e) {
-	        System.err.println("Database error: " + e.getMessage());
-	        e.printStackTrace();
-	    }		
-	}
-	/*
-	
-	@Override    //search id in table order, returns reservation from db if exist, otherwise null
-	public Reservation getById(int id) {
-		String sqlGet = "SELECT * FROM `Order` WHERE order_number = " + id;
-		return this.getOneOrderFromDb(sqlGet, id, "Id");
-	}
-	
-	
-				//search confirmation code in table order, returns reservation from db if exist, otherwise null
-	public Reservation getByCode(int confimrationCode) {
-		String sqlGet = "SELECT * FROM `Order` WHERE confirmation_code = " + confimrationCode;
-		return this.getOneOrderFromDb(sqlGet, confimrationCode, "Confirmation code");
-	}
+    /**
+     * @return The single instance of Reservation_Repository.
+     */
+    public static Reservation_Repository getInstance() {
+        return reservationRepositoryInstance;
+    }
 
-	
-				//search user id in table order, returns all reservations from db if exist as list, otherwise null
-	public List<Reservation> getByUserId(int userId) {
-		String sqlGet = "SELECT * FROM `Order` WHERE subscriber_id = " + userId;
-		List<Reservation> lst = getListOfOrdersFromDb(sqlGet, userId, "Subscriber ID");	
-		if (lst.isEmpty()) {
-			System.out.println("the Reservations with subscriber_id: "+ userId + " is not found!!");
-			return null;
-		}
-		return lst;
-	}
+    /**
+     * Initializes the repository by setting the next available confirmation code 
+     * and loading active reservations for the current day.
+     */
+    public void init() {
+        // 1. Fetch the maximum confirmation code currently in the DB
+        int maxCode = 100000;
+        String query = "SELECT MAX(ConfirmationCode) FROM reservations";
 
-				//these 3 functions are helping get orders from db.
-				//1st get sql statement and returns one reservation
-	private Reservation getOneOrderFromDb(String sqlGet,int key,String typeOfKey) {
-		List<Reservation> reservations = getListOfOrdersFromDb(sqlGet, key, typeOfKey);
-		if (reservations.isEmpty()) {
-			System.out.println("the Reservation with " + typeOfKey +": " + key + " is not found!!");
-			return null;
-		}
-		return reservations.get(0);
-	}
-	//2st get sql statement and returns list of reservations
-	private List<Reservation> getListOfOrdersFromDb(String sqlGet,int key,String typeOfKey) {
-		Statement stmt;
-		ResultSet rs;
-		try {
-			stmt = db.getConnection().createStatement();
-	        rs = stmt.executeQuery(sqlGet);
-	        return orderTranslator(rs);
-		} catch (SQLException e) {
-			e.printStackTrace();
-			System.out.println("has problem getting data from DB");
-			return null;
-		}
-	}
-	//3rd
-	private List<Reservation> orderTranslator(ResultSet rs) throws SQLException {
-		ArrayList<Reservation> reservations = new ArrayList<Reservation>();
-		while (rs.next()) {
-			int orderNumber = rs.getInt("order_number");
-        	Date orderDate = rs.getDate("order_date");
-        	int numOfDiners = rs.getInt("number_of_guests");
-        	int confCode = rs.getInt("confirmation_code");
-        	int subscriberId = rs.getInt("subscriber_id");
-        	Date dateOfPlacingOrder = rs.getDate("date_of_placing_order");
-        	reservations.add(new Reservation(orderNumber,orderDate.toLocalDate().atStartOfDay() ,
-        		numOfDiners,confCode,subscriberId,dateOfPlacingOrder.toLocalDate().atStartOfDay()));
-		}
-		return reservations;
-	}
-	
-	*/
-	
-	
-	    /*set new reservation in db, if there is order with
-		same id returns false, else set the order and return true*/
-	/*	@Override     
-	public boolean set(Reservation objToSet) {
-		String sqlSet = "INSERT INTO `order` (order_number, order_date, number_of_guests,"
-				+ " confirmation_code, subscriber_id, date_of_placing_order) VALUES (?, ?, ?, ?, ?, ?)";
+        try (Statement stmt = db.getConnection().createStatement();
+             ResultSet rs = stmt.executeQuery(query)) {
+            
+            if (rs.next()) {
+                maxCode = rs.getInt(1);
+            }
+            // Start generating from the next available number
+            confirmationCodeGenerator = (maxCode != 0) ? maxCode + 1 : 100000;
+            
+            System.out.println("Reservation System Initialized: Next confirmation code will be " + confirmationCodeGenerator);
+
+        } catch (SQLException e) {
+            System.err.println("Init Error: Failed to fetch MAX code: " + e.getMessage());
+        }
+
+        // 2. Load today's active reservations into memory
+        String sql = "SELECT * FROM reservations WHERE DATE(ReservationStartTime) = CURDATE() " 
+                   + "AND ActualArrivalTime IS NULL ORDER BY ReservationStartTime ASC";
+
+        try (Statement stmt = db.getConnection().createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
+            activeReservations.clear();
+            while (rs.next()) {
+                activeReservations.add(extractReservationFromResultSet(rs));
+            }
+            System.out.println("Successfully loaded today's reservations into cache.");
+        } catch (SQLException e) {
+            System.err.println("Init Error: Failed to load daily reservations: " + e.getMessage());
+        }       
+    }
+
+    /**
+     * Generates a new unique confirmation code in a thread-safe manner.
+     * @return A unique integer to be used as a confirmation code.
+     */
+    public synchronized int getNextConfirmationCode() {
+        return confirmationCodeGenerator++;
+    }
+
+    /**
+     * Inserts a new reservation record into the database.
+     * Includes the TableID assigned by the Server logic.
+     * * @param res The reservation object to be saved.
+     * @return true if the record was inserted successfully.
+     */
+    public boolean set(Reservation res) {
+        // 1. Added TableID to the column list and an extra '?' placeholder
+        String sql = "INSERT INTO reservations (UserID, TableID, Phone, Email, ReservationStartTime, "
+                   + "ReservationEndTime, NumberOfDiners, ConfirmationCode, Status, CreationTime) "
+                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
-        try {
-    		PreparedStatement pstmt = db.getConnection().prepareStatement(sqlSet);			
-        	pstmt.setInt(1, objToSet.getId());
-            pstmt.setDate(2, Date.valueOf(objToSet.getReservationTime().toLocalDate()));
-            pstmt.setInt(3, objToSet.getNumDiners());
-            pstmt.setInt(4, objToSet.getConfirmationCode());
-            pstmt.setInt(5, objToSet.getSubscriberId());
-            pstmt.setDate(6,Date.valueOf(objToSet.getDateOfPlacingOrder().toLocalDate()));
-            pstmt.executeUpdate();
-            return true;
-		} catch (SQLException e) {
-			System.out.println("failed to set reservation in db!");
-			e.printStackTrace();
-		}	
-		return false;
-	}
+        try (PreparedStatement pstmt = db.getConnection().prepareStatement(sql)) {
+            // 2. Map UserID (Subscriber ID or null for casual customers)
+            if (res.getUserId() != null) pstmt.setInt(1, res.getUserId());
+            else pstmt.setNull(1, java.sql.Types.INTEGER);
 
-	
-				//search by confirmation code, delete order from db if found, return true if succeed else false
-	public boolean deleteByCode(int confirmationCode) {	
-		String sqlDelete = "DELETE FROM `Order` WHERE confirmation_code = " + confirmationCode;
-		return this.deleteFromDb(sqlDelete, confirmationCode, "Confirmation code");
-	}
-	
-		//search by order id, delete order from db if found, return true if succeed else false
-	public boolean deleteById(int id) {	
-		String sqlDelete = "DELETE FROM `Order` WHERE order_number = " + id;
-		return this.deleteFromDb(sqlDelete, id, "ID");
-	}
-		
-				//function to help delete order from db
-	private boolean deleteFromDb(String sqlDelete,int key,String typeOfKey) {
-		try {
-			Statement st=db.getConnection().createStatement();
-			
-	        if (st.executeUpdate(sqlDelete)>0) { //track program by prints
-	            System.out.println("Order with "+typeOfKey+": "+key +" was deleted successfully!");
-	            return true;
-	        }	
-	        System.out.println("No order found with "+ typeOfKey+": " + key);
-		}
-	    catch (SQLException e) {
-	    	e.printStackTrace();
-	    }
-	    return false;
-	}
-	
-	//function to update exsisting order. gets reservation and return true if updated successfully,
-	//if not exsist ((or nothing updated)) returns false 
-	public boolean update(Reservation objToUpdate) {
-	    String sql = "UPDATE `Order` SET number_of_guests = ?, order_date = ? WHERE order_number = ?";
+            // 3. Map TableID (The table assigned by Table_Repository)
+            if (res.getTableId() != null) pstmt.setInt(2, res.getTableId());
+            else pstmt.setNull(2, java.sql.Types.INTEGER);
 
-	    try {
-	    	PreparedStatement stmt = db.getConnection().prepareStatement(sql);
-	        stmt.setInt(1, objToUpdate.getNumDiners());
-	        stmt.setDate(2, Date.valueOf(objToUpdate.getReservationTime().toLocalDate()));
-	        stmt.setInt(3, objToUpdate.getId());
+            // 4. Map remaining fields
+            pstmt.setString(3, res.getPhone());
+            pstmt.setString(4, res.getEmail());
+            pstmt.setTimestamp(5, Timestamp.valueOf(res.getOrderStartTime()));
+            pstmt.setTimestamp(6, Timestamp.valueOf(res.getOrderEndTime()));
+            pstmt.setInt(7, res.getNumberOfDiners());
+            pstmt.setInt(8, res.getConfirmationCode());
+            pstmt.setString(9, res.getStatus());
+            pstmt.setTimestamp(10, Timestamp.valueOf(res.getCreationTime()));
 
-	        int changed = stmt.executeUpdate();
-	        System.out.println("Rows updated: " + changed);
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Database Error: Failed to save reservation with TableID: " + e.getMessage());
+            return false;
+        }
+    }
 
-	        if (changed>0) return true; 
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("Failed to update order!!");
-		}
-	
-		return false;
-		
-	}
-	
-	*/
-	
-/*	
-	//testing
-	public static void main(String[] args) {		
-		Reservation_Repository rr = new Reservation_Repository();
-		Reservation res0=new Reservation(null, LocalDateTime.of(2025, 12, 6, 8, 40) , 4);
-		Reservation res1=new Reservation(null, LocalDateTime.now(), 7);
-		Reservation res2=new Reservation(null, LocalDateTime.now(), 8);
-		Reservation res3=new Reservation(null, LocalDateTime.now(), 10);
-		Reservation res4=new Reservation(null, LocalDateTime.now(), 12);
-		Reservation res5=new Reservation(null, LocalDateTime.now(), 12);
-		Reservation res6=new Reservation(null, LocalDateTime.now(), 12);
-		res6.setReservationTime(LocalDateTime.of(2025, 12, 12, 8, 40));
-		res6.setNumDiners(101);
-		if (rr.update(res6)==false) System.out.println("FAILED");;
-		rr.update(res1);
-		rr.update(res1);
-		rr.update(res1);
-				rr.set(res0);
-		rr.set(res1);
-		rr.set(res2);
-		rr.set(res3);
-		rr.set(res4);
-		Reservation r1 = rr.getById(0);
-		Reservation s1 = rr.getById(1);
-		Reservation t1 = rr.getByCode(100002);
-		Reservation d1 = rr.getByCode(100001);
+    /**
+     * Updates an existing reservation in the database.
+     * @param res The updated reservation object.
+     * @return true if the update was successful.
+     */
+    public boolean update(Reservation res) {
+        String sql = "UPDATE reservations SET NumberOfDiners = ?, ReservationStartTime = ?, "
+                   + "ReservationEndTime = ?, Status = ? WHERE ID = ?";
 
-		System.out.println("TRY1: "+ r1);
-		System.out.println("TRY2: "+ s1);
-		System.out.println("TRY3: "+ t1);
-		System.out.println("TRY4: "+ d1);
-		
-		t1.setSubscriberId(9);
-		t1.setNumDiners(1);
-		rr.update(t1);
-		System.out.println("TRY5: "+ t1);
-	}*/
+        try (PreparedStatement pstmt = db.getConnection().prepareStatement(sql)) {
+            pstmt.setInt(1, res.getNumberOfDiners());
+            pstmt.setTimestamp(2, Timestamp.valueOf(res.getOrderStartTime()));
+            pstmt.setTimestamp(3, Timestamp.valueOf(res.getOrderEndTime()));
+            pstmt.setString(4, res.getStatus());
+            pstmt.setInt(5, res.getId());
+
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Database Error: Update failed for ID " + res.getId() + ": " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Deletes a reservation from the database by its ID.
+     * @param id The primary key ID of the reservation.
+     * @return true if the deletion was successful.
+     */
+    public boolean deleteById(int id) {
+        String sql = "DELETE FROM reservations WHERE ID = ?";
+
+        try (PreparedStatement pstmt = db.getConnection().prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Database Error: Delete failed for ID " + id + ": " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Retrieves all reservations associated with a specific user/subscriber.
+     * @param userId The unique subscriber/user ID.
+     * @return A list of found Reservation objects.
+     */
+    public List<Reservation> getByUserId(int userId) {
+        List<Reservation> results = new ArrayList<>();
+        String sql = "SELECT * FROM reservations WHERE UserID = ?";
+        
+        try (PreparedStatement pstmt = db.getConnection().prepareStatement(sql)) {
+            pstmt.setInt(1, userId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    results.add(extractReservationFromResultSet(rs));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Database Error: Failed to fetch user reservations: " + e.getMessage());
+        }
+        return results;
+    }
+    /**
+     * Fetches reservations for casual customers using phone or email.
+     * @param contact The contact string (Phone or Email).
+     * @return List of matching reservations.
+     */
+    public List<Reservation> getByContactInfo(String contact) {
+        List<Reservation> results = new ArrayList<>();
+        // Search in both Phone and Email columns
+        String sql = "SELECT * FROM reservations WHERE Phone = ? OR Email = ?";
+        
+        try (PreparedStatement pstmt = db.getConnection().prepareStatement(sql)) {
+            pstmt.setString(1, contact);
+            pstmt.setString(2, contact);
+            
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    results.add(extractReservationFromResultSet(rs));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Database Error: Fetch by Contact failed: " + e.getMessage());
+        }
+        return results;
+    }
+    /**
+     * Fetches all reservations with a 'PENDING' status for the employee management panel.
+     * Uses the existing helper method to map database rows to objects.
+     * @return A list of all pending reservations in the restaurant.
+     */
+    public List<Reservation> getAllPendingReservations() {
+        List<Reservation> results = new ArrayList<>();
+        String sql = "SELECT * FROM reservations WHERE Status = 'Pending' ORDER BY ReservationStartTime ASC";
+        
+        try (Statement stmt = db.getConnection().createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            
+            while (rs.next()) {
+                // Using your existing helper method
+                results.add(extractReservationFromResultSet(rs));
+            }
+        } catch (SQLException e) {
+            System.err.println("Database Error: Failed to fetch pending reservations: " + e.getMessage());
+        }
+        return results;
+    }
+
+    /**
+     * Advanced update for employees, allowing modification of contact info and assigned tables.
+     * @param res The reservation with updated fields.
+     * @return true if the update was successful.
+     */
+    public boolean updateByEmployee(Reservation res) {
+        String sql = "UPDATE reservations SET NumberOfDiners = ?, ReservationStartTime = ?, "
+                   + "ReservationEndTime = ?, Status = ?, TableID = ?, Phone = ?, Email = ? WHERE ID = ?";
+
+        try (PreparedStatement pstmt = db.getConnection().prepareStatement(sql)) {
+            pstmt.setInt(1, res.getNumberOfDiners());
+            pstmt.setTimestamp(2, Timestamp.valueOf(res.getOrderStartTime()));
+            pstmt.setTimestamp(3, Timestamp.valueOf(res.getOrderEndTime()));
+            pstmt.setString(4, res.getStatus());
+            
+            if (res.getTableId() != null) pstmt.setInt(5, res.getTableId());
+            else pstmt.setNull(5, java.sql.Types.INTEGER);
+            
+            pstmt.setString(6, res.getPhone());
+            pstmt.setString(7, res.getEmail());
+            pstmt.setInt(8, res.getId());
+
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Database Error: Employee update failed: " + e.getMessage());
+            return false;
+        }
+    }
+    /**
+     * Private helper method to map a database row to a Reservation object.
+     * @param rs The ResultSet currently pointing to a row.
+     * @return A mapped Reservation entity.
+     */
+    private Reservation extractReservationFromResultSet(ResultSet rs) throws SQLException {
+        return new Reservation(
+            rs.getInt("ID"),
+            (Integer) rs.getObject("UserID"),
+            (Integer) rs.getObject("TableID"),
+            rs.getString("Phone"),
+            rs.getString("Email"),
+            rs.getTimestamp("ReservationStartTime").toLocalDateTime(),
+            rs.getTimestamp("ReservationEndTime").toLocalDateTime(),
+            rs.getTimestamp("ActualArrivalTime") != null ? rs.getTimestamp("ActualArrivalTime").toLocalDateTime() : null,
+            rs.getTimestamp("ActualDepartureTime") != null ? rs.getTimestamp("ActualDepartureTime").toLocalDateTime() : null,
+            rs.getInt("NumberOfDiners"),
+            rs.getInt("ConfirmationCode"),
+            rs.getString("Status"),
+            rs.getTimestamp("CreationTime").toLocalDateTime()
+        );
+    }
+    
 }
-
-
-
-
-
-

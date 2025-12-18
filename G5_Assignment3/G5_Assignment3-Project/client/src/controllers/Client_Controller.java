@@ -1,10 +1,19 @@
 package controllers;
 
 import java.io.*;
-
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 import utils.KryoUtil;
-import gui.Customer_GUI;
+import gui.AddManualReservation_GUI;
+import gui.AddReservation_GUI;
+import gui.ManageOrders_GUI;
+import gui.User_Session;
+import gui.ViewReservations_GUI;
+import javafx.application.Platform;
+import entities.Opening_Hours;
 import entities.Reservation;
+import entities.Restaurant;
 import entities.Subscribed_Customer;
 import messages.Message;
 import messages.MessageType;
@@ -24,85 +33,279 @@ public class Client_Controller implements ChatIF {
 		}
 	}
 
-
-	public void onShowReservationsRequest() {
-		Subscribed_Customer S_customer = new Subscribed_Customer("Oshri", "Sabag", "05212345678",
-				"test@test.com", "OshriSabag", "123456");
+	/**
+	 * Requests the list of reservations from the server based on the provided
+	 * identifier. The identifier can be a Subscribed_Customer object or a String
+	 * (Phone/Email). * @param identifier The user identification (Subscriber object
+	 * or String contact info).
+	 */
+	public void sendGetReservationsRequest(Object identifier) {
 		try {
-			Message message = new Message(MessageType.GET_RESERVATIONS_BY_USER, S_customer);
-			//client.handleMessageFromClientUI(message);
+			Message message;
+
+			if (identifier instanceof Subscribed_Customer) {
+				// Identifier is a member - sending the whole object or just the code
+				System.out.println("Client_Controller: Requesting reservations for Subscriber: "
+						+ ((Subscribed_Customer) identifier).getSubscriberCode());
+				message = new Message(MessageType.GET_RESERVATIONS_BY_USER, identifier);
+			} else if (identifier instanceof String) {
+				// Identifier is a casual customer's phone/email
+				System.out.println("Client_Controller: Requesting reservations for Casual Customer: " + identifier);
+				message = new Message(MessageType.GET_RESERVATIONS_BY_USER, (String) identifier);
+			} else {
+				System.err.println("Client_Controller: Unknown identifier type!");
+				return;
+			}
+
+			// Send the serialized message via Kryo/OCSF
 			sendComplexObject(message);
 
 		} catch (Exception ex) {
-			System.out.println("Unexpected error while sending a reservation request!");
+			System.err.println("Unexpected error while sending a reservation request: " + ex.getMessage());
+			ex.printStackTrace();
 		}
 	}
-	
-	public void sendUpdateReservationRequest(Reservation reservationToUpdate) {
-        try {
-            Message msg = new Message(MessageType.UPDATE_RESERVATION_REQUEST, reservationToUpdate);
-            //client.handleMessageFromClientUI(msg);
-            sendComplexObject(msg);
-            System.out.println("Update request sent for reservation ID: " + reservationToUpdate.getId());
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-	 public void sendComplexObject(Object obj) {
-	     try {
-	         // Convert to bytes using Kryo
-	         byte[] payload = KryoUtil.serialize(obj);
-	         
-	         // Send the byte array using OCSF
-	         client.handleMessageFromClientUI(payload); 
-	         
-	     } catch (Exception e) {
-	         e.printStackTrace();
-	     }
-	 }
-	public void logout() {
-	    try {
-	        Message msg = new Message(MessageType.LOGOUT_REQUEST, null);
-            sendComplexObject(msg);
-	        
-	        System.out.println("Logout request sent to server.");
-	        client.quit();
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	    }
-	}
-	public void display(Object message) {
 
+	public void sendUpdateReservationRequest(Reservation reservationToUpdate) {
+		try {
+			Message msg = new Message(MessageType.UPDATE_RESERVATION_REQUEST, reservationToUpdate);
+			// client.handleMessageFromClientUI(msg);
+			sendComplexObject(msg);
+			System.out.println("Update request sent for reservation ID: " + reservationToUpdate.getId());
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Sends a new reservation request to the server. Use this for both Casual and
+	 * Subscribed customers as it passes a Reservation object.
+	 * 
+	 * @param newRes The reservation entity to be persisted.
+	 */
+	public void sendNewReservationRequest(Reservation newRes) {
+		try {
+			Message msg = new Message(MessageType.CREATE_RESERVATION, newRes);
+			sendComplexObject(msg);
+			System.out.println("Client_Controller: Reservation request sent for: "
+					+ (newRes.getUserId() != null ? "Subscriber " + newRes.getUserId() : "Casual Customer"));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void sendGetOpeningHoursRequest() {
+		try {
+			Message msg = new Message(MessageType.GET_OPENING_HOURS, null);
+			sendComplexObject(msg);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Sends a request to the server to retrieve all reservations currently in
+	 * 'PENDING' status. This is used specifically for the Employee/Manager
+	 * management dashboard.
+	 */
+	public void sendGetAllPendingReservationsRequest() {
+		try {
+			System.out.println("Client_Controller: Requesting all pending reservations for management.");
+
+			// Create a message with the specific management type
+			Message message = new Message(MessageType.GET_ALL_PENDING_RESERVATIONS, null);
+
+			// Send via the existing serialized OCSF pipeline
+			sendComplexObject(message);
+
+		} catch (Exception e) {
+			System.err.println("Error while sending request for pending reservations: " + e.getMessage());
+			e.printStackTrace();
+		}
+	}
+
+	public void sendComplexObject(Object obj) {
+		try {
+			// Convert to bytes using Kryo
+			byte[] payload = KryoUtil.serialize(obj);
+
+			// Send the byte array using OCSF
+			client.handleMessageFromClientUI(payload);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void logout() {
+		try {
+			Message msg = new Message(MessageType.LOGOUT_REQUEST, null);
+			sendComplexObject(msg);
+
+			System.out.println("Client_Controller: Logout request sent to server.");
+			client.quit();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Handles messages received from the server. Deserializes the byte array and
+	 * updates relevant GUI components on the JavaFX Application Thread. * @param
+	 * message The serialized message from the server.
+	 */
+	public void display(Object message) {
 		if (message instanceof byte[]) {
 			Object receivedMessageDeserialized = KryoUtil.deserialize((byte[]) message);
 			Message recivedMessage = (Message) receivedMessageDeserialized;
+
 			try {
 				switch (recivedMessage.getType()) {
 
 				case RETURN_RESERVATIONS_BY_USER:
-					System.out.println("Reservations received: " + recivedMessage.getContent());
-
-					if (Customer_GUI.instance != null) {
-						Customer_GUI.instance.updateReservationsList(recivedMessage.getContent());
-					}
+					@SuppressWarnings("unchecked")
+					final List<Reservation> resList = (List<Reservation>) recivedMessage.getContent();
+					Platform.runLater(new Runnable() {
+						@Override
+						public void run() {
+							if (ViewReservations_GUI.instance != null) {
+								ViewReservations_GUI.instance.updateTable(resList);
+							}
+						}
+					});
 					break;
+
+				case RETURN_ALL_PENDING_RESERVATIONS:
+					/**
+					 * Receives the full list of pending reservations for the Employee Dashboard.
+					 */
+					@SuppressWarnings("unchecked")
+					final List<Reservation> adminList = (List<Reservation>) recivedMessage.getContent();
+					Platform.runLater(new Runnable() {
+						@Override
+						public void run() {
+							if (ManageOrders_GUI.instance != null) {
+								ManageOrders_GUI.instance.updateAdminUI(adminList);
+							}
+						}
+					});
+					break;
+
+				case RESERVATION_CONFIRMED:
+				    final int confirmationCode = (Integer) recivedMessage.getContent();
+				    Platform.runLater(new Runnable() {
+				        @Override
+				        public void run() {
+				            if (AddReservation_GUI.instance != null) {
+				                AddReservation_GUI.instance.showSuccessAlert(confirmationCode);
+				            } else if (AddManualReservation_GUI.instance != null) {
+				                AddManualReservation_GUI.instance.showSuccessAlert(confirmationCode);
+				            }
+				        }
+				    });
+				    break;
+
+				case RESERVATION_FAILED_NO_TABLE:
+				    final LocalDateTime suggestedTime = (LocalDateTime) recivedMessage.getContent();
+				    Platform.runLater(new Runnable() {
+				        @Override
+				        public void run() {
+				            if (AddReservation_GUI.instance != null) {
+				                AddReservation_GUI.instance.showNoTableAlert(suggestedTime);
+				            } else if (AddManualReservation_GUI.instance != null) {
+				                AddManualReservation_GUI.instance.showNoTableAlert(suggestedTime);
+				            }
+				        }
+				    });
+				    break;
+
+				case RESERVATION_FAILED_NO_TABLE_FULLY_BOOKED:
+					Platform.runLater(new Runnable() {
+						@Override
+						public void run() {
+							if (AddReservation_GUI.instance != null) {
+								AddReservation_GUI.instance.showNoTableAlert(null);
+							} else if (ViewReservations_GUI.instance != null) {
+								ViewReservations_GUI.instance.showNoTableAlert(null);
+							}else if (AddManualReservation_GUI.instance != null) {
+				                AddManualReservation_GUI.instance.showNoTableAlert(null);
+				            }
+						}
+					});
+					break;
+
 				case RESERVATION_UPDATE_SUCCESS:
-	                System.out.println("Update success! Refreshing list...");
-	                onShowReservationsRequest(); 
-	                break;
-				
+					Platform.runLater(new Runnable() {
+						@Override
+						public void run() {
+							if (ViewReservations_GUI.instance != null) {
+								ViewReservations_GUI.instance.showSuccessAlert();
+								sendGetReservationsRequest(
+										User_Session.getLoggedInUser() != null ? User_Session.getLoggedInUser()
+												: User_Session.getCasualPhone());
+							}
+						}
+					});
+					break;
+
+				case ADMIN_UPDATE_SUCCESS:
+					/**
+					 * Handles a successful administrative update. Refreshes the management table.
+					 */
+					Platform.runLater(new Runnable() {
+						@Override
+						public void run() {
+							if (ManageOrders_GUI.instance != null) {
+								// Management logic: auto-refresh full list
+								ManageOrders_GUI.instance.refreshAdminData();
+							}
+						}
+					});
+					break;
+
+				case RESERVATION_CANCELED:
+					Platform.runLater(new Runnable() {
+						@Override
+						public void run() {
+							if (ViewReservations_GUI.instance != null) {
+								sendGetReservationsRequest(
+										User_Session.getLoggedInUser() != null ? User_Session.getLoggedInUser()
+												: User_Session.getCasualPhone());
+							} else if (ManageOrders_GUI.instance != null) {
+								// Refresh admin dashboard if an order was deleted by an employee
+								ManageOrders_GUI.instance.refreshAdminData();
+							}
+						}
+					});
+					break;
+
+				case RETURN_OPENING_HOURS:
+					final Opening_Hours oh = (Opening_Hours) recivedMessage.getContent();
+					Restaurant.getInstance().setOpeningHours(oh);
+					Platform.runLater(new Runnable() {
+						@Override
+						public void run() {
+							if (AddReservation_GUI.instance != null) {
+								LocalDate currentDate = AddReservation_GUI.instance.getDatePicker().getValue();
+								if (currentDate != null) {
+									AddReservation_GUI.instance.loadDynamicHours(currentDate);
+								}
+							}
+							// Managers can also benefit from dynamic hour loading during editing
+						}
+					});
+					break;
 
 				default:
+					System.out.println("Client_Controller: Unknown message type: " + recivedMessage.getType());
 					break;
-
 				}
 			} catch (Exception e) {
+				System.err.println("Client_Controller: Error processing server message.");
 				e.printStackTrace();
 			}
-		} else
-			System.out.println("> " + message);
-
+		}
 	}
 
 }

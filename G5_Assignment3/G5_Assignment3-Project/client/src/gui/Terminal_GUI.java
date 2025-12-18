@@ -138,7 +138,8 @@ public class Terminal_GUI {
         welcomePassField.clear();
     }
 
-    private void setupTimer() {
+    @SuppressWarnings("unused")
+	private void setupTimer() {
         inactivityTimer = new Timeline(new KeyFrame(Duration.seconds(30), e -> resetToWelcome()));
         inactivityTimer.setCycleCount(1);
         terminalRoot.addEventFilter(MouseEvent.ANY, e -> inactivityTimer.playFromStart());

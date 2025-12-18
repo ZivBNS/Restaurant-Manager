@@ -1,121 +1,85 @@
 package gui;
 
-import java.io.IOException;
-
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.ButtonBar;
 import javafx.stage.Stage;
 
+/**
+ * Controller for the Casual Customer Menu.
+ * Provides navigation to reservation creation, management, and billing.
+ */
 public class CasualCustomer_GUI {
 
-	@FXML
-	private void openNewOrder(ActionEvent event) {
-	    try {
-	        FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/CasualOrderForm.fxml"));
-	        Parent root = loader.load();
+    /**
+     * Navigates to the screen for creating a new reservation.
+     * @param event The action event triggered by the "New Reservation" button.
+     */
+    @FXML
+    private void openNewOrder(ActionEvent event) {
+        loadScreen(event, "/gui/AddReservation.fxml", "Bistro - New Reservation");
+    }
 
-	        // Get current window (Stage)
-	        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+    /**
+     * Navigates to the combined View/Edit reservations screen.
+     * This screen allows users to see their list, update details, or cancel.
+     * @param event The action event triggered by the "View & Edit" button.
+     */
+    @FXML
+    private void onViewReservations(ActionEvent event) {
+        loadScreen(event, "/gui/ViewReservations.fxml", "Bistro - My Reservations");
+    }
 
-	        // Replace the scene in the same window
-	        stage.setScene(new Scene(root));
-	        stage.setTitle("Create New Order");
-	        stage.show();
+    /**
+     * Navigates to the bill payment screen.
+     * @param event The action event triggered by the "Pay Bill" button.
+     */
+    @FXML
+    private void onBillPaymentClicked(ActionEvent event) {
+        loadScreen(event, "/gui/BillPayment.fxml", "Bistro - Bill Payment");
+    }
 
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	    }
-	}
-	
-	@FXML
-	private void onBillPaymentClicked(ActionEvent event) {
-	    try {
-	        Parent paymentScreen = FXMLLoader.load(getClass().getResource("/gui/BillPayment.fxml"));
+    /**
+     * Returns to the main screen and clears the current user session.
+     * Acts as a logout for the guest/subscriber session.
+     * @param event The action event triggered by the "Sign Out" or "Back" button.
+     */
+    @FXML
+    private void onBackClicked(ActionEvent event) {
+        // Clear static session data to prevent data leakage between users
+        User_Session.clear(); 
+        loadScreen(event, "/gui/MainScreen.fxml", "Bistro - Main Menu");
+    }
 
-	        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-	        stage.setScene(new Scene(paymentScreen));
-	        stage.setTitle("Order Payment");
-	        stage.show();
+    /**
+     * Helper method to handle screen transitions within the same stage.
+     * * @param event The ActionEvent to identify the current window.
+     * @param fxmlPath The path to the FXML file to be loaded.
+     * @param title The title of the new window/scene.
+     */
+    private void loadScreen(ActionEvent event, String fxmlPath, String title) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Parent root = loader.load();
 
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	    }
-	}
-	
-	@FXML
-	private void onViewOrderClicked(ActionEvent event) throws IOException {
-	    FXMLLoader loader = new FXMLLoader(
-	        getClass().getResource("/gui/ViewCasualCustomerOrder.fxml")
-	    );
-	    Parent root = loader.load();
-
-	    Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-	    stage.setScene(new Scene(root));
-	    stage.setTitle("View Order");
-	    stage.show();
-	}
-	
-	@FXML
-	private void onEditOrderClicked(ActionEvent event) throws IOException {
-	    Parent root = FXMLLoader.load(
-	            getClass().getResource("/gui/EditCasualCustomerOrder.fxml")
-	    );
-
-	    Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-	    stage.setScene(new Scene(root));
-	    stage.setTitle("Edit Order");
-	    stage.show();
-	}
-	
-	@FXML
-	private void onCancelOrderClicked(ActionEvent event) {
-	    Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
-	    confirmAlert.setTitle("Cancel Order");
-	    confirmAlert.setHeaderText("Cancel Order Confirmation");
-	    confirmAlert.setContentText("Are you sure you want to cancel this order?");
-
-	    ButtonType yesButton = new ButtonType("Yes");
-	    ButtonType noButton = new ButtonType("No", ButtonBar.ButtonData.CANCEL_CLOSE);
-
-	    confirmAlert.getButtonTypes().setAll(yesButton, noButton);
-
-	    confirmAlert.showAndWait().ifPresent(response -> {
-	        if (response == yesButton) {
-
-	            // DEMO behavior (no DB yet)
-	            Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-	            successAlert.setTitle("Order Cancelled");
-	            successAlert.setHeaderText(null);
-	            successAlert.setContentText("Your order has been cancelled successfully.");
-
-	            successAlert.showAndWait();
-	        }
-	    });
-	}
-
-
-
-	
-	@FXML
-	private void onBackClicked(ActionEvent event) {
-		try {
-			Parent previousScreen = FXMLLoader.load(getClass().getResource("/gui/MainScreen.fxml"));
-
+            // Get the current Stage from the source node of the event
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(previousScreen));
+
+            // Create new scene and set it to the stage
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            stage.setTitle(title);
+            stage.centerOnScreen();
             stage.show();
-			
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-	}
+            
+            System.out.println("Navigated to: " + title);
 
-
+        } catch (Exception e) {
+            System.err.println("Failed to load screen: " + fxmlPath);
+            e.printStackTrace();
+        }
+    }
 }

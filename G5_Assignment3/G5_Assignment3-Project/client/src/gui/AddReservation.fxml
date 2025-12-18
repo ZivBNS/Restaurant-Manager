@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.effect.DropShadow?>
+
+<AnchorPane prefHeight="600.0" prefWidth="450.0" 
+            style="-fx-background-color: linear-gradient(to bottom right, #f8f9fa, #dfe6e9);" 
+            xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" 
+            fx:controller="gui.AddReservation_GUI">
+
+    <children>
+        <VBox alignment="CENTER" spacing="10" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="40">
+            <Label text="New Reservation" 
+                   style="-fx-font-size: 30px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" />
+            <Label text="Please fill in the details below" 
+                   style="-fx-font-size: 14px; -fx-text-fill: #7f8c8d;" />
+        </VBox>
+
+        <VBox spacing="20" alignment="CENTER_LEFT" 
+              AnchorPane.leftAnchor="40" AnchorPane.rightAnchor="40" AnchorPane.topAnchor="140"
+              style="-fx-background-color: white; -fx-background-radius: 20; -fx-padding: 35;">
+            
+            <effect>
+                <DropShadow color="rgba(0,0,0,0.1)" radius="15" offsetX="0" offsetY="5" />
+            </effect>
+
+            <VBox spacing="5">
+                <Label text="Number of Guests" style="-fx-font-weight: bold; -fx-text-fill: #34495e;" />
+                <TextField fx:id="guestsField" promptText="e.g. 4" 
+                           style="-fx-background-radius: 8; -fx-padding: 10;" />
+            </VBox>
+
+            <VBox spacing="5">
+                <Label text="Select Date" style="-fx-font-weight: bold; -fx-text-fill: #34495e;" />
+                <DatePicker fx:id="datePicker" prefWidth="350.0" editable="false"
+                            style="-fx-background-radius: 8;" />
+            </VBox>
+
+            <VBox spacing="5">
+                <Label text="Select Time" style="-fx-font-weight: bold; -fx-text-fill: #34495e;" />
+                <ComboBox fx:id="timeCombo" prefWidth="350.0" promptText="Choose a slot..."
+                          style="-fx-background-radius: 8; -fx-padding: 5;" />
+            </VBox>
+
+            <Region prefHeight="10" />
+
+            <HBox spacing="15" alignment="CENTER">
+                <Button text="Cancel" onAction="#onBackClicked" prefWidth="120"
+                        style="-fx-background-color: #ecf0f1; -fx-text-fill: #7f8c8d; -fx-font-weight: bold; -fx-background-radius: 10; -fx-padding: 12; -fx-cursor: hand;" />
+                
+                <Button text="Submit Order" onAction="#onSaveOrderClicked" prefWidth="180"
+                        style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-padding: 12; -fx-cursor: hand;" />
+            </HBox>
+        </VBox>
+
+        <Label text="Reservations must be made at least 1 hour in advance" 
+               AnchorPane.bottomAnchor="30" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" 
+               alignment="CENTER" style="-fx-font-size: 11px; -fx-text-fill: #95a5a6; -fx-font-style: italic;" />
+    </children>
+</AnchorPane>

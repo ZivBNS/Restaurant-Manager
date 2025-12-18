@@ -1,11 +1,18 @@
 package entities;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
-public class Reservation {
-    private static int confirmationCodeGenerator=100001; 
+/**
+ * Represents a Reservation entity in the Bistro system.
+ * This class is Serializable to allow transmission between Client and Server.
+ */
+public class Reservation implements Serializable {
 
-	private int id;
+    private static final long serialVersionUID = 1L;
+
+    private int id;
     private Integer userId; 
     private Integer tableId;
     private String phone;
@@ -19,7 +26,14 @@ public class Reservation {
     private String status; 
     private LocalDateTime creationTime; 
 
-    //constructor for db to use
+    /**
+     * Default constructor for serialization frameworks.
+     */
+    public Reservation() {}
+    
+    /**
+     * Constructor for retrieving existing reservations from the database.
+     */
     public Reservation(int id, Integer userId, Integer tableId, String phone, String email, 
                        LocalDateTime orderStartTime, LocalDateTime orderEndTime, 
                        LocalDateTime actualArrivalTime, LocalDateTime actualDepartureTime, 
@@ -40,7 +54,10 @@ public class Reservation {
         this.creationTime = creationTime;
     }
 
-    //constructor to insert data to db
+    /**
+     * Constructor used by the Client to create a new reservation request.
+     * Note: The confirmationCode is initialized to 0 and will be assigned by the Server.
+     */
     public Reservation(Integer userId, String phone, String email, 
                        LocalDateTime orderStartTime, LocalDateTime orderEndTime, 
                        int numberOfDiners) {
@@ -51,130 +68,160 @@ public class Reservation {
         this.orderStartTime = orderStartTime;
         this.orderEndTime = orderEndTime;
         this.numberOfDiners = numberOfDiners;
-        this.confirmationCode = getConfirmationCodeGenerator();
         
-        id = 0;
-        status = "Pending";
-        tableId = null;
-        actualArrivalTime = null;
-        actualDepartureTime = null;
-        creationTime = LocalDateTime.now(); 
+        // Initial defaults before server processing
+        this.id = 0;
+        this.status = "Pending";
+        this.confirmationCode = 0; 
+        this.tableId = null;
+        this.actualArrivalTime = null;
+        this.actualDepartureTime = null;
+        this.creationTime = LocalDateTime.now(); 
     }
 
-	public int getId() {
-		return id;
-	}
+    // --- Getters and Setters ---
 
-	public void setId(int id) {
-		this.id = id;
-	}
+    public int getId() {
+        return id;
+    }
 
-	public Integer getUserId() {
-		return userId;
-	}
+    public void setId(int id) {
+        this.id = id;
+    }
 
-	public void setUserId(Integer userId) {
-		this.userId = userId;
-	}
+    public Integer getUserId() {
+        return userId;
+    }
 
-	public Integer getTableId() {
-		return tableId;
-	}
+    public void setUserId(Integer userId) {
+        this.userId = userId;
+    }
 
-	public void setTableId(Integer tableId) {
-		this.tableId = tableId;
-	}
+    public Integer getTableId() {
+        return tableId;
+    }
 
-	public String getPhone() {
-		return phone;
-	}
+    public void setTableId(Integer tableId) {
+        this.tableId = tableId;
+    }
 
-	public void setPhone(String phone) {
-		this.phone = phone;
-	}
+    public String getPhone() {
+        return phone;
+    }
 
-	public String getEmail() {
-		return email;
-	}
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
 
-	public void setEmail(String email) {
-		this.email = email;
-	}
+    public String getEmail() {
+        return email;
+    }
 
-	public LocalDateTime getOrderStartTime() {
-		return orderStartTime;
-	}
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
-	public void setOrderStartTime(LocalDateTime orderStartTime) {
-		this.orderStartTime = orderStartTime;
-	}
+    public LocalDateTime getOrderStartTime() {
+        return orderStartTime;
+    }
 
-	public LocalDateTime getOrderEndTime() {
-		return orderEndTime;
-	}
+    public void setOrderStartTime(LocalDateTime orderStartTime) {
+        this.orderStartTime = orderStartTime;
+    }
 
-	public void setOrderEndTime(LocalDateTime orderEndTime) {
-		this.orderEndTime = orderEndTime;
-	}
+    public LocalDateTime getOrderEndTime() {
+        return orderEndTime;
+    }
 
-	public LocalDateTime getActualArrivalTime() {
-		return actualArrivalTime;
-	}
+    public void setOrderEndTime(LocalDateTime orderEndTime) {
+        this.orderEndTime = orderEndTime;
+    }
 
-	public void setActualArrivalTime(LocalDateTime actualArrivalTime) {
-		this.actualArrivalTime = actualArrivalTime;
-	}
+    public LocalDateTime getActualArrivalTime() {
+        return actualArrivalTime;
+    }
 
-	public LocalDateTime getActualDepartureTime() {
-		return actualDepartureTime;
-	}
+    public void setActualArrivalTime(LocalDateTime actualArrivalTime) {
+        this.actualArrivalTime = actualArrivalTime;
+    }
 
-	public void setActualDepartureTime(LocalDateTime actualDepartureTime) {
-		this.actualDepartureTime = actualDepartureTime;
-	}
+    public LocalDateTime getActualDepartureTime() {
+        return actualDepartureTime;
+    }
 
-	public int getNumberOfDiners() {
-		return numberOfDiners;
-	}
+    public void setActualDepartureTime(LocalDateTime actualDepartureTime) {
+        this.actualDepartureTime = actualDepartureTime;
+    }
 
-	public void setNumberOfDiners(int numberOfDiners) {
-		this.numberOfDiners = numberOfDiners;
-	}
+    public int getNumberOfDiners() {
+        return numberOfDiners;
+    }
 
-	public int getConfirmationCode() {
-		return confirmationCode;
-	}
+    public void setNumberOfDiners(int numberOfDiners) {
+        this.numberOfDiners = numberOfDiners;
+    }
 
-	public void setConfirmationCode(int confirmationCode) {
-		this.confirmationCode = confirmationCode;
-	}
+    public int getConfirmationCode() {
+        return confirmationCode;
+    }
 
-	public String getStatus() {
-		return status;
-	}
+    public void setConfirmationCode(int confirmationCode) {
+        this.confirmationCode = confirmationCode;
+    }
 
-	public void setStatus(String status) {
-		this.status = status;
-	}
+    public String getStatus() {
+        return status;
+    }
 
-	public LocalDateTime getCreationTime() {
-		return creationTime;
-	}
+    public void setStatus(String status) {
+        this.status = status;
+    }
 
-	public void setCreationTime(LocalDateTime creationTime) {
-		this.creationTime = creationTime;
+    public LocalDateTime getCreationTime() {
+        return creationTime;
+    }
+
+    public void setCreationTime(LocalDateTime creationTime) {
+        this.creationTime = creationTime;
+    }
+    
+    /**
+     * Formats the reservation date to dd.MM.yyyy string format.
+     * Uses the ReservationStartTime column data.
+     * @return A string representing the date in dd.MM.yyyy format.
+     */
+    public String getFormattedDate() {
+        if (orderStartTime == null) return "";
+        
+        // Define the desired pattern: dd.MM.yyyy
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+        
+        // Format the LocalDateTime object
+        return orderStartTime.format(dateFormatter);
+    }
+
+    public String getFormattedTime() {
+        if (orderStartTime == null) return "";
+        // Formats to HH:mm
+        int hour = orderStartTime.getHour();
+        int minute = orderStartTime.getMinute();
+        return String.format("%02d:%02d", hour, minute);
+    }
+//    @Override
+//    public String toString() {
+//        return "Reservation [ConfirmationCode=" + confirmationCode + 
+//               ", StartTime=" + orderStartTime + 
+//               ", Diners=" + numberOfDiners + 
+//               ", Status=" + status + "]";
+//    }
+
+	@Override
+	public String toString() {
+		return "Reservation [id=" + id + ", userId=" + userId + ", tableId=" + tableId + ", phone=" + phone + ", email="
+				+ email + ", orderStartTime=" + orderStartTime + ", orderEndTime=" + orderEndTime
+				+ ", actualArrivalTime=" + actualArrivalTime + ", actualDepartureTime=" + actualDepartureTime
+				+ ", numberOfDiners=" + numberOfDiners + ", confirmationCode=" + confirmationCode + ", status=" + status
+				+ ", creationTime=" + creationTime + "]";
 	}
     
-    @Override
-    public String toString() {
-    	return "Reservation [Confirmation code: "+confirmationCode+", Order date: "+orderStartTime+", number of diners: "+numberOfDiners+"]";
-    }
-
-	public static int getConfirmationCodeGenerator() {
-		return confirmationCodeGenerator++;
-	}
-
-	public static void setConfirmationCodeGenerator(int confirmationCodeGenerator) {
-		Reservation.confirmationCodeGenerator = confirmationCodeGenerator;
-	}
 }

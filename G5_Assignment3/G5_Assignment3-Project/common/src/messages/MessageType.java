@@ -15,6 +15,8 @@ public enum MessageType {
     GET_RESERVATIONS_LIST,  // Client requests list of active bookings
     GET_RESERVATIONS_BY_USER,
     RETURN_RESERVATIONS_BY_USER,
+    RESERVATION_FAILED_NO_TABLE,
+    RESERVATION_FAILED_NO_TABLE_FULLY_BOOKED,
     RESERVATION_FAILED,
     RESERVATION_CONFIRMED,
     RESERVATION_CANCELED,
@@ -23,7 +25,10 @@ public enum MessageType {
     RESERVATION_UPDATE_FAILED,
     UPDATE_RESERVATION_REQUEST,
     UPDATE_RESERVATION_SUCCESS,
-    
+    GET_ALL_PENDING_RESERVATIONS,
+    RETURN_ALL_PENDING_RESERVATIONS,
+    ADMIN_UPDATE_RESERVATION,
+    ADMIN_UPDATE_SUCCESS,
     //***********************************added by oshri***//
     // --- Register new user account ---
     REGISTER_USER_REQUEST,
@@ -51,6 +56,10 @@ public enum MessageType {
     BILL_RETURN_DETAILS,
     BILL_PAYMENT_SUCCESS,
     BILL_PAYMENT_FAILED,
+    
+    //--- Opening hours ---
+    GET_OPENING_HOURS,
+    RETURN_OPENING_HOURS,
     //***************************************************//
 
     
@@ -66,6 +75,6 @@ public enum MessageType {
     ERROR_RESPONSE,         // Server sends an error message (Content=String)
     SUCCESS_RESPONSE,        // Server confirms successful operation
     
-    TEXT_MESSAGE, 
+    TEXT_MESSAGE,  
     
 }

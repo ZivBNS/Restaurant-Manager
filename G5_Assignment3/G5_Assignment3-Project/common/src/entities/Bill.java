@@ -1,7 +1,5 @@
 package entities;
 
-import messages.Message;
-
 public class Bill {
 	private final double UserDiscountRate=0.15;
     private double totalAmount=0.0;

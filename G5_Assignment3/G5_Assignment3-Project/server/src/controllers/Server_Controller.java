@@ -1,9 +1,9 @@
 package controllers;
 
-
 import java.io.IOException;
-
 import utils.KryoUtil;
+import entities.Opening_Hours;
+import entities.Restaurant;
 import entities.User;
 import gui.Server_GUI;
 import messages.Message;
@@ -11,22 +11,30 @@ import messages.MessageType;
 import ocsf.server.AbstractServer;
 import ocsf.server.ConnectionToClient;
 
+/**
+ * Main Server Controller that handles OCSF connections and Kryo serialization.
+ * Acts as the primary router for all client requests.
+ */
 public class Server_Controller extends AbstractServer {
 
     final public static int DEFAULT_PORT = 5555;
     private Server_GUI gui;
-
 
     public Server_Controller(int port, Server_GUI gui) {
         super(port); 
         this.gui = gui;
     }
 
+    /**
+     * Handles incoming byte arrays from clients, deserializes them, 
+     * and routes them to the appropriate logic controller.
+     */
     @Override
     protected void handleMessageFromClient(Object msg, ConnectionToClient client) {
-        //deserialize using kryo
-    	Object receivedMessageDeserialized = KryoUtil.deserialize((byte[]) msg);
-    	// 1. Input Validation: Check if message is valid
+        // 1. Deserialization using Kryo
+        Object receivedMessageDeserialized = KryoUtil.deserialize((byte[]) msg);
+        
+        // 2. Input Validation
         if (receivedMessageDeserialized == null || !(receivedMessageDeserialized instanceof Message)) {
             log("Error: Invalid message format from " + client);
             return;
@@ -38,18 +46,17 @@ public class Server_Controller extends AbstractServer {
         log("Processing command: " + clientMsg.getType());
 
         try {
-            // 2. Switch Case: Handle specific commands
+            // 3. Routing Logic: Handle specific commands based on MessageType
             switch (clientMsg.getType()) {
 
                 // --- Authentication ---
                 case LOGIN_REQUEST:
-                    // Extract User object from message content
                     User user = (User) clientMsg.getContent();
-                    // TODO: Check credentials in DB (LoginController)
+                    // Basic mock logic - eventually handled by a LoginController
                     if ("admin".equals(user.getUsername())) { 
                         serverResponse = new Message(MessageType.LOGIN_SUCCESS, "Welcome!");
                     } else {
-                        serverResponse = new Message(MessageType.LOGIN_FAILED, "Invalid Pass");
+                        serverResponse = new Message(MessageType.LOGIN_FAILED, "Invalid Credentials");
                     }
                     break;
 
@@ -60,7 +67,6 @@ public class Server_Controller extends AbstractServer {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    //Update 'isLoggedIn' status in DB
                     break;
 
                 // --- Reservation Management ---
@@ -68,57 +74,59 @@ public class Server_Controller extends AbstractServer {
                 case CANCEL_RESERVATION:
                 case GET_RESERVATIONS_BY_USER:
                 case UPDATE_RESERVATION_REQUEST:
-                    System.out.println("Handling Reservation Request: " + clientMsg.getType());
+                case GET_ALL_PENDING_RESERVATIONS: 
+                case ADMIN_UPDATE_RESERVATION:    
+                    log("Handling Reservation Request: " + clientMsg.getType());
+                    // Static call to the logic controller as per your existing pattern
                     serverResponse = Reservation_Controller.handleMessage(clientMsg);
                     break;
                     
                 // --- Waitlist Management ---
                 case JOIN_WAITLIST:
-                    // TODO: Add WaitlistEntry to DB (WaitlistController)
+                    // Logic to be implemented in Waitlist_Controller
                     serverResponse = new Message(MessageType.SUCCESS_RESPONSE, "Added to Waitlist");
                     break;
 
-                // --- Restaurant Status (Live Map) ---
+                // --- Restaurant Status ---
                 case GET_TABLES_STATUS:
-                    // TODO: Fetch all tables and their status from DB
-                    // List<RestaurantTable> tables = TableRepository.getAll();
-                    serverResponse = new Message(MessageType.TEXT_MESSAGE, "List of Tables (Mock)");
+                    serverResponse = new Message(MessageType.TEXT_MESSAGE, "Table status list (Mock)");
                     break;
 
                 case UPDATE_TABLE_STATUS:
-                    // TODO: Change table status (e.g., OCCUPIED -> AVAILABLE)
+                    // Logic to update bistro_tables
                     break;
                 
                 // Reports (Manager Only)
                 case GET_REPORTS:
-                    // TODO: Generate report (ReportController)
+                    // Logic to be implemented in Report_Controller
+                    break;
+                case GET_OPENING_HOURS:
+                    // The OpeningHours_Repository has already loaded the hours into the Restaurant singleton during init()
+                    Opening_Hours hours = Restaurant.getInstance().getOpeningHours();  
+                    serverResponse= new Message(MessageType.RETURN_OPENING_HOURS, hours);
                     break;
 
                 default:
-                    log("Warning: Unknown command received.");
+                    log("Warning: Unknown command received: " + clientMsg.getType());
                     serverResponse = new Message(MessageType.ERROR_RESPONSE, "Unknown Command");
             }
 
-            // 3. Send Response: If a response object was created, send it back
+            // 4. Send Response: Serialize and send back to the specific client
             if (serverResponse != null) {
                 try {
-       	         // Convert to bytes using Kryo
-	       	         byte[] payload = KryoUtil.serialize(serverResponse);
-	       	         
-	       	         // Send the byte array using OCSF
-	       	         client.sendToClient(payload); 
-                   
+                    byte[] payload = KryoUtil.serialize(serverResponse);
+                    client.sendToClient(payload); 
                 } catch (IOException e) {
+                    log("Error sending response to client: " + e.getMessage());
                     e.printStackTrace();
                 }
             }
 
         } catch (Exception e) {
-            log("Critical Error: " + e.getMessage());
+            log("Critical Error during message processing: " + e.getMessage());
             e.printStackTrace();
         }
     }
-
 
     @Override
     protected void serverStarted() {
