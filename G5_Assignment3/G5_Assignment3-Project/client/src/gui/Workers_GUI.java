@@ -48,9 +48,22 @@ public class Workers_GUI {
             @Override
             public void handle(ActionEvent event) {
                 System.out.println("Go to: Manage Tables Screen");
-                // TODO: loadScreen("TableManagement.fxml");
+
+                try {
+                    FXMLLoader loader = new FXMLLoader(
+                        getClass().getResource("/gui/ManageTables.fxml")
+                    );
+                    Parent root = loader.load();
+
+                    Stage stage = (Stage) btnManageTables.getScene().getWindow();
+                    stage.setScene(new Scene(root));
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         });
+
 
         btnManageUsers.setOnAction(new EventHandler<ActionEvent>() {
             @Override
