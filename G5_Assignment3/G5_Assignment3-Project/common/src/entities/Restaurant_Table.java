@@ -5,17 +5,21 @@ public class Restaurant_Table {
 
     private int id=-1;
     private int tableNumber=-1;
-    private int size;         
+    private TableSize size;        
     private boolean isActive = true;
     
-    public Restaurant_Table(int id,int tableNumber, int size,boolean isActive) {
+    public Restaurant_Table(int id,int tableNumber, TableSize size,boolean isActive) {
         this.id = id;
         this.setTableNumber(tableNumber);
         this.size=size;
         this.isActive=isActive;
     }
 
-    public Restaurant_Table(int size) {
+    public Restaurant_Table(TableSize size) {
+        this.size = size;
+    }
+    
+    public void setTableSize(TableSize size) {
         this.size = size;
     }
         
@@ -28,11 +32,11 @@ public class Restaurant_Table {
 	}
 
 	public int getSize() {
-		return size;
+		return size.getSeats();
 	}
-
-	public void setSize(int size) {
-		this.size = size;
+	
+	public TableSize getTableSize() {
+	    return size;
 	}
 
 	public boolean isActive() {

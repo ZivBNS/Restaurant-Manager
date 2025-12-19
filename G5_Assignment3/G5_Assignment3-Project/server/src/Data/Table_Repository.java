@@ -12,6 +12,7 @@ import java.util.List;
 
 import entities.Restaurant;
 import entities.Restaurant_Table;
+import entities.TableSize;
 
 /**
  * Repository class for managing Table data and logical capacity availability.
@@ -38,6 +39,7 @@ public class Table_Repository implements Repository_Interface<Restaurant_Table> 
         int maxTableSize = 0;
         List<Restaurant_Table> tablesList = new ArrayList<>();
         String sql = "SELECT ID, TableNumber, Size, IsActive FROM Tables";
+        Restaurant.getInstance().setTables(tablesList);
 
         PooledConnection pConn = null;
         try {
@@ -50,7 +52,7 @@ public class Table_Repository implements Repository_Interface<Restaurant_Table> 
                 while (rs.next()) {
                     int id = rs.getInt("ID");
                     int tableNumber = rs.getInt("TableNumber");
-                    int size = rs.getInt("Size");
+                    TableSize size = TableSize.fromSeats(rs.getInt("Size"));
                     boolean isActive = rs.getBoolean("IsActive");
 
                     Restaurant_Table table = new Restaurant_Table(id, tableNumber, size, isActive);
@@ -171,8 +173,130 @@ public class Table_Repository implements Repository_Interface<Restaurant_Table> 
         return null;
     }
 
-    @Override public boolean set(Restaurant_Table obj) { return false; }
-    @Override public boolean update(Restaurant_Table obj) { return false; }
-    @Override public boolean deleteById(int id) { return false; }
-    @Override public Restaurant_Table getById(int id) { return null; }
+    @Override
+    public boolean set(Restaurant_Table table) {
+
+        String sql =
+            "INSERT INTO Tables (TableNumber, Size, IsActive) VALUES (?, ?, ?)";
+
+        PooledConnection pConn = null;
+        try {
+            pConn = db.getConnection();
+            PreparedStatement ps =
+                pConn.getConnection().prepareStatement(sql);
+
+            ps.setInt(1, table.getTableNumber());
+            ps.setInt(2, table.getSize()); // INT (2,4,6,8,10,12)
+            ps.setBoolean(3, table.isActive());
+
+            boolean success = ps.executeUpdate() > 0;
+
+            if (success) {
+                init();
+            }
+
+            return success;
+
+        } catch (SQLException e) {
+            System.err.println("Set Table Error: " + e.getMessage());
+            return false;
+        } finally {
+            if (pConn != null) db.releaseConnection(pConn);
+        }
+    }
+
+    @Override
+    public boolean update(Restaurant_Table table) {
+
+        String sql =
+            "UPDATE Tables SET TableNumber = ?, Size = ?, IsActive = ? WHERE ID = ?";
+
+        PooledConnection pConn = null;
+        try {
+            pConn = db.getConnection();
+            PreparedStatement ps =
+                pConn.getConnection().prepareStatement(sql);
+
+            ps.setInt(1, table.getTableNumber());
+            ps.setInt(2, table.getSize());
+            ps.setBoolean(3, table.isActive());
+            ps.setInt(4, table.getId());
+
+            boolean success = ps.executeUpdate() > 0;
+
+            if (success) {
+                init();
+            }
+
+            return success;
+
+        } catch (SQLException e) {
+            System.err.println("Update Table Error: " + e.getMessage());
+            return false;
+        } finally {
+            if (pConn != null) db.releaseConnection(pConn);
+        }
+    }
+
+    @Override
+    public boolean deleteById(int id) {
+
+        String sql = "DELETE FROM tables WHERE ID = ?";
+
+        PooledConnection pConn = null;
+
+        try {
+            pConn = db.getConnection();
+            Connection conn = pConn.getConnection();
+
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setInt(1, id);
+                return pstmt.executeUpdate() > 0;
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Delete table error: " + e.getMessage());
+            return false;
+
+        } finally {
+            if (pConn != null)
+                db.releaseConnection(pConn);
+        }
+    }
+
+    @Override
+    public Restaurant_Table getById(int id) {
+
+        String sql =
+            "SELECT ID, TableNumber, Size, IsActive FROM Tables WHERE ID = ?";
+
+        PooledConnection pConn = null;
+        try {
+            pConn = db.getConnection();
+            PreparedStatement ps =
+                pConn.getConnection().prepareStatement(sql);
+
+            ps.setInt(1, id);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int tableNumber = rs.getInt("TableNumber");
+                    TableSize size =
+                        TableSize.fromSeats(rs.getInt("Size"));
+                    boolean isActive = rs.getBoolean("IsActive");
+
+                    return new Restaurant_Table(
+                        id, tableNumber, size, isActive
+                    );
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Get Table By ID Error: " + e.getMessage());
+        } finally {
+            if (pConn != null) db.releaseConnection(pConn);
+        }
+
+        return null;
+    }
 }

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Text?>
+
+<BorderPane fx:id="manageTablesRoot" prefHeight="600.0"
+	prefWidth="600.0" style="-fx-background-color: #f4f7f6;"
+	xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="gui.ManageTables_GUI">
+
+	<top>
+		<VBox alignment="CENTER" spacing="10">
+			<padding>
+				<Insets top="20" bottom="20" />
+			</padding>
+			<Label text="Manage Tables" style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" />
+			<Separator maxWidth="300" />
+		</VBox>
+	</top>
+
+	<center>
+		<VBox spacing="15">
+			<padding>
+				<Insets left="30" right="30" />
+			</padding>
+			<TableView fx:id="tablesTable" VBox.vgrow="ALWAYS" style="-fx-background-radius: 10;">
+				<columns>
+					<TableColumn fx:id="colTableNumber" text="Table #" prefWidth="120"/>
+					<TableColumn fx:id="colTableSize" text="Size" prefWidth="120"/>
+					<TableColumn fx:id="colActive" text="Active" prefWidth="120"/>
+				</columns>
+			</TableView>
+		</VBox>
+	</center>
+
+	<bottom>
+		<VBox spacing="20"
+			style="-fx-background-color: white; -fx-background-radius: 20 20 0 0; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, -5);">
+			<padding>
+				<Insets top="25" bottom="25" left="40" right="40" />
+			</padding>
+
+			<HBox spacing="20" alignment="CENTER">
+			
+				<VBox spacing="5">
+				<Label text="Table Number" style="-fx-font-weight: bold;" />
+				<TextField fx:id="tableNumberField" prefWidth="120" />
+				</VBox>
+				
+				<VBox spacing="5">
+				<Label text="Table Size" style="-fx-font-weight: bold;" />
+				<ComboBox fx:id="sizeCombo" prefWidth="120" />
+				</VBox>
+				
+				<VBox spacing="5">
+				<Label text="Active" style="-fx-font-weight: bold;" />
+				<CheckBox fx:id="activeCheckBox" />
+				</VBox>
+				
+			</HBox>
+
+			<HBox spacing="15" alignment="CENTER">
+			     <Button text="Back" onAction="#onBackClicked" style="-fx-background-color: #7f8c8d; -fx-text-fill: white; -fx-padding: 10 20;" />   
+			     <Button text="Save / Update Table" onAction="#onSaveClicked" style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20;" />
+			     <Button text="Delete Table" onAction="#onDeleteClicked" style="-fx-background-color: #c0392b; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20;" />  
+			</HBox>
+		</VBox>
+	</bottom>
+</BorderPane>

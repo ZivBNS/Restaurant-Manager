@@ -62,6 +62,15 @@ public enum MessageType {
     //--- Opening hours ---
     GET_OPENING_HOURS,
     RETURN_OPENING_HOURS,
+    
+  //---Table Managment---
+    ADD_TABLE_REQUEST, 
+    UPDATE_TABLE_REQUEST,
+    GET_ALL_TABLES,
+    RETURN_ALL_TABLES,
+    DELETE_TABLE_REQUEST,
+    TABLE_OPERATION_SUCCESS,
+    TABLE_OPERATION_FAILED,
     //***************************************************//
 
     
@@ -77,6 +86,6 @@ public enum MessageType {
     ERROR_RESPONSE,         // Server sends an error message (Content=String)
     SUCCESS_RESPONSE,        // Server confirms successful operation
     
-    TEXT_MESSAGE,  
+    TEXT_MESSAGE,
     
 }
