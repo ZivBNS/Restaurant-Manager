@@ -199,6 +199,7 @@ public class AddReservation_GUI {
 
 	@FXML
 	private void onBackClicked() {
+		instance = null;
 		try {
 			Parent root = FXMLLoader.load(getClass().getResource("/gui/CasualCustomer.fxml"));
 
@@ -291,7 +292,7 @@ public class AddReservation_GUI {
      * @param code The confirmation code received from the server.
      */
     public void showSuccessAlert(int code) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Reservation Confirmed");
         alert.setHeaderText("Success!");
         alert.setContentText("Your reservation has been saved.\nConfirmation Code: " + code);

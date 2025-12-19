@@ -5,6 +5,7 @@ import messages.MessageType;
 import java.util.List;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.LocalDate;
 
 import Data.Reservation_Repository;
 import Data.Table_Repository;
@@ -14,235 +15,244 @@ import entities.Restaurant;
 import entities.Subscribed_Customer;
 
 /**
- * Controller for handling reservation-related requests on the server.
- * Coordinates between table allocation and reservation data persistence.
+ * Controller responsible for handling all reservation-related logic on the server side.
+ * This class implements the "Total Capacity" logic, ensuring that physical tables
+ * are not assigned until the customer actually arrives (Check-In).
+ * * Logic Update: Prevents "Self-Collision" during updates by excluding the 
+ * current reservation ID from the capacity calculation.
  */
 public class Reservation_Controller {
 
-	private static final Reservation_Repository reservationRepository = Reservation_Repository.getInstance();
-	private static final Table_Repository tableRepository = Table_Repository.getInstance();
-	/**
-	 * Main handler that routes incoming reservation messages to specific logic.
-	 * * @param msg The incoming message from the client.
-	 * 
-	 * @return A response message to be sent back to the client.
-	 */
-	public static Message handleMessage(Message msg) {
-		switch (msg.getType()) {
-		case CREATE_RESERVATION:
-			return createReservation(msg);
-		case CANCEL_RESERVATION:
-			return cancelReservation(msg);
-		case GET_RESERVATIONS_BY_USER:
-			return getReservationsByUser(msg);
-		case UPDATE_RESERVATION_REQUEST:
-			return updateReservation(msg);
-		case GET_ALL_PENDING_RESERVATIONS:
-            return fetchAllPending(msg);
-        case ADMIN_UPDATE_RESERVATION:
-            return processAdminUpdate(msg);
-		default:
-			System.out.println("Reservation_Controller: Unknown message type: " + msg.getType());
-			return null;
-		}
-	}
-
-	/**
-	 * Processes a new reservation request and handles table allocation.
-	 * If no table is found, it attempts to find a suggestion. 
-	 * If no suggestion is found (null), it returns a specific failure message.
-	 */
-	private static Message createReservation(Message msg) {
-	    try {
-	        Reservation reservation = (Reservation) msg.getContent();
-	        LocalDateTime startTime = reservation.getOrderStartTime();
-	        LocalDateTime endTime = startTime.plusHours(2);
-	        
-	        Integer assignedTableId = tableRepository.findBestAvailableTable(startTime, endTime, reservation.getNumberOfDiners());
-
-	        if (assignedTableId == null) {
-	            LocalDateTime suggestedTime = findNextAvailableSlot(startTime, reservation.getNumberOfDiners());
-	            
-	            // Check if a suggestion was actually found
-	            if (suggestedTime == null) {
-	                return new Message(MessageType.RESERVATION_FAILED_NO_TABLE_FULLY_BOOKED, "The restaurant is fully booked for the remainder of the day.");
-	            }
-	            
-	            return new Message(MessageType.RESERVATION_FAILED_NO_TABLE, suggestedTime);
-	        }
-
-	        reservation.setTableId(assignedTableId);
-	        reservation.setOrderEndTime(endTime);
-	        reservation.setConfirmationCode(reservationRepository.getNextConfirmationCode());
-
-	        if (reservationRepository.set(reservation)) {
-	            return new Message(MessageType.RESERVATION_CONFIRMED, reservation.getConfirmationCode());
-	        } else {
-	            return new Message(MessageType.RESERVATION_FAILED, "Database Error");
-	        }
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	        return new Message(MessageType.RESERVATION_FAILED, "Server Error");
-	    }
-	}
+    private static final Reservation_Repository reservationRepository = Reservation_Repository.getInstance();
+    private static final Table_Repository tableRepository = Table_Repository.getInstance();
 
     /**
-     * Iterates through future time slots in 30-minute increments to find availability.
-     * Dynamic Closing: Fetches the closing time from the Restaurant entity.
-     * @param requestedTime The original time requested by the user.
-     * @param guests The number of diners to accommodate.
-     * @return The next available LocalDateTime, or null if no slots are found that day.
+     * Routes incoming messages from the server to the specific internal logic handlers.
+     * * @param msg The message object received from the client.
+     * @return A response Message object containing the result of the operation.
      */
-    private static LocalDateTime findNextAvailableSlot(LocalDateTime requestedTime, int guests) {
+    public static Message handleMessage(Message msg) {
+        switch (msg.getType()) {
+            case CREATE_RESERVATION:
+                return createReservation(msg);
+            case UPDATE_RESERVATION_REQUEST:
+                return updateReservation(msg);
+            case GET_RESERVATIONS_BY_USER:
+                return getReservationsByUser(msg);
+            case CANCEL_RESERVATION:
+                return cancelReservation(msg);
+            case GET_ALL_PENDING_RESERVATIONS:
+                return fetchAllPending(msg);
+            case ADMIN_UPDATE_RESERVATION:
+                return processAdminUpdate(msg);
+            case CHECK_IN_REQUEST: 
+                return handleCheckIn(msg);
+            default:
+                return null;
+        }
+    }
+
+    /**
+     * Processes a new reservation request.
+     * Checks availability using total capacity logic.
+     * * @param msg The message containing the Reservation object to be created.
+     * @return Message confirming success, suggesting a new time, or reporting failure.
+     */
+    private static Message createReservation(Message msg) {
+        try {
+            Reservation reservation = (Reservation) msg.getContent();
+            LocalDateTime startTime = reservation.getOrderStartTime();
+            LocalDateTime endTime = startTime.plusHours(2);
+            
+            // For new reservations, excludeId is null
+            if (!tableRepository.isCapacityAvailable(startTime, endTime, reservation.getNumberOfDiners(), null)) {
+                // Find nearest available 30-minute slot
+                LocalDateTime suggestedTime = findNextAvailableSlot(startTime, reservation.getNumberOfDiners(), null);
+                
+                if (suggestedTime == null) {
+                    return new Message(MessageType.RESERVATION_FAILED_NO_TABLE_FULLY_BOOKED, null);
+                }
+                return new Message(MessageType.RESERVATION_FAILED_NO_TABLE, suggestedTime);
+            }
+
+            // Implementation of Logical Seating: TableID is NULL
+            reservation.setTableId(null); 
+            reservation.setOrderEndTime(endTime);
+            reservation.setConfirmationCode(reservationRepository.getNextConfirmationCode());
+            reservation.setStatus("Pending");
+
+            if (reservationRepository.set(reservation)) {
+                return new Message(MessageType.RESERVATION_CONFIRMED, reservation.getConfirmationCode());
+            } else {
+                return new Message(MessageType.RESERVATION_FAILED, "Database Error: Could not save reservation.");
+            }
+        } catch (Exception e) {
+            return new Message(MessageType.RESERVATION_FAILED, "Server Error: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Searches for the next available time slot using capacity logic.
+     * Fix: Includes Midnight Crossing logic and handles self-exclusion via excludeId.
+     * * @param requestedTime The original time that was found to be full.
+     * @param guests The number of diners requested.
+     * @param excludeId The ID to exclude from calculations (used for updates).
+     * @return The next available LocalDateTime or null if no slots are found.
+     */
+    private static LocalDateTime findNextAvailableSlot(LocalDateTime requestedTime, int guests, Integer excludeId) {
         LocalDateTime suggestion = requestedTime;
-        
-        // 1. Get the dynamic schedule loaded by OpeningHours_Repository
+        LocalDate date = requestedTime.toLocalDate();
         Opening_Hours oh = Restaurant.getInstance().getOpeningHours();
+        
         if (oh == null) return null; 
 
-        // 2. Determine the specific closing time for this specific date (Exception or Regular)
-        LocalTime closingTime;
-        if (oh.getExceptionSchedule().containsKey(requestedTime.toLocalDate())) {
-            closingTime = oh.getExceptionSchedule().get(requestedTime.toLocalDate()).getCloseTime();
-        } else {
-            closingTime = oh.getRegularSchedule().get(requestedTime.getDayOfWeek()).getCloseTime();
+        // Get closing time for the specific day
+        LocalTime closingLocalTime = oh.getExceptionSchedule().containsKey(date) ?
+            oh.getExceptionSchedule().get(date).getCloseTime() :
+            oh.getRegularSchedule().get(date.getDayOfWeek()).getCloseTime();
+
+        if (closingLocalTime == null) return null;
+
+        // Convert to LocalDateTime for comparison
+        LocalDateTime closingDateTime = LocalDateTime.of(date, closingLocalTime);
+        
+        // Handle Midnight Crossing (e.g., closing at 03:00 AM the next day)
+        LocalTime openingLocalTime = oh.getExceptionSchedule().containsKey(date) ?
+                oh.getExceptionSchedule().get(date).getOpenTime() :
+                oh.getRegularSchedule().get(date.getDayOfWeek()).getOpenTime();
+        
+        if (closingLocalTime.isBefore(openingLocalTime)) {
+            closingDateTime = closingDateTime.plusDays(1);
         }
 
-        if (closingTime == null) return null; // Restaurant is closed on this date
-
-        // 3. Search for slots in 30-minute increments
-        while (suggestion.toLocalTime().isBefore(closingTime)) {
+        // Increment by 30 minutes until closing
+        while (suggestion.isBefore(closingDateTime)) {
             suggestion = suggestion.plusMinutes(30); 
             
-            // Ensure the 2-hour meal fits before closing
-            if (suggestion.toLocalTime().plusHours(2).isAfter(closingTime)) {
+            // Check if a 2-hour meal fits before closing
+            if (suggestion.plusHours(2).isAfter(closingDateTime)) {
                 break; 
             }
             
-            LocalDateTime sugEnd = suggestion.plusHours(2);
-            Integer tableId = tableRepository.findBestAvailableTable(suggestion, sugEnd, guests);
-            
-            if (tableId != null) {
+            // Check capacity for the alternative slot, passing the excludeId
+            if (tableRepository.isCapacityAvailable(suggestion, suggestion.plusHours(2), guests, excludeId)) {
                 return suggestion; 
             }
         }
         return null; 
     }
 
-	/**
-	 * Fetches reservations associated with a specific user (Subscriber or Guest).
-	 */
-	private static Message getReservationsByUser(Message msg) {
-		try {
-			List<Reservation> reservations;
-			Object content = msg.getContent();
+    /**
+     * Processes a request to update an existing reservation.
+     * Fix: Passes the reservation ID to the capacity check to prevent self-collision.
+     * * @param msg The message containing the updated Reservation details.
+     * @return Message confirming success or providing an alternative suggestion.
+     */
+    private static Message updateReservation(Message msg) {
+        try {
+            Reservation updatedInfo = (Reservation) msg.getContent();
+            LocalDateTime startTime = updatedInfo.getOrderStartTime();
+            LocalDateTime endTime = startTime.plusHours(2);
+            updatedInfo.setOrderEndTime(endTime);
 
-			if (content instanceof Subscribed_Customer) {
-				int subCode = ((Subscribed_Customer) content).getSubscriberCode();
-				reservations = reservationRepository.getByUserId(subCode);
-			} else if (content instanceof String) {
-				reservations = reservationRepository.getByContactInfo((String) content);
-			} else {
-				return new Message(MessageType.ERROR_RESPONSE, "Invalid identifier.");
-			}
-			return new Message(MessageType.RETURN_RESERVATIONS_BY_USER, reservations);
-		} catch (Exception e) {
-			return new Message(MessageType.ERROR_RESPONSE, "Server Error: " + e.getMessage());
-		}
-	}
+            // Pass updatedInfo.getId() to ensure the system ignores current seats during calculation
+            if (!tableRepository.isCapacityAvailable(startTime, endTime, updatedInfo.getNumberOfDiners(), updatedInfo.getId())) {
+                LocalDateTime suggested = findNextAvailableSlot(startTime, updatedInfo.getNumberOfDiners(), updatedInfo.getId());
+                return new Message(MessageType.RESERVATION_FAILED_NO_TABLE, suggested);
+            }
 
-	/**
-	 * Processes a request to update an existing reservation.
-	 * It validates table availability for the new time/guests and searches for 
-	 * suggestions if the requested slot is unavailable.
-	 * * @param msg The message containing the updated Reservation entity.
-	 * @return A response message indicating success, failure with a suggestion, or error.
-	 */
-	private static Message updateReservation(Message msg) {
-	    try {
-	        Reservation updatedInfo = (Reservation) msg.getContent();
-	        
-	        // 1. Calculate new end time (in case the start time was changed)
-	        LocalDateTime startTime = updatedInfo.getOrderStartTime();
-	        LocalDateTime endTime = startTime.plusHours(2); // Standard 2-hour duration
-	        updatedInfo.setOrderEndTime(endTime);
+            updatedInfo.setTableId(null); // Keep logical assignment
+            if (reservationRepository.update(updatedInfo)) {
+                return new Message(MessageType.RESERVATION_UPDATE_SUCCESS, updatedInfo);
+            }
+            return new Message(MessageType.RESERVATION_UPDATE_FAILED, "Database Error: Update failed.");
+        } catch (Exception e) {
+            return new Message(MessageType.ERROR_RESPONSE, "Server Error during update.");
+        }
+    }
 
-	        // 2. Check if a table is available for the new time and guest count.
-	        // This logic searches for an optimal table; if it's the same table already 
-	        // assigned and it is free, it will be reassigned.
-	        Integer assignedTableId = tableRepository.findBestAvailableTable(
-	            startTime, endTime, updatedInfo.getNumberOfDiners()
-	        );
+    /**
+     * Handles the physical table assignment when a customer arrives.
+     * * @param msg Message containing the confirmation code.
+     * @return Message with the assigned TableID or an error if no tables fit.
+     */
+    private static Message handleCheckIn(Message msg) {
+        try {
+            int code = (int) msg.getContent();
+            Reservation res = reservationRepository.getByConfirmationCode(code);
+            
+            if (res == null || !res.getStatus().equalsIgnoreCase("Pending")) {
+                return new Message(MessageType.ERROR_RESPONSE, "Invalid or already active reservation.");
+            }
 
-	        // 3. If no table is available, search for the nearest alternative slot.
-	        if (assignedTableId == null) {
-	            LocalDateTime suggested = findNextAvailableSlot(startTime, updatedInfo.getNumberOfDiners());
-	            // Return failure message with the suggested LocalDateTime as content
-	            return new Message(MessageType.RESERVATION_FAILED_NO_TABLE, suggested);
-	        }
+            // Assign the best (smallest) physical table available now
+            Integer tableId = tableRepository.findBestAvailableTable(res.getOrderStartTime(), res.getOrderEndTime(), res.getNumberOfDiners());
+            
+            if (tableId != null) {
+                res.setTableId(tableId);
+                res.setStatus("Active");
+                reservationRepository.updateByEmployee(res);
+                return new Message(MessageType.CHECK_IN_COMPLETED, tableId);
+            } else {
+                return new Message(MessageType.ERROR_RESPONSE, "No suitable tables available at this moment.");
+            }
+        } catch (Exception e) {
+            return new Message(MessageType.ERROR_RESPONSE, "Check-in failed due to server error.");
+        }
+    }
 
-	        // 4. Table found - update the assigned TableID and persist changes.
-	        updatedInfo.setTableId(assignedTableId);
-	        
-	        if (reservationRepository.update(updatedInfo)) {
-	            return new Message(MessageType.RESERVATION_UPDATE_SUCCESS, updatedInfo);
-	        } else {
-	            return new Message(MessageType.RESERVATION_UPDATE_FAILED, "Database Update Error");
-	        }
+    /**
+     * Retrieves reservations associated with a specific user.
+     * * @param msg Message containing the user identifier.
+     * @return Message containing the list of matching Reservation objects.
+     */
+    private static Message getReservationsByUser(Message msg) {
+        try {
+            List<Reservation> reservations;
+            if (msg.getContent() instanceof Subscribed_Customer) {
+                reservations = reservationRepository.getByUserId(((Subscribed_Customer) msg.getContent()).getSubscriberCode());
+            } else {
+                reservations = reservationRepository.getByContactInfo((String) msg.getContent());
+            }
+            return new Message(MessageType.RETURN_RESERVATIONS_BY_USER, reservations);
+        } catch (Exception e) { 
+            return new Message(MessageType.ERROR_RESPONSE, "Error fetching user reservations."); 
+        }
+    }
 
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	        return new Message(MessageType.ERROR_RESPONSE, "Server Error: " + e.getMessage());
-	    }
-	}
+    /**
+     * Deletes a reservation from the system.
+     * * @param msg Message containing the reservation ID to delete.
+     * @return Message indicating whether cancellation was successful.
+     */
+    private static Message cancelReservation(Message msg) {
+        int reservationId = (int) msg.getContent();
+        if (reservationRepository.deleteById(reservationId)) {
+            return new Message(MessageType.RESERVATION_CANCELED, reservationId);
+        }
+        return new Message(MessageType.RESERVATION_CANCEL_FAILED, reservationId);
+    }
 
-	/**
-	 * Cancels/Deletes a reservation by its unique database ID.
-	 */
-	private static Message cancelReservation(Message msg) {
-		try {
-			int reservationId = (int) msg.getContent();
-			boolean success = reservationRepository.deleteById(reservationId);
-			MessageType type = success ? MessageType.RESERVATION_CANCELED : MessageType.RESERVATION_CANCEL_FAILED;
-			return new Message(type, reservationId);
-		} catch (Exception e) {
-			return null;
-		}
-	}
-	/**
-	 * Fetches every reservation in the system with a 'PENDING' status.
-	 * This provides the data for the Employee Management Dashboard.
-	 */
-	private static Message fetchAllPending(Message msg) {
-	    try {
-	        List<Reservation> pendingList = reservationRepository.getAllPendingReservations();
-	        return new Message(MessageType.RETURN_ALL_PENDING_RESERVATIONS, pendingList);
-	    } catch (Exception e) {
-	        return new Message(MessageType.ERROR_RESPONSE, "Failed to fetch pending orders: " + e.getMessage());
-	    }
-	}
+    /**
+     * Fetches all reservations with a 'Pending' status for management purposes.
+     * * @param msg Request message.
+     * @return Message containing the list of pending reservations.
+     */
+    private static Message fetchAllPending(Message msg) {
+        return new Message(MessageType.RETURN_ALL_PENDING_RESERVATIONS, reservationRepository.getAllPendingReservations());
+    }
 
-	/**
-	 * Processes a full administrative update. Employees have the authority to 
-	 * override table assignments, contact info, and reservation status.
-	 */
-	private static Message processAdminUpdate(Message msg) {
-	    try {
-	        Reservation updatedRes = (Reservation) msg.getContent();
-	        
-	        // Recalculate end time in case the start time was changed manually
-	        updatedRes.setOrderEndTime(updatedRes.getOrderStartTime().plusHours(2));
-
-	        // Use the repository method specifically designed for administrative overrides
-	        if (reservationRepository.updateByEmployee(updatedRes)) {
-	            System.out.println("Admin: Successfully updated reservation ID " + updatedRes.getId());
-	            return new Message(MessageType.ADMIN_UPDATE_SUCCESS, null);
-	        } else {
-	            return new Message(MessageType.ERROR_RESPONSE, "Database update failed.");
-	        }
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	        return new Message(MessageType.ERROR_RESPONSE, "Server logic error: " + e.getMessage());
-	    }
-	}
+    /**
+     * Processes an update request initiated by a restaurant employee.
+     * * @param msg Message containing the reservation details to update.
+     * @return Message indicating success or failure of the admin update.
+     */
+    private static Message processAdminUpdate(Message msg) {
+        Reservation updatedRes = (Reservation) msg.getContent();
+        updatedRes.setOrderEndTime(updatedRes.getOrderStartTime().plusHours(2));
+        if (reservationRepository.updateByEmployee(updatedRes)) {
+            return new Message(MessageType.ADMIN_UPDATE_SUCCESS, null);
+        }
+        return new Message(MessageType.ERROR_RESPONSE, "Administrative update failed.");
+    }
 }

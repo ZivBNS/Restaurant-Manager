@@ -1,5 +1,6 @@
 package Data;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -13,11 +14,15 @@ import entities.Restaurant;
 /**
  * Repository class responsible for loading and managing restaurant operating hours.
  * It handles standard weekly schedules and specific date exceptions (holidays/events).
- * This class follows the Singleton pattern and implements the Repository_Interface.
+ * This class follows the Singleton pattern and utilizes a custom Connection Pool 
+ * for optimized database access.
  */
 public class OpeningHours_Repository implements Repository_Interface<Opening_Hours> {
     
+    /** The database controller managing the connection pool. */
     private DB_Controller db = DB_Controller.getInstance();
+    
+    /** Singleton instance of the repository. */
     private static OpeningHours_Repository OpeningHoursInstance = new OpeningHours_Repository();
 
     /**
@@ -38,55 +43,65 @@ public class OpeningHours_Repository implements Repository_Interface<Opening_Hou
      * Initializes the restaurant's operating hours by fetching data from the database.
      * It populates both the regular weekly schedule and special date exceptions.
      * Once loaded, the data is stored in the Restaurant singleton for global access.
+     * Uses the connection pool to safely borrow and release connections.
      */
     @Override
     public void init() {
         Opening_Hours oh = new Opening_Hours();
-        
-        // 1. Load standard weekly operating hours
-        String sqlRegular = "SELECT DayOfWeek, OpenTime, CloseTime FROM OpeningHours";
-        try (Statement stmt = db.getConnection().createStatement();
-             ResultSet rs = stmt.executeQuery(sqlRegular)) {
-            
-            while (rs.next()) {
-                // Convert DB string to DayOfWeek enum and SQL time to LocalTime
-                DayOfWeek day = DayOfWeek.valueOf(rs.getString("DayOfWeek").toUpperCase());
-                LocalTime open = rs.getTime("OpenTime").toLocalTime();
-                LocalTime close = rs.getTime("CloseTime").toLocalTime();
-                oh.setRegularHour(day, open, close);
-            }
-        } catch (SQLException e) {
-            System.err.println("Database Error: Failed to load regular opening hours.");
-            e.printStackTrace();
-        }
+        PooledConnection pConn = null;
 
-        // 2. Load special date exceptions (e.g., Holidays or adjusted days)
-        String sqlSpecial = "SELECT Date, OpenTime, CloseTime FROM SpecialHours";
-        try (Statement stmt = db.getConnection().createStatement();
-             ResultSet rs = stmt.executeQuery(sqlSpecial)) {
-            
-            while (rs.next()) {
-                LocalDate date = rs.getDate("Date").toLocalDate();
+        try {
+            // Borrow a connection from the pool
+            pConn = db.getConnection();
+            Connection conn = pConn.getConnection();
+
+            // 1. Load standard weekly operating hours
+            String sqlRegular = "SELECT DayOfWeek, OpenTime, CloseTime FROM OpeningHours";
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery(sqlRegular)) {
                 
-                // If OpenTime is NULL, the restaurant is considered closed for that day
-                if (rs.getTime("OpenTime") != null) {
+                while (rs.next()) {
+                    // Convert DB string to DayOfWeek enum and SQL time to LocalTime
+                    DayOfWeek day = DayOfWeek.valueOf(rs.getString("DayOfWeek").toUpperCase());
                     LocalTime open = rs.getTime("OpenTime").toLocalTime();
                     LocalTime close = rs.getTime("CloseTime").toLocalTime();
-                    oh.setException(date, open, close);
-                } else {
-                    // Set as closed by passing null values to the entity
-                    oh.setException(date, null, null); 
+                    oh.setRegularHour(day, open, close);
                 }
             }
-        } catch (SQLException e) {
-            System.err.println("Database Error: Failed to load special date exceptions.");
-            e.printStackTrace();
-        }
 
-        // 3. Update the Restaurant singleton with the newly loaded hours
-        Restaurant.getInstance().setOpeningHours(oh);
-        System.out.println("OpeningHours_Repository: Successfully loaded hours into Restaurant instance.");
-        System.out.println(oh.toString());
+            // 2. Load special date exceptions (e.g., Holidays or adjusted days)
+            String sqlSpecial = "SELECT Date, OpenTime, CloseTime FROM SpecialHours";
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery(sqlSpecial)) {
+                
+                while (rs.next()) {
+                    LocalDate date = rs.getDate("Date").toLocalDate();
+                    
+                    // If OpenTime is NULL, the restaurant is considered closed for that day
+                    if (rs.getTime("OpenTime") != null) {
+                        LocalTime open = rs.getTime("OpenTime").toLocalTime();
+                        LocalTime close = rs.getTime("CloseTime").toLocalTime();
+                        oh.setException(date, open, close);
+                    } else {
+                        // Set as closed by passing null values to the entity
+                        oh.setException(date, null, null); 
+                    }
+                }
+            }
+
+            // 3. Update the Restaurant singleton with the newly loaded hours
+            Restaurant.getInstance().setOpeningHours(oh);
+            System.out.println("OpeningHours_Repository: Successfully loaded hours into Restaurant instance.");
+
+        } catch (SQLException e) {
+            System.err.println("Database Error: Failed to load opening hours: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            // Always return the connection to the pool
+            if (pConn != null) {
+                db.releaseConnection(pConn);
+            }
+        }
     }
     
     /**
@@ -112,7 +127,7 @@ public class OpeningHours_Repository implements Repository_Interface<Opening_Hou
     }
 
     /**
-     * Deletes a specific hours record based on an ID or confirmation code.
+     * Deletes a specific hours record based on a unique identifier.
      * @param id The identifier of the record to delete.
      * @return true if successful, false otherwise.
      */

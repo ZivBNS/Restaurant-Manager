@@ -37,7 +37,6 @@
                         <Button fx:id="btnContinueAsGuest" style="-fx-background-color: transparent; -fx-text-fill: #2980b9; -fx-underline: true; -fx-cursor: hand;" text="Continue as Guest (No Subscription)"><font><Font size="16.0" /></font></Button>
                      </children>
                   </VBox>
-                  <Label fx:id="lblScanCode" style="-fx-cursor: hand;" text="SCAN CODE" textFill="#2980b9" AnchorPane.bottomAnchor="20.0" AnchorPane.rightAnchor="30.0"><font><Font name="Segoe UI Bold" size="14.0" /></font></Label>
                </children>
             </AnchorPane>
             
@@ -92,14 +91,12 @@
                               <Label text="Please provide at least one: Phone or Email" textFill="#7f8c8d"><font><Font name="Segoe UI Italic" size="12.0" /></font></Label>
                               <GridPane hgap="10.0" vgap="10.0" alignment="CENTER">
                                  <children>
-                                    <Label text="Name:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-                                    <TextField fx:id="instNameField" GridPane.columnIndex="1" GridPane.rowIndex="0" />
-                                    <Label text="Diners:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-                                    <Spinner fx:id="instDinersSpinner" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                                    <Label text="Phone:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
-                                    <TextField fx:id="instPhoneField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                                    <Label text="Email:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
-                                    <TextField fx:id="instEmailField" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                    <Label text="Diners:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                    <Spinner fx:id="instDinersSpinner" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                    <Label text="Phone:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                    <TextField fx:id="instPhoneField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                    <Label text="Email:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                                    <TextField fx:id="instEmailField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                                  </children>
                               </GridPane>
                               <Button fx:id="btnSubmitInstant" style="-fx-background-color: #e67e22; -fx-text-fill: white; -fx-cursor: hand;" text="Book Now" />

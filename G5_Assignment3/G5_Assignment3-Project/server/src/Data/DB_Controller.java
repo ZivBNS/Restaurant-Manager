@@ -1,106 +1,117 @@
 package Data;
-import java.sql.Connection; 
+
+import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
-import entities.Restaurant_Table;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
+/**
+ * Controller for managing a custom Database Connection Pool.
+ * Implements the Singleton pattern to provide a centralized access point for 
+ * database connections while optimizing performance through reuse.
+ */
 public class DB_Controller {
-	private Connection con;
-	private static DB_Controller instance;
-	
-	// db using single-tone pattern
-	// connection started when first time get help from db and ends when server is disconnecting
-	private DB_Controller() {
-		try {
-			con = DriverManager.getConnection("jdbc:mysql://localhost:3306/bistro?allowLoadLocalInfile=true&serverTimezone=Asia/Jerusalem&useSSL=false", "root", "zaqwsxcde321");
-			//con = DriverManager.getConnection("jdbc:mysql://localhost:3306/bistro?allowLoadLocalInfile=true&serverTimezone=Asia/Jerusalem&useSSL=false", "root", "212009666");
-			System.out.println("Connection Succeed");
-		} catch (SQLException e) {
-			e.printStackTrace();
-			System.out.println("Connection FAILED");
-		}
-	}
+    
+    /** The single instance of this controller. */
+    private static DB_Controller instance;
+    
+    /** Database connection details. */
+    private final String DB_URL = "jdbc:mysql://localhost:3306/bistro?serverTimezone=Asia/Jerusalem&useSSL=false";
+    private final String USER = "root";
+    private final String PASS = "zaqwsxcde321";
+    //private final String PASS = "212009666";
+    private final int MAX_POOL_SIZE = 10;
 
-	public static DB_Controller getInstance() {
+    /** Thread-safe queue to store available pooled connections. */
+    private BlockingQueue<PooledConnection> pool;
+
+    /**
+     * Private constructor to initialize the connection pool.
+     * Uses a LinkedBlockingQueue to store pooled connections up to a defined limit.
+     */
+    private DB_Controller() {
+        pool = new LinkedBlockingQueue<>(MAX_POOL_SIZE);
+        System.out.println("[Pool] Initialized. Max Size: " + MAX_POOL_SIZE);
+    }
+
+    /**
+     * Retrieves the singleton instance of the DB_Controller.
+     * * @return The active DB_Controller instance.
+     */
+    public static synchronized DB_Controller getInstance() {
         if (instance == null)
             instance = new DB_Controller();
         return instance;
     }
 
-    public Connection getConnection() {
-        return con;
+    /**
+     * Retrieves a connection from the pool. 
+     * If the pool is empty, a new physical connection is created. 
+     * If a connection is retrieved from the pool, its usage timestamp is updated.
+     * * @return A PooledConnection object ready for database operations.
+     * @throws SQLException If a database access error occurs during physical connection creation.
+     */
+    public PooledConnection getConnection() throws SQLException {
+        // Attempt to retrieve a connection from the queue
+        PooledConnection pConn = pool.poll();
+        
+        if (pConn == null) {
+            // No available connections in pool, create a new physical one
+            System.out.println("[Pool] Queue empty. Creating NEW physical connection!!!");
+            Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+            pConn = new PooledConnection(conn);
+        } else {
+            // Connection found, update its 'last used' status before returning
+            System.out.println("[Pool] Reusing existing connection.");
+            pConn.touch();
+        }
+        return pConn;
     }
-    
-    // server use this method to close connection when exit.
-    public boolean closeConnection() {
-    	if(con == null)
-    		return true;
-    	try {
-			con.close();
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return false;
-		}
-    	
-    	return true;
+
+    /**
+     * Returns a connection to the pool for future reuse.
+     * If the pool has reached its maximum capacity, the physical connection is closed.
+     * * @param pConn The PooledConnection object to be returned or closed.
+     */
+    public void releaseConnection(PooledConnection pConn) {
+        if (pConn != null) {
+            // Attempt to put the connection back into the queue
+            boolean added = pool.offer(pConn);
+            
+            if (added) {
+                System.out.println("[Pool] Connection returned. Current Pool Size: " + pool.size());
+            } else {
+                // If the pool is full, close the underlying physical connection to free resources
+                try {
+                    System.out.println("[Pool] Pool full. Closing physical connection.");
+                    pConn.closePhysicalConnection();
+                } catch (SQLException e) {
+                    System.err.println("[Pool] Error while closing physical connection: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+        }
     }
-
-
-
-
-//if we will need to make more tables
-
-public static void main(String[] args) {
-	int i;
-	Statement stmt;
-	DB_Controller db=DB_Controller.getInstance();
-	try {
-		Connection con = db.getConnection();
-		stmt = con.createStatement();
-		//create all tables
-		stmt.executeUpdate("CREATE TABLE Users (ID INT PRIMARY KEY AUTO_INCREMENT, FirstName VARCHAR(25),LastName VARCHAR(25), Phone VARCHAR(14), Email VARCHAR(35), Username VARCHAR(20) UNIQUE , Password VARCHAR(20), subscriberCode INT, Identity ENUM('Subscriber', 'Manager', 'Employee') NOT NULL);");
-		stmt.executeUpdate("CREATE TABLE Tables (ID INT PRIMARY KEY AUTO_INCREMENT, TableNumber INT , Size INT , IsActive BOOLEAN DEFAULT TRUE);");
-		stmt.executeUpdate("CREATE TABLE OpeningHours (DayOfWeek ENUM('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday') NOT NULL, OpenTime TIME, CloseTime TIME, PRIMARY KEY (DayOfWeek, OpenTime));");
-		stmt.executeUpdate("CREATE TABLE SpecialHours (Date DATE PRIMARY KEY, OpenTime TIME, CloseTime TIME, Description TEXT);");	
-		stmt.executeUpdate("CREATE TABLE Reservations (ID INT PRIMARY KEY AUTO_INCREMENT, UserID INT, TableID INT, Phone VARCHAR(14), Email VARCHAR(35), ReservationStartTime DATETIME, ReservationEndTime DATETIME , ActualArrivalTime DATETIME, ActualDepartureTime DATETIME, NumberOfDiners INT, ConfirmationCode INT, Status VARCHAR(25), CreationTime DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (UserID) REFERENCES Users(ID), FOREIGN KEY (TableID) REFERENCES Tables(ID));");
-		stmt.executeUpdate("CREATE TABLE Waitlist (ID INT PRIMARY KEY AUTO_INCREMENT, ReservationID INT UNIQUE, Status VARCHAR(25),creationTime DATETIME, TableFreedTime DATETIME, FOREIGN KEY (ReservationID) REFERENCES Reservations(ID));");
-		stmt.executeUpdate("CREATE TABLE Bills (ID INT PRIMARY KEY AUTO_INCREMENT, ReservationID INT UNIQUE, TotalAmount DECIMAL(10, 2) NOT NULL, BillDetails TEXT, DiscountPercentage DECIMAL(5, 2) DEFAULT 0.00, Status VARCHAR(25), FOREIGN KEY (ReservationID) REFERENCES Reservations(ID));");
-		
-		//create default oppening time for the first time
-		//ראשון-חמישי מ8 בבוקר עד 11 בלילה
-		//שישי מהבוקר עד הצהריים, מוצש מ8 בלילה עד 11
-		String[] weekDays = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"};
-		for (String day : weekDays) {
-		    stmt.executeUpdate("INSERT INTO OpeningHours (DayOfWeek, OpenTime, CloseTime) VALUES ('" + day + "', '08:00:00', '23:00:00')");
-		}
-		stmt.executeUpdate("INSERT INTO OpeningHours (DayOfWeek, OpenTime, CloseTime) VALUES ('Friday', '08:00:00', '14:00:00')");
-		stmt.executeUpdate("INSERT INTO OpeningHours (DayOfWeek, OpenTime, CloseTime) VALUES ('Saturday', '20:00:00', '23:00:00')");
-		System.out.println("inserted DEFAULT data to OPENING HOURS");
-
-		//create default tables for the first time
-		//4 tables for 2,4 tables for 4, 2 tables for 8
-		List<Restaurant_Table> rTables= new ArrayList<Restaurant_Table>();
-		for (i = 0; i < 4; i++) {
-			rTables.add(new Restaurant_Table(2));
-			rTables.add(new Restaurant_Table(4));
-			if (i<2) rTables.add(new Restaurant_Table(8));
-		}
-		i=1;
-		for (Restaurant_Table rt:rTables) 
-			stmt.executeUpdate("INSERT INTO Tables (TableNumber, Size, IsActive) VALUES ("+ (i++) +", "+ rt.getSize() +", true)");
-		System.out.println("inserted DEFAULT data to TABLES");
-
-		
-		
-		System.out.println("Created successfully, all the cavod");
-	}
-	
-	catch (SQLException e) {
-		e.printStackTrace();
-		System.out.println("ERROR - COULD NOT CREATE TABLES ISSUE");
-		}
-	}
+    /**
+     * Closes all physical connections currently stored in the pool.
+     * This should be called when the server is shutting down to ensure
+     * no orphan connections remain open in the database.
+     */
+    public void closePool() {
+        System.out.println("[Pool] Closing connection pool...");
+        
+        // While there are connections in the queue, take them and close them physically
+        while (!pool.isEmpty()) {
+            PooledConnection pConn = pool.poll();
+            if (pConn != null) {
+                try {
+                    pConn.closePhysicalConnection();
+                } catch (SQLException e) {
+                    System.err.println("[Pool] Error closing physical connection during shutdown: " + e.getMessage());
+                }
+            }
+        }
+        System.out.println("[Pool] All connections closed successfully.");
+    }
 }

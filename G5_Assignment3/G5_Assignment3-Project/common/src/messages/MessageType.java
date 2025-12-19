@@ -50,6 +50,8 @@ public enum MessageType {
     // ---check in and out messages ---
     RESERVATION_CHECK_IN,
     RESERVATION_CHECK_OUT,
+    CHECK_IN_REQUEST,
+    CHECK_IN_COMPLETED,
     
     // --- bill request ---
     BILL_REQUEST,

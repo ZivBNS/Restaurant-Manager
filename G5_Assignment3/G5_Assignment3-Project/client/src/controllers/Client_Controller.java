@@ -151,14 +151,23 @@ public class Client_Controller implements ChatIF {
 	}
 
 	/**
-	 * Handles messages received from the server. Deserializes the byte array and
-	 * updates relevant GUI components on the JavaFX Application Thread. * @param
-	 * message The serialized message from the server.
+	 * Handles messages received from the server. Deserializes the byte array using Kryo 
+	 * and routes the response to the active GUI instance.
+	 * All UI updates are wrapped in Platform.runLater using Anonymous Inner Classes 
+	 * to ensure thread safety on the JavaFX Application Thread.
+	 * * @param message The serialized message (byte array) received from the server.
 	 */
+	@Override
 	public void display(Object message) {
 		if (message instanceof byte[]) {
+			// Deserialization using the utility class
 			Object receivedMessageDeserialized = KryoUtil.deserialize((byte[]) message);
-			Message recivedMessage = (Message) receivedMessageDeserialized;
+			
+			if (!(receivedMessageDeserialized instanceof Message)) {
+				return;
+			}
+			
+			final Message recivedMessage = (Message) receivedMessageDeserialized;
 
 			try {
 				switch (recivedMessage.getType()) {
@@ -177,9 +186,6 @@ public class Client_Controller implements ChatIF {
 					break;
 
 				case RETURN_ALL_PENDING_RESERVATIONS:
-					/**
-					 * Receives the full list of pending reservations for the Employee Dashboard.
-					 */
 					@SuppressWarnings("unchecked")
 					final List<Reservation> adminList = (List<Reservation>) recivedMessage.getContent();
 					Platform.runLater(new Runnable() {
@@ -193,34 +199,48 @@ public class Client_Controller implements ChatIF {
 					break;
 
 				case RESERVATION_CONFIRMED:
-				    final int confirmationCode = (Integer) recivedMessage.getContent();
-				    Platform.runLater(new Runnable() {
-				        @Override
-				        public void run() {
-				            if (AddReservation_GUI.instance != null) {
-				                AddReservation_GUI.instance.showSuccessAlert(confirmationCode);
-				            } else if (AddManualReservation_GUI.instance != null) {
-				                AddManualReservation_GUI.instance.showSuccessAlert(confirmationCode);
-				            }
-				        }
-				    });
-				    break;
+					final int confirmationCode = (Integer) recivedMessage.getContent();
+					Platform.runLater(new Runnable() {
+						@Override
+						public void run() {
+							if (AddReservation_GUI.instance != null) {
+								AddReservation_GUI.instance.showSuccessAlert(confirmationCode);
+							} else if (AddManualReservation_GUI.instance != null) {
+								AddManualReservation_GUI.instance.showSuccessAlert(confirmationCode);
+							}
+						}
+					});
+					break;
 
 				case RESERVATION_FAILED_NO_TABLE:
-				    final LocalDateTime suggestedTime = (LocalDateTime) recivedMessage.getContent();
-				    Platform.runLater(new Runnable() {
-				        @Override
-				        public void run() {
-				            if (AddReservation_GUI.instance != null) {
-				                AddReservation_GUI.instance.showNoTableAlert(suggestedTime);
-				            } else if (AddManualReservation_GUI.instance != null) {
-				                AddManualReservation_GUI.instance.showNoTableAlert(suggestedTime);
-				            }
-				        }
-				    });
-				    break;
+					/**
+					 * The server found no availability for the requested time but provided a suggestion.
+					 * Content: LocalDateTime (the suggested alternative slot).
+					 */
+					final LocalDateTime suggestedTime = (LocalDateTime) recivedMessage.getContent();
+					Platform.runLater(new Runnable() {
+						@Override
+						public void run() {
+							// Route to Add Reservation Screen
+							if (AddReservation_GUI.instance != null) {
+								AddReservation_GUI.instance.showNoTableAlert(suggestedTime);
+							} 
+							// Route to Staff Manual Entry Screen
+							else if (AddManualReservation_GUI.instance != null) {
+								AddManualReservation_GUI.instance.showNoTableAlert(suggestedTime);
+							}
+							// Route to View/Edit Screen (Crucial for existing order updates)
+							else if (ViewReservations_GUI.instance != null) {
+								ViewReservations_GUI.instance.showNoTableAlert(suggestedTime);
+							}
+						}
+					});
+					break;
 
 				case RESERVATION_FAILED_NO_TABLE_FULLY_BOOKED:
+					/**
+					 * The server found no availability and no suggestions for the rest of the day.
+					 */
 					Platform.runLater(new Runnable() {
 						@Override
 						public void run() {
@@ -228,9 +248,23 @@ public class Client_Controller implements ChatIF {
 								AddReservation_GUI.instance.showNoTableAlert(null);
 							} else if (ViewReservations_GUI.instance != null) {
 								ViewReservations_GUI.instance.showNoTableAlert(null);
-							}else if (AddManualReservation_GUI.instance != null) {
-				                AddManualReservation_GUI.instance.showNoTableAlert(null);
-				            }
+							} else if (AddManualReservation_GUI.instance != null) {
+								AddManualReservation_GUI.instance.showNoTableAlert(null);
+							}
+						}
+					});
+					break;
+
+				case RESERVATION_FAILED:
+					/**
+					 * General failure (e.g., Database error).
+					 */
+					final String errorMsg = (String) recivedMessage.getContent();
+					Platform.runLater(new Runnable() {
+						@Override
+						public void run() {
+							// Display generic error to whichever screen initiated the request
+							System.err.println("Server Error: " + errorMsg);
 						}
 					});
 					break;
@@ -250,14 +284,10 @@ public class Client_Controller implements ChatIF {
 					break;
 
 				case ADMIN_UPDATE_SUCCESS:
-					/**
-					 * Handles a successful administrative update. Refreshes the management table.
-					 */
 					Platform.runLater(new Runnable() {
 						@Override
 						public void run() {
 							if (ManageOrders_GUI.instance != null) {
-								// Management logic: auto-refresh full list
 								ManageOrders_GUI.instance.refreshAdminData();
 							}
 						}
@@ -273,7 +303,6 @@ public class Client_Controller implements ChatIF {
 										User_Session.getLoggedInUser() != null ? User_Session.getLoggedInUser()
 												: User_Session.getCasualPhone());
 							} else if (ManageOrders_GUI.instance != null) {
-								// Refresh admin dashboard if an order was deleted by an employee
 								ManageOrders_GUI.instance.refreshAdminData();
 							}
 						}
@@ -292,17 +321,16 @@ public class Client_Controller implements ChatIF {
 									AddReservation_GUI.instance.loadDynamicHours(currentDate);
 								}
 							}
-							// Managers can also benefit from dynamic hour loading during editing
 						}
 					});
 					break;
 
 				default:
-					System.out.println("Client_Controller: Unknown message type: " + recivedMessage.getType());
+					System.out.println("Client_Controller: Received unhandled message type: " + recivedMessage.getType());
 					break;
 				}
 			} catch (Exception e) {
-				System.err.println("Client_Controller: Error processing server message.");
+				System.err.println("Client_Controller: Critical error while processing server response.");
 				e.printStackTrace();
 			}
 		}
