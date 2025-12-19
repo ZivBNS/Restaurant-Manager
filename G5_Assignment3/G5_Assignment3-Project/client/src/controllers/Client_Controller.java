@@ -7,10 +7,18 @@ import java.util.List;
 import utils.KryoUtil;
 import gui.AddManualReservation_GUI;
 import gui.AddReservation_GUI;
+import gui.ConnectToServer_GUI;
+import gui.MainScreen_GUI;
 import gui.ManageOrders_GUI;
 import gui.User_Session;
 import gui.ViewReservations_GUI;
 import javafx.application.Platform;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+import entities.LoginData;
 import entities.Opening_Hours;
 import entities.Reservation;
 import entities.Restaurant;
@@ -149,6 +157,21 @@ public class Client_Controller implements ChatIF {
 			e.printStackTrace();
 		}
 	}
+	
+	public void sendSubscriberLoginRequest(LoginData loginData) {
+		System.out.println("Subscriber Login Attempt: " + loginData.getUsername());
+		Message loginMessage = new Message(MessageType.LOGIN_REQUEST, loginData);
+        if (ConnectToServer_GUI.clientController != null) {
+            try {
+                sendComplexObject(loginMessage);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            //ConnectToServer_GUI.clientController = null;
+        }
+        System.out.println("Subscriber Login Attempt: " + loginData.getUsername());
+	}
+	
 
 	/**
 	 * Handles messages received from the server. Deserializes the byte array using Kryo 
@@ -171,6 +194,32 @@ public class Client_Controller implements ChatIF {
 
 			try {
 				switch (recivedMessage.getType()) {
+				
+				case LOGIN_SUCCESS:
+					
+					Subscribed_Customer user = (Subscribed_Customer)recivedMessage.getContent();
+					User_Session.setLoggedInUser(user);
+					
+					Platform.runLater(new Runnable() {
+						@Override
+						public void run() {
+							if (MainScreen_GUI.instance != null) {
+								MainScreen_GUI.instance.onLoginSuccess(user);
+							}
+						}});
+					break;
+					
+				case LOGIN_FAILED:
+					
+					Platform.runLater(new Runnable() {
+						@Override
+						public void run() {
+							if (MainScreen_GUI.instance != null) {
+								MainScreen_GUI.instance.onLoginFailure();
+							}
+						}});
+					
+					break;
 
 				case RETURN_RESERVATIONS_BY_USER:
 					@SuppressWarnings("unchecked")

@@ -2,6 +2,7 @@ package controllers;
 
 import java.io.IOException;
 import utils.KryoUtil;
+import entities.LoginData;
 import entities.Opening_Hours;
 import entities.Restaurant;
 import entities.User;
@@ -51,14 +52,14 @@ public class Server_Controller extends AbstractServer {
 
                 // --- Authentication ---
                 case LOGIN_REQUEST:
-                    User user = (User) clientMsg.getContent();
-                    // Basic mock logic - eventually handled by a LoginController
-                    if ("admin".equals(user.getUsername())) { 
-                        serverResponse = new Message(MessageType.LOGIN_SUCCESS, "Welcome!");
-                    } else {
-                        serverResponse = new Message(MessageType.LOGIN_FAILED, "Invalid Credentials");
+                    if(clientMsg.getContent() instanceof LoginData) {
+                    	serverResponse = Login_Controller.handleLogin((LoginData)clientMsg.getContent());
+                    	break;
+                    }else {
+                    	serverResponse = new Message(MessageType.LOGIN_FAILED, "Unexpected user data");
+                    	break;
                     }
-                    break;
+                    
 
                 case LOGOUT_REQUEST:
                     log("Client disconnected: " + client.getInetAddress());
@@ -113,6 +114,7 @@ public class Server_Controller extends AbstractServer {
 
             // 4. Send Response: Serialize and send back to the specific client
             if (serverResponse != null) {
+            	log("Sending message to client: " + serverResponse.getType());
                 try {
                     byte[] payload = KryoUtil.serialize(serverResponse);
                     client.sendToClient(payload); 

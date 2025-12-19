@@ -2,6 +2,7 @@ package gui;
 
 import java.io.IOException;
 
+import entities.LoginData;
 import entities.Subscribed_Customer;
 import javafx.application.Platform; // Added for Platform.exit()
 import javafx.event.ActionEvent;
@@ -21,8 +22,11 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent; // Added for WindowEvent
+import messages.Message;
+import messages.MessageType;
 
 public class MainScreen_GUI {
+	public static MainScreen_GUI instance;
 
     @FXML private BorderPane mainRoot;
     @FXML private VBox employeeLoginBox;
@@ -41,6 +45,12 @@ public class MainScreen_GUI {
     @FXML private PasswordField subPasswordField;
     @FXML private TextField subUsernameField;
     @FXML private Button terminalBtn;
+    
+    private Stage stage;
+    
+    public void setStage(Stage stage) {
+        this.stage = stage;
+    }
 
     @FXML
     void onEmployeeToggleClick(ActionEvent event) {
@@ -50,6 +60,7 @@ public class MainScreen_GUI {
     
     @FXML
     public void initialize() {
+    	instance = this;
         System.out.println("Main Screen Loaded Successfully");
 
         // --- Handle "X" Button (Window Close) Logic ---
@@ -189,6 +200,32 @@ public class MainScreen_GUI {
      * Triggered when a subscriber clicks the login button.
      * Handles authentication and navigation to the Subscriber Dashboard.
      */
+    public void onLoginSuccess(Subscribed_Customer user) {
+    	try {
+        	
+            // 3. Load the Subscribed Customer Dashboard
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/SubscribedCustomer.fxml"));
+            Parent root = loader.load();
+            
+            // Switch scene
+            stage.setScene(new Scene(root));
+            stage.setTitle("Bistro - Member Dashboard");
+            stage.show();
+
+            System.out.println("Login Success: Switched to Subscriber Dashboard");
+
+        } catch (IOException e) {
+            System.err.println("Error loading SubscribedCustomer.fxml");
+            e.printStackTrace();
+            subErrorLabel.setText("System error loading dashboard.");
+            subErrorLabel.setVisible(true);
+        }
+    } 
+    
+    public void onLoginFailure() {
+    	subErrorLabel.setText("Invalid username or password.");
+        subErrorLabel.setVisible(true);
+    }
     @FXML
     void onSubscriberLoginClick(ActionEvent event) {
         String username = subUsernameField.getText().trim();
@@ -200,47 +237,54 @@ public class MainScreen_GUI {
             subErrorLabel.setVisible(true);
             return;
         }
-
-        System.out.println("Subscriber Login Attempt: " + username);
+        
+        stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        LoginData loginData = new LoginData(username, password);
+        if (ConnectToServer_GUI.clientController == null) {
+            subErrorLabel.setText("Not connected to server. Please reconnect.");
+            subErrorLabel.setVisible(true);
+            return;
+        }
+        ConnectToServer_GUI.clientController.sendSubscriberLoginRequest(loginData);
 
         // --- PLACEHOLDER FOR SERVER VALIDATION ---
         // TODO: Send login request to server (e.g., clientController.login(username, password))
         // and wait for a response message from the server.
         // For now, we bypass validation and proceed to the dashboard:
-        boolean loginSuccessful = true; 
+//        boolean loginSuccessful = true; 
         // -----------------------------------------
 
-        if (loginSuccessful) {
-            try {
-            	
-                // 2. --------CHANGE THIS AFTER USER VALIDTION----------
-                 Subscribed_Customer mockUser = new Subscribed_Customer("User", "Test", "1234567890", "user@test.com", "a", "a");
-                 User_Session.setLoggedInUser(mockUser);
-
-                // 3. Load the Subscribed Customer Dashboard
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/SubscribedCustomer.fxml"));
-                Parent root = loader.load();
-                
-                // Get current window (Stage)
-                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-                
-                // Switch scene
-                stage.setScene(new Scene(root));
-                stage.setTitle("Bistro - Member Dashboard");
-                stage.show();
-
-                System.out.println("Login Success: Switched to Subscriber Dashboard");
-
-            } catch (IOException e) {
-                System.err.println("Error loading SubscribedCustomer.fxml");
-                e.printStackTrace();
-                subErrorLabel.setText("System error loading dashboard.");
-                subErrorLabel.setVisible(true);
-            }
-        } else {
-            // Handle failed login
-            subErrorLabel.setText("Invalid username or password.");
-            subErrorLabel.setVisible(true);
-        }
+//        if (loginSuccessful) {
+//            try {
+//            	
+//                // 2. --------CHANGE THIS AFTER USER VALIDTION----------
+//                 //Subscribed_Customer mockUser = new Subscribed_Customer("User", "Test", "1234567890", "user@test.com", "a", "a");
+//                 //User_Session.setLoggedInUser(mockUser);
+//
+//                // 3. Load the Subscribed Customer Dashboard
+//                FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/SubscribedCustomer.fxml"));
+//                Parent root = loader.load();
+//                
+//                // Get current window (Stage)
+//                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+//                
+//                // Switch scene
+//                stage.setScene(new Scene(root));
+//                stage.setTitle("Bistro - Member Dashboard");
+//                stage.show();
+//
+//                System.out.println("Login Success: Switched to Subscriber Dashboard");
+//
+//            } catch (IOException e) {
+//                System.err.println("Error loading SubscribedCustomer.fxml");
+//                e.printStackTrace();
+//                subErrorLabel.setText("System error loading dashboard.");
+//                subErrorLabel.setVisible(true);
+//            }
+//        } else {
+//            // Handle failed login
+//            subErrorLabel.setText("Invalid username or password.");
+//            subErrorLabel.setVisible(true);
+//        }
     }
 }

@@ -78,7 +78,7 @@
 						promptText="Enter Email/Phone Number..."
 						style="-fx-background-radius: 5;" />
 					<Label fx:id="casualErrorLabel"
-						text="Error with Email or Phone" textFill="#e74c3c" visible="true">
+						text="Error with Email or Phone" textFill="#e74c3c" visible="false">
 						<font>
 							<Font size="11.0" />
 						</font>
@@ -125,8 +125,8 @@
 					<PasswordField fx:id="subPasswordField"
 						promptText="Enter Password..." style="-fx-background-radius: 5;" />
 
-					<Label text="Invalid username or password" textFill="#e74c3c"
-						visible="true">
+					<Label fx:id="subErrorLabel" text="Invalid username or password" textFill="#e74c3c"
+						visible="false">
 						<font>
 							<Font size="11.0" />
 						</font>
