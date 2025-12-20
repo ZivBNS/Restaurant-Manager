@@ -13,7 +13,6 @@ import java.util.List;
 import controllers.Client_Controller;
 import entities.Restaurant;
 import entities.Restaurant_Table;
-import entities.TableSize;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import messages.Message;
@@ -27,7 +26,7 @@ public class ManageTables_GUI {
     @FXML private TableColumn<Restaurant_Table, String> colActive;
 
     @FXML private TextField tableNumberField;
-    @FXML private ComboBox<TableSize> sizeCombo;
+    @FXML private TextField  tableSizeField;
     @FXML private CheckBox activeCheckBox;
     
     private Client_Controller clientController;
@@ -42,8 +41,6 @@ public class ManageTables_GUI {
 
     @FXML
     public void initialize() {
-
-        sizeCombo.getItems().addAll(TableSize.values());
 
         colTableNumber.setCellValueFactory(data ->
             new SimpleIntegerProperty(
@@ -69,7 +66,9 @@ public class ManageTables_GUI {
                     tableNumberField.setText(
                         String.valueOf(selected.getTableNumber())
                     );
-                    sizeCombo.setValue(selected.getTableSize());
+                    tableNumberField.setText(
+                            String.valueOf(selected.getSize())
+                        );
                     activeCheckBox.setSelected(selected.isActive());
                 }
             });
@@ -89,7 +88,7 @@ public class ManageTables_GUI {
             return;
         }
 
-        if (sizeCombo.getValue() == null) {
+        if (tableSizeField.getText().isEmpty()) {
             showAlert("Please select table size");
             return;
         }
@@ -102,7 +101,14 @@ public class ManageTables_GUI {
             return;
         }
 
-        TableSize size = sizeCombo.getValue();
+        int tableSize;
+        try {
+            tableSize = Integer.parseInt(tableSizeField.getText());
+        } catch (NumberFormatException e) {
+            showAlert("Table Size must be a number");
+            return;
+        }
+        
         boolean active = activeCheckBox.isSelected();
 
         Restaurant_Table selected =
@@ -111,7 +117,7 @@ public class ManageTables_GUI {
         if (selected == null) {
             // ADD
             Restaurant_Table newTable =
-                new Restaurant_Table(-1, tableNumber, size, active);
+                new Restaurant_Table(-1, tableNumber, tableSize, active);
 
             clientController.sendComplexObject(
             	    new Message(MessageType.ADD_TABLE_REQUEST, newTable)
@@ -121,7 +127,7 @@ public class ManageTables_GUI {
         } else {
             // UPDATE
             selected.setTableNumber(tableNumber);
-            selected.setTableSize(size);
+            selected.setTableSize(tableSize);
             selected.setActive(active);
 
             clientController.sendComplexObject(
@@ -132,7 +138,7 @@ public class ManageTables_GUI {
 
         tablesTable.getSelectionModel().clearSelection();
         tableNumberField.clear();
-        sizeCombo.setValue(null);
+        tableSizeField.clear();
         activeCheckBox.setSelected(false);
     }
 

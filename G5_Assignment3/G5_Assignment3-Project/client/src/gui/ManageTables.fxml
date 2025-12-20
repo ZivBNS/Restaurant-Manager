@@ -51,7 +51,7 @@
 				
 				<VBox spacing="5">
 				<Label text="Table Size" style="-fx-font-weight: bold;" />
-				<ComboBox fx:id="sizeCombo" prefWidth="120" />
+				<TextField fx:id="tableSizeField" prefWidth="120" />
 				</VBox>
 				
 				<VBox spacing="5">

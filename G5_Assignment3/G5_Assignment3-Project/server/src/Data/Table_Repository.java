@@ -12,7 +12,6 @@ import java.util.List;
 
 import entities.Restaurant;
 import entities.Restaurant_Table;
-import entities.TableSize;
 
 /**
  * Repository class for managing Table data and logical capacity availability.
@@ -52,7 +51,7 @@ public class Table_Repository implements Repository_Interface<Restaurant_Table> 
                 while (rs.next()) {
                     int id = rs.getInt("ID");
                     int tableNumber = rs.getInt("TableNumber");
-                    TableSize size = TableSize.fromSeats(rs.getInt("Size"));
+                    int size = rs.getInt("Size");
                     boolean isActive = rs.getBoolean("IsActive");
 
                     Restaurant_Table table = new Restaurant_Table(id, tableNumber, size, isActive);
@@ -281,8 +280,7 @@ public class Table_Repository implements Repository_Interface<Restaurant_Table> 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     int tableNumber = rs.getInt("TableNumber");
-                    TableSize size =
-                        TableSize.fromSeats(rs.getInt("Size"));
+                    int size = rs.getInt("Size");
                     boolean isActive = rs.getBoolean("IsActive");
 
                     return new Restaurant_Table(
