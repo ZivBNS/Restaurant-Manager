@@ -87,7 +87,7 @@
 
 				<Button fx:id="guestLoginBtn"
 					maxWidth="1.7976931348623157E308" mnemonicParsing="false"
-					onAction="#openGuestMenu"
+					onAction="#onGuestLoginClick"
 					style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;"
 					text="Continue as Guest">
 					<font>

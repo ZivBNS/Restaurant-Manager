@@ -51,12 +51,21 @@ public class Server_Controller extends AbstractServer {
             switch (clientMsg.getType()) {
 
                 // --- Authentication ---
-                case LOGIN_REQUEST:
+                case LOGIN_REQUEST_SUB:
                     if(clientMsg.getContent() instanceof LoginData) {
-                    	serverResponse = Login_Controller.handleLogin((LoginData)clientMsg.getContent());
+                    	serverResponse = Login_Controller.handleSubLogin((LoginData)clientMsg.getContent());
                     	break;
                     }else {
-                    	serverResponse = new Message(MessageType.LOGIN_FAILED, "Unexpected user data");
+                    	serverResponse = new Message(MessageType.LOGIN_FAILED_SUB, "Unexpected user data");
+                    	break;
+                    }
+                    
+                case LOGIN_REQUEST_GUEST:
+                    if(clientMsg.getContent() instanceof LoginData) {
+                    	serverResponse = Login_Controller.handleGuestLogin((LoginData)clientMsg.getContent());
+                    	break;
+                    }else {
+                    	serverResponse = new Message(MessageType.LOGIN_FAILED_GUEST, "Unexpected user data");
                     	break;
                     }
                     

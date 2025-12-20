@@ -18,6 +18,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import entities.Casual_Customer;
 import entities.LoginData;
 import entities.Opening_Hours;
 import entities.Reservation;
@@ -160,7 +161,7 @@ public class Client_Controller implements ChatIF {
 	
 	public void sendSubscriberLoginRequest(LoginData loginData) {
 		System.out.println("Subscriber Login Attempt: " + loginData.getUsername());
-		Message loginMessage = new Message(MessageType.LOGIN_REQUEST, loginData);
+		Message loginMessage = new Message(MessageType.LOGIN_REQUEST_SUB, loginData);
         if (ConnectToServer_GUI.clientController != null) {
             try {
                 sendComplexObject(loginMessage);
@@ -169,7 +170,18 @@ public class Client_Controller implements ChatIF {
             }
             //ConnectToServer_GUI.clientController = null;
         }
-        System.out.println("Subscriber Login Attempt: " + loginData.getUsername());
+	}
+	
+	public void sendGuestLoginRequest(LoginData loginData) {
+		System.out.println("Guest Login Attempt: " + loginData.getEmail() != null ? loginData.getEmail() : loginData.getPhoneNumber());
+		Message loginMessage = new Message(MessageType.LOGIN_REQUEST_GUEST, loginData);
+        if (ConnectToServer_GUI.clientController != null) {
+            try {
+                sendComplexObject(loginMessage);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 	}
 	
 
@@ -195,27 +207,52 @@ public class Client_Controller implements ChatIF {
 			try {
 				switch (recivedMessage.getType()) {
 				
-				case LOGIN_SUCCESS:
-					
-					Subscribed_Customer user = (Subscribed_Customer)recivedMessage.getContent();
-					User_Session.setLoggedInUser(user);
+				case LOGIN_SUCCESS_GUEST:
 					
 					Platform.runLater(new Runnable() {
 						@Override
 						public void run() {
 							if (MainScreen_GUI.instance != null) {
-								MainScreen_GUI.instance.onLoginSuccess(user);
+								MainScreen_GUI.instance.onGuestLoginSuccess();
+							}
+						}});
+					break;
+				
+				case LOGIN_SUCCESS_SUB:
+					
+					Subscribed_Customer sub = (Subscribed_Customer)recivedMessage.getContent();
+					User_Session.setLoggedInUser(sub);
+					
+					Platform.runLater(new Runnable() {
+						@Override
+						public void run() {
+							if (MainScreen_GUI.instance != null) {
+								MainScreen_GUI.instance.onSubLoginSuccess(sub);
 							}
 						}});
 					break;
 					
-				case LOGIN_FAILED:
+
+				case LOGIN_FAILED_GUEST:
 					
 					Platform.runLater(new Runnable() {
 						@Override
 						public void run() {
 							if (MainScreen_GUI.instance != null) {
-								MainScreen_GUI.instance.onLoginFailure();
+								MainScreen_GUI.instance.onGuestLoginFailure(recivedMessage);
+							}
+						}});
+					
+					break;
+					
+					
+				case LOGIN_FAILED_SUB:
+					
+					Platform.runLater(new Runnable() {
+						@Override
+						public void run() {
+							if (MainScreen_GUI.instance != null) {
+								MainScreen_GUI.instance.onSubLoginFailure();
 							}
 						}});
 					

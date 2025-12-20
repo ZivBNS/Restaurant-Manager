@@ -3,9 +3,12 @@ package messages;
 
 public enum MessageType {
     // --- Authorization and User Management ---
-    LOGIN_REQUEST,          // Client sends user credentials (User object)
-    LOGIN_SUCCESS,          // Server confirms authentication
-    LOGIN_FAILED,           // Server denies authentication
+    LOGIN_REQUEST_SUB,          // Client sends subscriber credentials 
+    LOGIN_REQUEST_GUEST,          // Client sends guest credentials 
+    LOGIN_SUCCESS_SUB,          // Server confirms authentication
+    LOGIN_SUCCESS_GUEST,          // Server confirms guest authentication
+    LOGIN_FAILED_SUB,			// Server denies authentication for subscriber
+    LOGIN_FAILED_GUEST,           // Server denies authentication for guest
     LOGOUT_REQUEST,         // Client requests disconnection
     
     // --- Reservations and Waitlist ---

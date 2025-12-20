@@ -32,6 +32,41 @@ public class User_Repository {
         return null;
     }
 	
+	public boolean getByEmailOrPhone(String email, int phone) {
+        PooledConnection pConn = null;
+        
+        boolean hasEmail = (email != null && !email.trim().isEmpty());
+        boolean hasPhone = (phone != 0);
+        try {
+            pConn = db.getConnection();
+            String sql;
+            
+            if (hasEmail && hasPhone) { //TODO: remove unneeded check
+                sql = "SELECT 1 FROM users WHERE Email = ? OR Phone = ? LIMIT 1";
+            } else if (hasEmail) {
+                sql = "SELECT 1 FROM users WHERE Email = ? LIMIT 1";
+            } else {
+                sql = "SELECT 1 FROM users WHERE Phone = ? LIMIT 1";
+            }
+            
+            try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(sql)) {
+                int idx = 1;
+                if (hasEmail) pstmt.setString(idx++, email.trim());
+                if (hasPhone) pstmt.setString(idx++, String.valueOf(phone));
+
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    return rs.next();
+                }
+            }
+            
+        } catch (SQLException e) {
+        	e.printStackTrace(); 
+        } finally { 
+        	if (pConn != null) db.releaseConnection(pConn); 
+        }
+        return false;
+    }
+	
 	private Subscribed_Customer mapRowToUser(ResultSet rs) throws SQLException {
         return new Subscribed_Customer(
 

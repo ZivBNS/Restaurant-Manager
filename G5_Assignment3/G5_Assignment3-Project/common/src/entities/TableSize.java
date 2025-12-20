@@ -3,6 +3,7 @@ package entities;
 public enum TableSize {
 	TWO(2),
 	FOUR(4),
+	FIVE(5),
 	SIX(6),
 	EIGHT(8),
 	TEN(10),
