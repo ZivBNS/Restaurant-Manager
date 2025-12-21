@@ -3,11 +3,13 @@ package Data;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
 import entities.Reservation;
 import entities.Subscribed_Customer;
+import entities.UserRecord;
 
 public class User_Repository {
 	
@@ -70,25 +72,34 @@ public class User_Repository {
         return false;
     }
 	
-	public List<Subscribed_Customer> getAllSubscribedCustomers() {
+	public List<UserRecord> getAllSubscribedCustomers() {
 		
-		List<Subscribed_Customer> results = new ArrayList<>();
+		List<UserRecord> results = new ArrayList<>();
 		PooledConnection pConn = null;
 		
 		try {
             pConn = db.getConnection();
-            String sql = "SELECT * FROM users";
+            String sql = "SELECT ID, FirstName, LastName, Phone, Email,  Username, Password, subscriberCode, Identity "
+            		+ "FROM users "
+            		+ "ORDER BY LastName, FirstName;";
             
             try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(sql)) {
 
                 try (ResultSet rs = pstmt.executeQuery()) {
                     while (rs.next()) {
+                    	int id = rs.getInt("ID");
                         String firstName = rs.getString("FirstName");
                         String lastName  = rs.getString("LastName");
                         String phone     = rs.getString("Phone");
                         String email     = rs.getString("Email");
                         String username  = rs.getString("Username");
                         String password  = rs.getString("Password");
+                        int code = rs.getInt("subscriberCode");
+                        String identity = rs.getString("Identity");
+                        
+                        results.add(new UserRecord(
+                                id, firstName, lastName, phone, email, username, password, identity, code
+                        ));
                     };
                 }
             }
@@ -98,8 +109,8 @@ public class User_Repository {
         } finally { 
         	if (pConn != null) db.releaseConnection(pConn); 
         }
-		
-		return null;
+		System.out.println("returns user list of size : " + results.size());
+		return results;
 	}
 	
 	private Subscribed_Customer mapRowToUser(ResultSet rs) throws SQLException {
@@ -114,5 +125,115 @@ public class User_Repository {
         );
     }
 
+	public boolean existsByUsername(String username) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	public boolean addNewUser(UserRecord user) {
+		// TODO Auto-generated method stub
+		
+		String sql = """
+		        INSERT INTO users
+		        (FirstName, LastName, Phone, Email, Username, Password, subscriberCode, Identity)
+		        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		    """;
+		
+		PooledConnection pConn = null;
+		
+		try {
+            pConn = db.getConnection();
+            
+            try (PreparedStatement ps = pConn.getConnection().prepareStatement(sql)) {
+
+            	ps.setString(1, user.getFirstName());
+                ps.setString(2, user.getLastName());
+                ps.setString(3, user.getPhone());
+                ps.setString(4, user.getEmail());
+                ps.setString(5, user.getUsername());
+                ps.setString(6, user.getPassword());
+
+                // subscriberCode can be NULL
+                if (user.getSubscriberCode() != null) {
+                    ps.setInt(7, user.getSubscriberCode());
+                } else {
+                    ps.setNull(7, Types.INTEGER);
+                }
+
+                ps.setString(8, user.getIdentity());
+
+                return ps.executeUpdate() == 1; // true if exactly 1 row inserted
+                
+            }
+            
+        } catch (SQLException e) {
+        	e.printStackTrace(); 
+        } finally { 
+        	if (pConn != null) db.releaseConnection(pConn); 
+        }
+		
+		
+		return false;
+	}
+
+	
+	public boolean updateUser(UserRecord u) {
+	    PooledConnection pConn = null;
+
+	    String sql = """
+	        UPDATE users
+	        SET FirstName = ?, LastName = ?, Phone = ?, Email = ?, Username = ?, Password = ?, subscriberCode = ?, Identity = ?
+	        WHERE ID = ?
+	    """;
+
+	    try {
+	        pConn = db.getConnection();
+
+	        try (PreparedStatement ps = pConn.getConnection().prepareStatement(sql)) {
+	            ps.setString(1, u.getFirstName());
+	            ps.setString(2, u.getLastName());
+	            ps.setString(3, u.getPhone());
+	            ps.setString(4, u.getEmail());
+	            ps.setString(5, u.getUsername());
+	            ps.setString(6, u.getPassword());          
+	            ps.setInt(7, u.getSubscriberCode());
+	            ps.setString(8, u.getIdentity());
+	            ps.setInt(9, u.getId());
+
+	            return ps.executeUpdate() == 1; // true if exactly 1 row updated
+	        }
+
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	        return false;
+	    } finally {
+	        if (pConn != null) db.releaseConnection(pConn);
+	    }
+	}
+	
+	public boolean deleteUserByID(UserRecord u) {
+	    PooledConnection pConn = null;
+
+	    String sql = "DELETE FROM users WHERE ID = ?";
+
+	    try {
+	        pConn = db.getConnection();
+
+	        try (PreparedStatement ps =
+	                 pConn.getConnection().prepareStatement(sql)) {
+
+	            ps.setLong(1, u.getId());
+
+	            return ps.executeUpdate() == 1;
+	        }
+
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    } finally {
+	        if (pConn != null) db.releaseConnection(pConn);
+	    }
+
+	    return false;
+	}
 	
 }

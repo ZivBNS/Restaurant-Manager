@@ -20,10 +20,12 @@ public class Server_Controller extends AbstractServer {
 
     final public static int DEFAULT_PORT = 5555;
     private Server_GUI gui;
+    private final User_Controller userController;
 
     public Server_Controller(int port, Server_GUI gui) {
         super(port); 
         this.gui = gui;
+        this.userController = new User_Controller();
     }
 
     /**
@@ -116,10 +118,15 @@ public class Server_Controller extends AbstractServer {
                     serverResponse= new Message(MessageType.RETURN_OPENING_HOURS, hours);
                     break;
 
-                case GET_USER_DETAILS:
-                    
+                case GET_ALL_USERS_REQUEST:
+                	serverResponse = userController.handle(clientMsg);
                     break;
                     
+                case ADD_USER_REQUEST:
+                case EDIT_USER_REQUEST:
+                case DELETE_USER_REQUEST:
+                	serverResponse = userController.handle(clientMsg);
+                    break;
                 default:
                     log("Warning: Unknown command received: " + clientMsg.getType());
                     serverResponse = new Message(MessageType.ERROR_RESPONSE, "Unknown Command");

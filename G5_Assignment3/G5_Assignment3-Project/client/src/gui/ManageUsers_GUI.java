@@ -1,28 +1,38 @@
 package gui;
 
+import java.io.IOException;
+import java.util.List;
+
 import entities.Subscribed_Customer;
+import entities.UserRecord;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.*;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.Stage;
+import messages.Message;
+import messages.MessageType;
 
 
 public class ManageUsers_GUI {
 
-
-
 	@FXML private TextField searchField;
-    @FXML private TableView<Subscribed_Customer> usersTable;
-    @FXML private TableColumn<Subscribed_Customer, Integer> colId;
+    @FXML private TableView<UserRecord> usersTable;
+    @FXML private TableColumn<UserRecord, Integer> colId;
     //@FXML private TableColumn<Subscribed_Customer, String> colFirstName;
     //@FXML private TableColumn<Subscribed_Customer, String> colLastName;
-    @FXML private TableColumn<Subscribed_Customer, String> colFullName;
-    @FXML private TableColumn<Subscribed_Customer, String> colPhone;
-    @FXML private TableColumn<Subscribed_Customer, String> colEmail;
-    @FXML private TableColumn<Subscribed_Customer, String> colUsername;
-    @FXML private TableColumn<Subscribed_Customer, Integer> colSubscriberCode;
-    @FXML private TableColumn<Subscribed_Customer, String> colIdentity;
+    @FXML private TableColumn<UserRecord, String> colFullName;
+    @FXML private TableColumn<UserRecord, String> colPhone;
+    @FXML private TableColumn<UserRecord, String> colEmail;
+    @FXML private TableColumn<UserRecord, String> colUsername;
+    @FXML private TableColumn<UserRecord, Integer> colSubscriberCode;
+    @FXML private TableColumn<UserRecord, String> colIdentity;
 
     @FXML private TextField idField;
     @FXML private TextField firstNameField, lastNameField, phoneField, emailField, usernameField, subscriberCodeField;
@@ -30,16 +40,22 @@ public class ManageUsers_GUI {
     @FXML private ComboBox<String> identityCombo;
 
     @FXML private Label formErrorLabel;
+    @FXML private Label statusMessageLabel;
     @FXML private Button deleteBtn;
+    @FXML private Button backBtn;
 
-    private final ObservableList<Subscribed_Customer> master = FXCollections.observableArrayList();
-    private Subscribed_Customer selected = null;
+    private final ObservableList<UserRecord> master = FXCollections.observableArrayList();
+    private UserRecord selected = null;
 
     @FXML
     public void initialize() {
+    	
+    	ConnectToServer_GUI.clientController.setManageUsersGUI(this);
+    	
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         //colFirstName.setCellValueFactory(new PropertyValueFactory<>("firstName"));
         //colLastName.setCellValueFactory(new PropertyValueFactory<>("lastName"));
+        colFullName.setCellValueFactory(new PropertyValueFactory<>("fullName"));
         colPhone.setCellValueFactory(new PropertyValueFactory<>("phone"));
         colEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
         colUsername.setCellValueFactory(new PropertyValueFactory<>("username"));
@@ -58,23 +74,76 @@ public class ManageUsers_GUI {
             else fillForm(newV);
         });
 
+        identityCombo.setItems(
+        		FXCollections.observableArrayList(
+                "Subscriber",
+                "Employee",
+                "Manager"
+            ));
         if (identityCombo.getItems().contains("Subscriber")) {
             identityCombo.getSelectionModel().select("Subscriber");
         }
 
-        loadUsers();
+        loadUsersAsk();
+    }
+    
+    public void handle(Message msg) {
+        
+        try {
+             switch (msg.getType()) {
+            
+                case MessageType.GET_ALL_USERS_RESPONSE : 
+                	List<UserRecord> users = (List<UserRecord>) msg.getContent();
+                	loadUsersRecive(users);
+                	break;
+                
+
+                case MessageType.ADD_USER_RESPONSE_OK : newUserAdded(); break;
+                case MessageType.ADD_USER_RESPONSE_ERR : failedToAddUser(); break;
+//
+//                case MessageType.UPDATE_USER -> handleUpdate((Subscribed_Customer) msg.getContent());
+//
+//                case MessageType.REMOVE_USER -> handleDelete((String) msg.getContent()); 
+//                // e.g. delete by username (or id)
+
+                default:	
+                	System.out.println("ManageUsers_GUI: Received unhandled message type: " + msg.getType());
+            
+            };
+        } catch (Exception e) {
+            e.printStackTrace();
+            //return new Message(MessageType.USERS_ERROR, "Server error.");
+        }
     }
 
-    private void loadUsers() {
-        // TODO: request list from server and replace master
-        // master.setAll(receivedUsers);
+    private void loadUsersAsk() {
+    	
+    	ConnectToServer_GUI.clientController.sendGetAllUsersRequest();
+    	//onRefresh();
+    }
+    private void loadUsersRecive(List<UserRecord> receivedUsers) {
+    	master.clear();
+        master.setAll(receivedUsers);
+    }
+    
+    private void newUserAdded() {
+    	
+    	
+    	
+    	showError("New user added");
+    	loadUsersAsk();
 
-        master.clear(); // placeholder
+    }
+    
+    private void failedToAddUser() {
+    	
+    	showError("Error adding user");
+
     }
 
     @FXML
     private void onRefresh() {
-        loadUsers();
+    	loadUsersAsk();
     }
 
     @FXML
@@ -129,30 +198,35 @@ public class ManageUsers_GUI {
             }
 
             // Build your object (adjust constructor / setters to your actual class!)
-            Subscribed_Customer newUser = new Subscribed_Customer(first, last, phone, email, username, password);
-
+//            int cardCode = 0;
+//            try {
+//            	cardCode = Integer.parseInt(codeText);
+//			} catch (Exception e) {
+//				showError("bad card-code from DB!");
+//			}
+            UserRecord newUser = new UserRecord(0, first, last, phone, email, username, password, identity, subscriberCode);
+            ConnectToServer_GUI.clientController.sendAddUserRequest(newUser);
             // TODO: set identity + subscriberCode if your class supports it (setters)
             // newUser.setIdentity(identity);
             // if (subscriberCode != null) newUser.setSubscriberCode(subscriberCode);
 
             // TODO: send ADD message to server
-
+            onRefresh();
             // On success:
-            master.add(newUser);
+            //master.add(newUser);
             usersTable.getSelectionModel().select(newUser);
 
         } else {
             // EDIT MODE
             // If password empty -> keep old password (server-side recommended)
-            Subscribed_Customer updated = new Subscribed_Customer(first, last, phone, email, username,
-                    (password == null || password.isEmpty()) ? selected.getPassword() : password);
+            UserRecord updated = new UserRecord(selected.getId(),first, last, phone, email, username,
+                    (password == null || password.isEmpty()) ? selected.getPassword() : password, identity, selected.getSubscriberCode());
 
             // updated.setId(selected.getId());
             // updated.setIdentity(identity);
             // updated.setSubscriberCode(subscriberCode);
-
-            // TODO: send UPDATE message to server
-
+            ConnectToServer_GUI.clientController.sendEditUserRequest(updated);
+            onRefresh();
             int idx = master.indexOf(selected);
             if (idx >= 0) {
                 master.set(idx, updated);
@@ -167,11 +241,11 @@ public class ManageUsers_GUI {
     @FXML
     private void onDelete() {
         if (selected == null) return;
-
-        // TODO: send DELETE message to server (by id or username)
-        master.remove(selected);
+        ConnectToServer_GUI.clientController.sendRemoveUserRequest(selected);
+        //master.remove(selected);
         selected = null;
         clearForm();
+        onRefresh();
     }
 
     @FXML
@@ -181,18 +255,37 @@ public class ManageUsers_GUI {
 
     @FXML
     private void onBack() {
-        // TODO: navigate back
+
+
+    	System.out.println("Go to: Workers Screen");
+
+        try {
+            FXMLLoader loader =
+                    new FXMLLoader(getClass().getResource("/gui/Workers.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = (Stage) backBtn.getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Employee Dashboard - Main Menu");
+            stage.show();
+
+        } catch (IOException e) {
+            System.err.println("Navigation Error: Failed to load Workers.fxml");
+            e.printStackTrace();
+        }
+        
+        
     }
 
-    private void fillForm(Subscribed_Customer u) {
+    private void fillForm(UserRecord newV) {
         //idField.setText(String.valueOf(u.ge));
-        firstNameField.setText(safe(u.getFirstName()));
-        lastNameField.setText(safe(u.getLastName()));
-        phoneField.setText(safe(u.getPhone()));
-        emailField.setText(safe(u.getEmail()));
-        usernameField.setText(safe(u.getUsername()));
-        subscriberCodeField.setText(String.valueOf(u.getSubscriberCode()));
-        //identityCombo.getSelectionModel().select(safe(u.getIdentity()));
+        firstNameField.setText(safe(newV.getFirstName()));
+        lastNameField.setText(safe(newV.getLastName()));
+        phoneField.setText(safe(newV.getPhone()));
+        emailField.setText(safe(newV.getEmail()));
+        usernameField.setText(safe(newV.getUsername()));
+        subscriberCodeField.setText(String.valueOf(newV.getSubscriberCode()));
+        identityCombo.getSelectionModel().select(safe(newV.getIdentity()));
         passwordField.clear(); // don't show current password
     }
 

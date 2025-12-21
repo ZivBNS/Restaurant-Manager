@@ -2,6 +2,7 @@ package controllers;
 
 import Data.User_Repository;
 import entities.Subscribed_Customer;
+import entities.UserRecord;
 import messages.Message;
 import messages.MessageType;
 
@@ -13,21 +14,21 @@ public class User_Controller {
 
     private final User_Repository repo;
 
-    public User_Controller(User_Repository repo) {
-        this.repo = repo;
+    public User_Controller() {
+        this.repo = User_Repository.getInstance();
     }
 
-    public Message handle(Object client, Message msg) {
+    public Message handle(Message msg) {
         try {
             return switch (msg.getType()) {
 
                 case MessageType.GET_ALL_USERS_REQUEST -> handleGetAll();
 
-                case MessageType.ADD_USER -> handleAdd((Subscribed_Customer) msg.getObject());
+                case MessageType.ADD_USER_REQUEST -> handleAdd((UserRecord) msg.getContent());
 
-                case MessageType.UPDATE_USER -> handleUpdate((Subscribed_Customer) msg.getObject());
+                case MessageType.EDIT_USER_REQUEST -> handleUpdate((UserRecord) msg.getContent());
 
-                case MessageType.REMOVE_USER -> handleDelete((String) msg.getObject()); 
+                case MessageType.DELETE_USER_REQUEST -> handleDelete((UserRecord) msg.getContent()); 
                 // e.g. delete by username (or id)
 
                 default -> new Message(MessageType.USERS_ERROR, "Unknown user action: " + msg.getType());
@@ -42,55 +43,61 @@ public class User_Controller {
     }
 
     private Message handleGetAll() {
-        List<Subscribed_Customer> users = repo.getAllSubscribedCustomers();
+        List<UserRecord> users = repo.getAllSubscribedCustomers();
         return new Message(MessageType.GET_ALL_USERS_RESPONSE, users);
     }
 
-    private Message handleAdd(Subscribed_Customer u) {
+    private Message handleAdd(UserRecord u) {
         String err = validateForAdd(u);
-        if (err != null) return new Message(MessageType.USERS_ERROR, err);
+        if (err != null) return new Message(MessageType.ADD_USER_RESPONSE_ERR, err);
 
-        // uniqueness checks (example)
+        // uniqueness checks
         if (repo.existsByUsername(u.getUsername())) {
-            return new Message(MsgType.USERS_ERROR, "Username already exists.");
+            return new Message(MessageType.ADD_USER_RESPONSE_ERR, "Username already exists.");
         }
-        if (repo.existsByEmailOrPhone(u.getEmail(), u.getPhone())) {
-            return new Message(MsgType.USERS_ERROR, "Email or phone already exists.");
+        
+        int phone = 0;
+        try {
+        	phone = Integer.parseInt(u.getPhone());
+        } catch (NumberFormatException e) {
+            // handle invalid number
+            System.out.println("Not a valid number");
+        }
+        if (repo.getByEmailOrPhone(u.getEmail(),phone)) {
+            return new Message(MessageType.ADD_USER_RESPONSE_ERR, "Email or phone already exists.");
         }
 
-        boolean ok = repo.insertSubscribedCustomer(u);
+        boolean ok = repo.addNewUser(u);
         return ok
-            ? new Message(MessageType.USERS_OK, "User added.")
-            : new Message(MessageType.USERS_ERROR, "Failed to add user.");
+            ? new Message(MessageType.ADD_USER_RESPONSE_OK, "User added.")
+            : new Message(MessageType.ADD_USER_RESPONSE_ERR, "Failed to add user.");
     }
 
-    private Message handleUpdate(Subscribed_Customer u) {
+    private Message handleUpdate(UserRecord u) {
         String err = validateForUpdate(u);
-        if (err != null) return new Message(MsgType.USERS_ERROR, err);
+        if (err != null) return new Message(MessageType.EDIT_USER_RESPONSE_ERR, err);
 
-        // If you allow changing username/email/phone, check collisions
-        // You likely need an ID or "originalUsername" to do this properly.
-        // For now, assume username identifies the row.
-        boolean ok = repo.updateSubscribedCustomer(u);
+        boolean ok = repo.updateUser(u);
         return ok
-            ? new Message(MessageType.USERS_OK, "User updated.")
-            : new Message(MessageType.USERS_ERROR, "Failed to update user.");
+            ? new Message(MessageType.EDIT_USER_RESPONSE_OK, "User updated.")
+            : new Message(MessageType.EDIT_USER_RESPONSE_ERR, "Failed to update user.");
     }
 
-    private Message handleDelete(String username) {
-        if (username == null || username.trim().isEmpty()) {
-            return new Message(MsgType.USERS_ERROR, "Username is required.");
+    private Message handleDelete(UserRecord u) {
+    	int id = u.getId();
+        if (id == 0) {
+            return new Message(MessageType.DELETE_USER_RESPONSE_ERR, "ID is required.");
         }
 
-        boolean ok = repo.deleteByUsername(username.trim());
+        boolean ok = repo.deleteUserByID(u);
         return ok
-            ? new Message(MsgType.USERS_OK, "User deleted.")
-            : new Message(MsgType.USERS_ERROR, "Failed to delete user.");
+            ? new Message(MessageType.DELETE_USER_RESPONSE_OK, "User deleted.")
+            : new Message(MessageType.DELETE_USER_RESPONSE_ERR, "Failed to delete user.");
     }
 
     // ---------- Validation ----------
 
-    private String validateForAdd(Subscribed_Customer u) {
+    private String validateForAdd(UserRecord u) {
         if (u == null) return "Missing user data.";
 
         if (isBlank(u.getFirstName()) || isBlank(u.getLastName())) return "First/last name required.";
@@ -101,7 +108,7 @@ public class User_Controller {
         return null;
     }
 
-    private String validateForUpdate(Subscribed_Customer u) {
+    private String validateForUpdate(UserRecord u) {
         if (u == null) return "Missing user data.";
 
         if (isBlank(u.getUsername())) return "Username required.";

@@ -2,8 +2,6 @@ package entities;
 
 public class Subscribed_Customer extends Casual_Customer implements User {
 	public static int subscriberCodeGenerator=100000;
-
-	private static final long serialVersionUID = 1L;
 	
 	private String firstName;
 	private String lastName;

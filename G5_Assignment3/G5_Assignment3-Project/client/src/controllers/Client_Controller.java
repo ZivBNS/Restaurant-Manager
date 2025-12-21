@@ -10,6 +10,7 @@ import gui.AddReservation_GUI;
 import gui.ConnectToServer_GUI;
 import gui.MainScreen_GUI;
 import gui.ManageOrders_GUI;
+import gui.ManageUsers_GUI;
 import gui.User_Session;
 import gui.ViewReservations_GUI;
 import javafx.application.Platform;
@@ -24,6 +25,7 @@ import entities.Opening_Hours;
 import entities.Reservation;
 import entities.Restaurant;
 import entities.Subscribed_Customer;
+import entities.UserRecord;
 import messages.Message;
 import messages.MessageType;
 
@@ -31,6 +33,7 @@ public class Client_Controller implements ChatIF {
 
 	final public static int DEFAULT_PORT = 5555;
 	ChatClient client;
+	private ManageUsers_GUI manageUsers_GUI;
 
 	public Client_Controller(String host, int port) throws IOException {
 		try {
@@ -185,8 +188,8 @@ public class Client_Controller implements ChatIF {
 	}
 	
 	public void sendGetAllUsersRequest() {
-		System.out.println("Get all users Attempt");
-		Message message = new Message(MessageType.GET_USER_DETAILS);
+		System.out.println("Get all users attempt");
+		Message message = new Message(MessageType.GET_ALL_USERS_REQUEST);
         if (ConnectToServer_GUI.clientController != null) {
             try {
                 sendComplexObject(message);
@@ -194,6 +197,50 @@ public class Client_Controller implements ChatIF {
                 e.printStackTrace();
             }
         }
+	}
+	
+	public void sendAddUserRequest(UserRecord newUser) {
+		System.out.println("Add new user attempt");
+		Message message = new Message(MessageType.ADD_USER_REQUEST, newUser);
+        if (ConnectToServer_GUI.clientController != null) {
+            try {
+                sendComplexObject(message);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+	}
+	public void sendEditUserRequest(UserRecord user) {
+		System.out.println("Add new user attempt");
+		Message message = new Message(MessageType.EDIT_USER_REQUEST, user);
+        if (ConnectToServer_GUI.clientController != null) {
+            try {
+                sendComplexObject(message);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+	}
+	public void sendRemoveUserRequest(UserRecord user) {
+		System.out.println("Add new user attempt");
+		Message message = new Message(MessageType.DELETE_USER_REQUEST, user);
+        if (ConnectToServer_GUI.clientController != null) {
+            try {
+                sendComplexObject(message);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+	}
+	
+	
+	// this function is a way to set the manage users gui to be reachable by the controller.
+	// its a bit different than what we used before but i think its better because
+	// the manage usres screen decides when its active to avoid problems with javaFX 
+	
+	public void setManageUsersGUI(ManageUsers_GUI manageUsers_GUI) {
+		// TODO Auto-generated method stub
+		this.manageUsers_GUI = manageUsers_GUI;
 	}
 	
 
@@ -422,9 +469,21 @@ public class Client_Controller implements ChatIF {
 						}
 					});
 					break;
+					
+				case GET_ALL_USERS_RESPONSE:
+				case ADD_USER_RESPONSE_OK:
+				case ADD_USER_RESPONSE_ERR:
+					Platform.runLater(new Runnable() {
+						@Override
+						public void run() {
+							if (manageUsers_GUI != null) {
+								manageUsers_GUI.handle(recivedMessage);
+							}
+						}});
+					break;
 
 				default:
-					System.out.println("Client_Controller: Received unhandled message type: " + recivedMessage.getType());
+					System.out.println("Client_Controller: Received unhandled message type: " + recivedMessage.getType() + recivedMessage.getContent());
 					break;
 				}
 			} catch (Exception e) {
@@ -433,5 +492,9 @@ public class Client_Controller implements ChatIF {
 			}
 		}
 	}
+
+
+
+	
 
 }

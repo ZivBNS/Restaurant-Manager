@@ -2,9 +2,8 @@ package entities;
 
 import java.io.Serializable;
 
-public class Casual_Customer implements Serializable   {
+public class Casual_Customer{
 
-	private static final long serialVersionUID = 1L;
 	private String phone;
     private String email;
 

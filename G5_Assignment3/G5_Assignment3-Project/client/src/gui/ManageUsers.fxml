@@ -8,12 +8,12 @@
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="gui.ManageUsers_GUI"
-            prefWidth="1000" prefHeight="600"
+            prefWidth="1300" prefHeight="600"
             style="-fx-background-color: #f3f5f7;">
 
     <top>
         <VBox spacing="8" BorderPane.alignment="CENTER" style="-fx-background-color: transparent;">
-            <Label text="Manage Users" style="-fx-text-fill: #1f2d3d;">
+            <Label text="Manage Users" BorderPane.alignment="CENTER" style="-fx-text-fill: #1f2d3d;">
                 <font><Font size="36"/></font>
             </Label>
             <Separator prefWidth="340" opacity="0.35"/>
@@ -27,14 +27,14 @@
             </padding>
 
             <!-- LEFT: Users list -->
-            <VBox spacing="12" HBox.hgrow="ALWAYS"
+            <VBox spacing="10" HBox.hgrow="ALWAYS"
                   style="-fx-background-color: white; -fx-background-radius: 14; -fx-border-radius: 14; -fx-border-color: #e3e7ed;">
                 <padding>
                     <Insets top="14" right="14" bottom="14" left="14"/>
                 </padding>
 
                 <HBox spacing="10">
-                    <TextField fx:id="searchField" promptText="Search username / name / email / phone..."
+                    <TextField fx:id="searchField" promptText="PLACEHOLDER - DOESNT WORK YET"
                                HBox.hgrow="ALWAYS"
                                style="-fx-background-radius: 10; -fx-border-radius: 10; -fx-border-color: #d9dde3; -fx-padding: 10;"/>
                     <Button text="Refresh" onAction="#onRefresh"
@@ -61,7 +61,16 @@
                     <Button text="Delete" fx:id="deleteBtn" onAction="#onDelete"
                             disable="true"
                             style="-fx-background-radius: 10; -fx-padding: 10 14;"/>
+                            
+                    <Label fx:id="statusMessageLabel"
+						text="" textFill="#e74c3c" visible="false" style="-fx-padding: 100 14;">
+						<font>
+							<Font size="20.0" />
+						</font>
+					</Label>
                 </HBox>
+                
+                
             </VBox>
 
             <!-- RIGHT: Form (added ID, subscriberCode, identity) -->
@@ -115,7 +124,7 @@
                 </HBox>
 
                 <Region VBox.vgrow="ALWAYS"/>
-                <Button text="Back" onAction="#onBack"
+                <Button text="Back" fx:id="backBtn" onAction="#onBack"
                         style="-fx-background-radius: 10; -fx-padding: 10 14;"/>
             </VBox>
 
