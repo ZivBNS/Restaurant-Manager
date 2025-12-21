@@ -69,6 +69,21 @@ public class Workers_GUI {
             @Override
             public void handle(ActionEvent event) {
                 System.out.println("Go to: Manage Users Screen");
+                try {
+                    // Load the FXML for the management panel
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/ManageUsers.fxml"));
+                    Parent root = loader.load();
+
+                    // Retrieve the current stage from the button and switch scenes
+                    Stage stage = (Stage) btnManageOrders.getScene().getWindow();
+                    stage.setScene(new Scene(root));
+                    stage.setTitle("Employee Dashboard - User Management");
+                    stage.show();
+                    
+                } catch (IOException e) {
+                    System.err.println("Navigation Error: Failed to load ManageUsers.fxml");
+                    e.printStackTrace();
+                }
             }
         });
 

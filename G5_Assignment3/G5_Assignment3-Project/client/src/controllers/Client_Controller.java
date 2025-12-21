@@ -184,6 +184,18 @@ public class Client_Controller implements ChatIF {
         }
 	}
 	
+	public void sendGetAllUsersRequest() {
+		System.out.println("Get all users Attempt");
+		Message message = new Message(MessageType.GET_USER_DETAILS);
+        if (ConnectToServer_GUI.clientController != null) {
+            try {
+                sendComplexObject(message);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+	}
+	
 
 	/**
 	 * Handles messages received from the server. Deserializes the byte array using Kryo 

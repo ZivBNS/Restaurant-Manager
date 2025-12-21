@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="gui.ManageUsers_GUI"
+            prefWidth="1000" prefHeight="600"
+            style="-fx-background-color: #f3f5f7;">
+
+    <top>
+        <VBox spacing="8" BorderPane.alignment="CENTER" style="-fx-background-color: transparent;">
+            <Label text="Manage Users" style="-fx-text-fill: #1f2d3d;">
+                <font><Font size="36"/></font>
+            </Label>
+            <Separator prefWidth="340" opacity="0.35"/>
+        </VBox>
+    </top>
+
+    <center>
+        <HBox spacing="16">
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20"/>
+            </padding>
+
+            <!-- LEFT: Users list -->
+            <VBox spacing="12" HBox.hgrow="ALWAYS"
+                  style="-fx-background-color: white; -fx-background-radius: 14; -fx-border-radius: 14; -fx-border-color: #e3e7ed;">
+                <padding>
+                    <Insets top="14" right="14" bottom="14" left="14"/>
+                </padding>
+
+                <HBox spacing="10">
+                    <TextField fx:id="searchField" promptText="Search username / name / email / phone..."
+                               HBox.hgrow="ALWAYS"
+                               style="-fx-background-radius: 10; -fx-border-radius: 10; -fx-border-color: #d9dde3; -fx-padding: 10;"/>
+                    <Button text="Refresh" onAction="#onRefresh"
+                            style="-fx-background-radius: 10; -fx-padding: 10 14;"/>
+                </HBox>
+
+                <!-- TABLE: added ID, subscriberCode, Identity columns -->
+                <TableView fx:id="usersTable" VBox.vgrow="ALWAYS"
+                           style="-fx-background-radius: 10; -fx-border-radius: 10; -fx-border-color: #eef1f5;">
+                    <columns>
+                        <TableColumn fx:id="colId" text="ID" prefWidth="70"/>
+                        <TableColumn fx:id="colUsername" text="Username" prefWidth="140"/>
+                        <TableColumn fx:id="colFullName" text="Name" prefWidth="160"/>
+                        <TableColumn fx:id="colEmail" text="Email" prefWidth="200"/>
+                        <TableColumn fx:id="colPhone" text="Phone" prefWidth="130"/>
+                        <TableColumn fx:id="colSubscriberCode" text="Code" prefWidth="90"/>
+                        <TableColumn fx:id="colIdentity" text="Identity" prefWidth="110"/>
+                    </columns>
+                </TableView>
+
+                <HBox spacing="10">
+                    <Button text="Add New" onAction="#onAddNew"
+                            style="-fx-background-radius: 10; -fx-padding: 10 14;"/>
+                    <Button text="Delete" fx:id="deleteBtn" onAction="#onDelete"
+                            disable="true"
+                            style="-fx-background-radius: 10; -fx-padding: 10 14;"/>
+                </HBox>
+            </VBox>
+
+            <!-- RIGHT: Form (added ID, subscriberCode, identity) -->
+            <VBox spacing="12" prefWidth="360"
+                  style="-fx-background-color: white; -fx-background-radius: 14; -fx-border-radius: 14; -fx-border-color: #e3e7ed;">
+                <padding>
+                    <Insets top="14" right="14" bottom="14" left="14"/>
+                </padding>
+
+                <Label text="User Details" style="-fx-font-size: 18; -fx-text-fill: #1f2d3d;"/>
+
+                <GridPane hgap="10" vgap="10">
+
+                    <Label text="ID:"/>
+                    <TextField fx:id="idField" GridPane.columnIndex="1" editable="false" promptText="(auto)"/>
+
+                    <Label text="First Name:" GridPane.rowIndex="1"/>
+                    <TextField fx:id="firstNameField" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                    <Label text="Last Name:" GridPane.rowIndex="2"/>
+                    <TextField fx:id="lastNameField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                    <Label text="Phone:" GridPane.rowIndex="3"/>
+                    <TextField fx:id="phoneField" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+                    <Label text="Email:" GridPane.rowIndex="4"/>
+                    <TextField fx:id="emailField" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+                    <Label text="Username:" GridPane.rowIndex="5"/>
+                    <TextField fx:id="usernameField" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+
+                    <Label text="Password:" GridPane.rowIndex="6"/>
+                    <PasswordField fx:id="passwordField" GridPane.rowIndex="6" GridPane.columnIndex="1"
+                                   promptText="Leave empty to keep current"/>
+
+                    <Label text="Subscriber Code:" GridPane.rowIndex="7"/>
+                    <TextField fx:id="subscriberCodeField" GridPane.rowIndex="7" GridPane.columnIndex="1"/>
+
+                    <Label text="Identity:" GridPane.rowIndex="8"/>
+                    <ComboBox fx:id="identityCombo" GridPane.rowIndex="8" GridPane.columnIndex="1" prefWidth="220"/>
+                </GridPane>
+
+                <Label fx:id="formErrorLabel" text="" visible="false"
+                       style="-fx-text-fill: #c0392b; -fx-font-size: 13;"/>
+
+                <HBox spacing="10">
+                    <Button text="Save" fx:id="saveBtn" onAction="#onSave"
+                            style="-fx-background-radius: 10; -fx-padding: 10 14;"/>
+                    <Button text="Clear" onAction="#onClear"
+                            style="-fx-background-radius: 10; -fx-padding: 10 14;"/>
+                </HBox>
+
+                <Region VBox.vgrow="ALWAYS"/>
+                <Button text="Back" onAction="#onBack"
+                        style="-fx-background-radius: 10; -fx-padding: 10 14;"/>
+            </VBox>
+
+        </HBox>
+    </center>
+</BorderPane>

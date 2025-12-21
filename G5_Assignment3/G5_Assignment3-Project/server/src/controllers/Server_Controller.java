@@ -116,6 +116,10 @@ public class Server_Controller extends AbstractServer {
                     serverResponse= new Message(MessageType.RETURN_OPENING_HOURS, hours);
                     break;
 
+                case GET_USER_DETAILS:
+                    
+                    break;
+                    
                 default:
                     log("Warning: Unknown command received: " + clientMsg.getType());
                     serverResponse = new Message(MessageType.ERROR_RESPONSE, "Unknown Command");

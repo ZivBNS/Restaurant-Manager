@@ -39,6 +39,12 @@ public enum MessageType {
     REGISTER_USER_FAILED,
     
     // --- get and set user details ---
+    GET_ALL_USERS_REQUEST,
+    GET_ALL_USERS_RESPONSE,
+    ADD_USER,
+    UPDATE_USER,
+    REMOVE_USER,
+    USERS_ERROR,
     GET_USER_DETAILS,
     RETURN_USER_DETAILS,
     UPDATE_USER_DETAILS_REQUEST,

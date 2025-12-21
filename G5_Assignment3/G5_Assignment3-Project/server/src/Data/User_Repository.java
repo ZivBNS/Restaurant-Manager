@@ -3,7 +3,10 @@ package Data;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
+import entities.Reservation;
 import entities.Subscribed_Customer;
 
 public class User_Repository {
@@ -67,6 +70,38 @@ public class User_Repository {
         return false;
     }
 	
+	public List<Subscribed_Customer> getAllSubscribedCustomers() {
+		
+		List<Subscribed_Customer> results = new ArrayList<>();
+		PooledConnection pConn = null;
+		
+		try {
+            pConn = db.getConnection();
+            String sql = "SELECT * FROM users";
+            
+            try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(sql)) {
+
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    while (rs.next()) {
+                        String firstName = rs.getString("FirstName");
+                        String lastName  = rs.getString("LastName");
+                        String phone     = rs.getString("Phone");
+                        String email     = rs.getString("Email");
+                        String username  = rs.getString("Username");
+                        String password  = rs.getString("Password");
+                    };
+                }
+            }
+            
+        } catch (SQLException e) {
+        	e.printStackTrace(); 
+        } finally { 
+        	if (pConn != null) db.releaseConnection(pConn); 
+        }
+		
+		return null;
+	}
+	
 	private Subscribed_Customer mapRowToUser(ResultSet rs) throws SQLException {
         return new Subscribed_Customer(
 
@@ -78,4 +113,6 @@ public class User_Repository {
             rs.getString("Password")
         );
     }
+
+	
 }
