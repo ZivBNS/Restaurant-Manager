@@ -8,6 +8,7 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.ArrayList;
 import entities.Reservation;
+import entities.ReservationStatus;
 
 /**
  * Repository for reservation data.
@@ -129,29 +130,62 @@ public class Reservation_Repository {
         finally { if (pConn != null) db.releaseConnection(pConn); }
     }
 
-    public List<Reservation> getByUserId(int userId) { /* Patterned pool fetch... */ 
-        List<Reservation> results = new ArrayList<>();
+    /**
+     * Retrieves all reservations associated with a specific subscriber ID
+     * that are currently 'Pending' or 'Active'.
+     * * @param userId The unique subscriber code.
+     * @return A list of filtered reservations.
+     */
+    public List<Reservation> getByUserId(int userId) {
+        List<Reservation> results = new ArrayList<Reservation>();
+        // Updated SQL to filter only relevant statuses for the customer view
+        String sql = "SELECT * FROM reservations WHERE UserID = ? AND Status IN ('Pending', 'Active')";
         PooledConnection pConn = null;
         try {
             pConn = db.getConnection();
-            try (PreparedStatement pstmt = pConn.getConnection().prepareStatement("SELECT * FROM reservations WHERE UserID = ?")) {
+            try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(sql)) {
                 pstmt.setInt(1, userId);
-                try (ResultSet rs = pstmt.executeQuery()) { while (rs.next()) results.add(extractReservationFromResultSet(rs)); }
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    while (rs.next()) {
+                        results.add(extractReservationFromResultSet(rs));
+                    }
+                }
             }
-        } catch (SQLException e) { } finally { if (pConn != null) db.releaseConnection(pConn); }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            if (pConn != null) db.releaseConnection(pConn);
+        }
         return results;
     }
 
-    public List<Reservation> getByContactInfo(String contact) { /* Patterned pool fetch... */ 
-        List<Reservation> results = new ArrayList<>();
+    /**
+     * Retrieves all reservations for a casual customer by phone or email
+     * that are currently 'Pending' or 'Active'.
+     * * @param contact The phone number or email string.
+     * @return A list of filtered reservations.
+     */
+    public List<Reservation> getByContactInfo(String contact) {
+        List<Reservation> results = new ArrayList<Reservation>();
+        // Updated SQL to filter only relevant statuses for the customer view
+        String sql = "SELECT * FROM reservations WHERE (Phone = ? OR Email = ?) AND Status IN ('Pending', 'Active')";
         PooledConnection pConn = null;
         try {
             pConn = db.getConnection();
-            try (PreparedStatement pstmt = pConn.getConnection().prepareStatement("SELECT * FROM reservations WHERE Phone = ? OR Email = ?")) {
-                pstmt.setString(1, contact); pstmt.setString(2, contact);
-                try (ResultSet rs = pstmt.executeQuery()) { while (rs.next()) results.add(extractReservationFromResultSet(rs)); }
+            try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(sql)) {
+                pstmt.setString(1, contact);
+                pstmt.setString(2, contact);
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    while (rs.next()) {
+                        results.add(extractReservationFromResultSet(rs));
+                    }
+                }
             }
-        } catch (SQLException e) { } finally { if (pConn != null) db.releaseConnection(pConn); }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            if (pConn != null) db.releaseConnection(pConn);
+        }
         return results;
     }
 
@@ -167,15 +201,27 @@ public class Reservation_Repository {
         return results;
     }
 
+    /**
+     * Hard deletes a reservation from the database.
+     * RESERVED FOR ADMIN USE ONLY.
+     * * @param id The reservation ID to delete.
+     * @return true if deleted.
+     */
     public boolean deleteById(int id) {
         PooledConnection pConn = null;
         try {
             pConn = db.getConnection();
             try (PreparedStatement pstmt = pConn.getConnection().prepareStatement("DELETE FROM reservations WHERE ID = ?")) {
-                pstmt.setInt(1, id); return pstmt.executeUpdate() > 0;
+                pstmt.setInt(1, id);
+                return pstmt.executeUpdate() > 0;
             }
-        } catch (SQLException e) { return false; } finally { if (pConn != null) db.releaseConnection(pConn); }
+        } catch (SQLException e) {
+            return false;
+        } finally {
+            if (pConn != null) db.releaseConnection(pConn);
+        }
     }
+
 
     private Reservation extractReservationFromResultSet(ResultSet rs) throws SQLException {
         return new Reservation(
@@ -187,5 +233,29 @@ public class Reservation_Repository {
             rs.getInt("NumberOfDiners"), rs.getInt("ConfirmationCode"), rs.getString("Status"),
             rs.getTimestamp("CreationTime").toLocalDateTime()
         );
+    }
+    /**
+     * Updates only the status of a specific reservation.
+     * Used for cancellations, check-ins, and completions.
+     * * @param reservationId The ID of the reservation.
+     * @param newStatus The new status enum value.
+     * @return true if the update was successful.
+     */
+    public boolean updateStatus(int reservationId, ReservationStatus newStatus) {
+        String sql = "UPDATE reservations SET Status = ? WHERE ID = ?";
+        PooledConnection pConn = null;
+        try {
+            pConn = db.getConnection();
+            try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(sql)) {
+                pstmt.setString(1, newStatus.toString()); // Converts enum to "Pending"/"Canceled" etc.
+                pstmt.setInt(2, reservationId);
+                return pstmt.executeUpdate() > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (pConn != null) db.releaseConnection(pConn);
+        }
     }
 }

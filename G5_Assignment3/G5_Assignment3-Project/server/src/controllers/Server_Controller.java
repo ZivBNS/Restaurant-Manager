@@ -5,7 +5,6 @@ import utils.KryoUtil;
 import entities.LoginData;
 import entities.Opening_Hours;
 import entities.Restaurant;
-import entities.User;
 import gui.Server_GUI;
 import messages.Message;
 import messages.MessageType;

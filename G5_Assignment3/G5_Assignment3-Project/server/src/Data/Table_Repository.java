@@ -8,16 +8,19 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import entities.Reservation;
 import entities.Restaurant;
 import entities.Restaurant_Table;
 
 /**
- * Repository class for managing Table data and logical capacity availability.
- * Implements the Singleton pattern and utilizes a custom Connection Pool.
- * Logic: Availability is determined by total seat capacity minus occupied seats 
- * to prevent table fragmentation.
+ * Repository class for managing Table data and simulating seating capacity.
+ * Implements "Best-Fit" Bin Packing with robust Debug Logging.
  */
 public class Table_Repository implements Repository_Interface<Restaurant_Table> {
     
@@ -31,14 +34,16 @@ public class Table_Repository implements Repository_Interface<Restaurant_Table> 
     }
 
     /**
-     * Initializes the restaurant table configuration and caches it.
+     * Initializes the restaurant table configuration.
+     * Includes Debug prints to verify tables are loaded correctly.
      */
     @Override
     public void init() {
         int maxTableSize = 0;
         List<Restaurant_Table> tablesList = new ArrayList<>();
-        String sql = "SELECT ID, TableNumber, Size, IsActive FROM Tables";
-        Restaurant.getInstance().setTables(tablesList);
+        // Note: Using lowercase 'tables' to match standard MySQL on most systems.
+        // If your DB uses 'Tables', change this back.
+        String sql = "SELECT ID, TableNumber, Size, IsActive FROM tables"; 
 
         PooledConnection pConn = null;
         try {
@@ -60,54 +65,101 @@ public class Table_Repository implements Repository_Interface<Restaurant_Table> 
                     }
                     tablesList.add(table);
                 }
+                
+                // --- DEBUG LOGGING ---
+                System.out.println("[Table_Repository] Loaded " + tablesList.size() + " tables from DB.");
+                if (tablesList.isEmpty()) {
+                    System.err.println("[Table_Repository] CRITICAL WARNING: No tables found! Capacity checks will always fail.");
+                } else {
+                    for(Restaurant_Table t : tablesList) {
+                        System.out.println("[Table_Repository] Table #" + t.getTableNumber() + " (Size: " + t.getSize() + ")");
+                    }
+                }
+                // ---------------------
+
                 Restaurant.getInstance().setTables(tablesList);
                 Restaurant.setBiggestTableSize(maxTableSize);
             }
         } catch (SQLException e) {
-            System.err.println("Init Error: " + e.getMessage());
+            System.err.println("[Table_Repository] Init Error: " + e.getMessage());
         } finally {
             if (pConn != null) db.releaseConnection(pConn);
         }
     }
 
     /**
-     * Checks if the restaurant has enough total seat capacity for a new or updated reservation.
-     * Calculation: (Total Seats) - (Occupied seats excluding the current reservation if updating).
-     * * @param start The requested start time.
-     * @param end The calculated end time.
-     * @param guests Requested guest count.
-     * @param excludeId The ID of the reservation to ignore (use null for new reservations).
-     * @return true if capacity exists, false otherwise.
+     * Advanced capacity check with Debug prints to trace failure reasons.
      */
     public boolean isCapacityAvailable(LocalDateTime start, LocalDateTime end, int guests, Integer excludeId) {
-        int totalSeats = 0;
-        for (Restaurant_Table t : Restaurant.getInstance().getTables()) {
+        
+        // 1. Fetch active tables from Cache
+        List<Restaurant_Table> activeTables = new ArrayList<>();
+        List<Restaurant_Table> cachedTables = Restaurant.getInstance().getTables();
+        
+        if (cachedTables == null || cachedTables.isEmpty()) {
+            System.err.println("[Capacity Check] Failed: No tables in Restaurant memory.");
+            return false;
+        }
+
+        for (Restaurant_Table t : cachedTables) {
             if (t.isActive()) {
-                totalSeats += t.getSize();
+                activeTables.add(t);
             }
         }
 
-        // Pass the excludeId to the helper method
-        int occupiedSeats = getOccupiedSeatCount(start, end, excludeId);
+        // 2. Fetch existing reservations
+        List<Reservation> simulatedGroups = getOverlappingReservationsList(start, end, excludeId);
+        
+        // 3. Add current request
+        Reservation currentRequest = new Reservation();
+        currentRequest.setNumberOfDiners(guests);
+        simulatedGroups.add(currentRequest);
 
-        return (totalSeats - occupiedSeats) >= guests;
+        // 4. Sort Groups (Descending)
+        Collections.sort(simulatedGroups, new Comparator<Reservation>() {
+            @Override
+            public int compare(Reservation r1, Reservation r2) {
+                return Integer.compare(r2.getNumberOfDiners(), r1.getNumberOfDiners());
+            }
+        });
+
+        // 5. Sort Tables (Ascending)
+        Collections.sort(activeTables, new Comparator<Restaurant_Table>() {
+            @Override
+            public int compare(Restaurant_Table t1, Restaurant_Table t2) {
+                return Integer.compare(t1.getSize(), t2.getSize());
+            }
+        });
+
+        // 6. Greedy Assignment Simulation
+        Set<Integer> occupiedInSimulation = new HashSet<>();
+
+        for (Reservation group : simulatedGroups) {
+            boolean assigned = false;
+            
+            for (Restaurant_Table table : activeTables) {
+                // If table fits AND is free in simulation
+                if (!occupiedInSimulation.contains(table.getId()) && table.getSize() >= group.getNumberOfDiners()) {
+                    occupiedInSimulation.add(table.getId());
+                    assigned = true;
+                    break; 
+                }
+            }
+
+            if (!assigned) {
+                // System.out.println("[Capacity Check] Failed to seat group of " + group.getNumberOfDiners() + " at " + start);
+                return false; // Simulation failed for this group
+            }
+        }
+
+        return true; // All groups seated successfully
     }
 
-    /**
-     * Helper method to sum NumberOfDiners for overlapping reservations, 
-     * optionally excluding a specific reservation ID to prevent self-collision during updates.
-     * * @param start Search window start.
-     * @param end Search window end.
-     * @param excludeId The ID to exclude from the sum (can be null).
-     * @return Total occupied seats in the time window.
-     */
-    private int getOccupiedSeatCount(LocalDateTime start, LocalDateTime end, Integer excludeId) {
-        int occupied = 0;
-        
-        // Build SQL query dynamically to handle the optional exclusion
+    private List<Reservation> getOverlappingReservationsList(LocalDateTime start, LocalDateTime end, Integer excludeId) {
+        List<Reservation> conflicts = new ArrayList<>();
         StringBuilder sql = new StringBuilder();
-        sql.append("SELECT SUM(NumberOfDiners) FROM reservations ");
-        sql.append("WHERE Status != 'Canceled' ");
+        sql.append("SELECT NumberOfDiners FROM reservations ");
+        sql.append("WHERE Status IN ('Pending', 'Active') ");
         sql.append("AND (ReservationStartTime < ? AND ReservationEndTime > ?) ");
         
         if (excludeId != null) {
@@ -126,29 +178,28 @@ public class Table_Repository implements Repository_Interface<Restaurant_Table> 
                 }
 
                 try (ResultSet rs = pstmt.executeQuery()) {
-                    if (rs.next()) {
-                        occupied = rs.getInt(1);
+                    while (rs.next()) {
+                        Reservation r = new Reservation();
+                        r.setNumberOfDiners(rs.getInt("NumberOfDiners"));
+                        conflicts.add(r);
                     }
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Database Error in getOccupiedSeatCount: " + e.getMessage());
+            System.err.println("DB Error loading overlapping reservations: " + e.getMessage());
         } finally {
             if (pConn != null) db.releaseConnection(pConn);
         }
-        return occupied;
+        return conflicts;
     }
 
-    /**
-     * Finds a specific physical table only during arrival.
-     */
     public Integer findBestAvailableTable(LocalDateTime start, LocalDateTime end, int guests) {
-        String sql = "SELECT ID FROM Tables " 
+        String sql = "SELECT ID FROM tables " 
                    + "WHERE Size >= ? AND IsActive = 1 " 
                    + "AND ID NOT IN ("
                    + "    SELECT TableID FROM reservations " 
                    + "    WHERE TableID IS NOT NULL "
-                   + "    AND Status != 'Canceled' " 
+                   + "    AND Status = 'Active' " 
                    + "    AND (ReservationStartTime < ? AND ReservationEndTime > ?)"
                    + ") " 
                    + "ORDER BY Size ASC LIMIT 1";
