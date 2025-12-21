@@ -5,7 +5,6 @@ import utils.KryoUtil;
 import entities.LoginData;
 import entities.Opening_Hours;
 import entities.Restaurant;
-import entities.User;
 import gui.Server_GUI;
 import messages.Message;
 import messages.MessageType;
@@ -117,6 +116,15 @@ public class Server_Controller extends AbstractServer {
                     Opening_Hours hours = Restaurant.getInstance().getOpeningHours();  
                     serverResponse= new Message(MessageType.RETURN_OPENING_HOURS, hours);
                     break;
+                    
+                 // --- Tables Management ---
+                case GET_ALL_TABLES:
+                case ADD_TABLE_REQUEST:
+                case UPDATE_TABLE_REQUEST:
+                case DELETE_TABLE_REQUEST:
+                    serverResponse = Table_Controller.handle(clientMsg);
+                    break;
+
 
                 case GET_ALL_USERS_REQUEST:
                 	serverResponse = userController.handle(clientMsg);

@@ -21,7 +21,7 @@ public class DB_Controller {
     private final String USER = "root";
     //private final String PASS = "zaqwsxcde321";
     //private final String PASS = "212009666";
-    private final String PASS = "Aa123456";
+    private final String PASS = "8630547";
     private final int MAX_POOL_SIZE = 10;
 
     /** Thread-safe queue to store available pooled connections. */

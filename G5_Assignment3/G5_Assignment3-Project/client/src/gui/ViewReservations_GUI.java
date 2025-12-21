@@ -226,28 +226,65 @@ public class ViewReservations_GUI {
 		alert.showAndWait();
 	}
 
+	/**
+	 * Displays an alert when the requested update cannot be fulfilled due to capacity.
+	 * If a suggestion is provided, it updates the input fields so the user can review 
+	 * and manually submit the update again if they agree.
+	 * * @param suggested The alternative LocalDateTime suggested by the server.
+	 */
 	public void showNoTableAlert(final LocalDateTime suggested) {
-		if (suggested == null) {
-			showErrorAlert("Fully Booked", "No tables available for the rest of the day.");
-			return;
-		}
+	    // Ensure UI updates happen on the JavaFX Application Thread
+	    Platform.runLater(new Runnable() {
+	        @Override
+	        public void run() {
+	            if (suggested == null) {
+	                Alert alert = new Alert(Alert.AlertType.ERROR);
+	                alert.setTitle("Fully Booked");
+	                alert.setHeaderText("No Availability Found");
+	                alert.setContentText("We are sorry, but there are no available tables for the rest of the day.");
+	                alert.showAndWait();
+	                return;
+	            }
 
-		Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-		alert.setTitle("Availability Conflict");
-		alert.setContentText("Nearest available time: " + suggested.format(displayFormatter) + ".\nUpdate to this time?");
+	            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+	            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+	            String displayString = suggested.format(dateFormatter) + " at " + suggested.format(timeFormatter);
 
-		alert.showAndWait().ifPresent(new java.util.function.Consumer<ButtonType>() {
-			@Override
-			public void accept(ButtonType response) {
-				if (response == ButtonType.OK) {
-					editDatePicker.setValue(suggested.toLocalDate());
-					loadDynamicHours(suggested.toLocalDate(), String.format("%02d:%02d", suggested.getHour(), suggested.getMinute()));
-					onUpdateClicked(null);
-				}
-			}
-		});
+	            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+	            alert.setTitle("Capacity Reached");
+	            alert.setHeaderText("The restaurant is full at the selected time.");
+	            alert.setContentText("The nearest available slot is: " + displayString 
+	                                + ".\n\nWould you like to update the form to this time?");
+
+	            // Use showAndWait and handle the result via Anonymous Inner Class consumer
+	            alert.showAndWait().ifPresent(new java.util.function.Consumer<ButtonType>() {
+	                @Override
+	                public void accept(ButtonType response) {
+	                    if (response == ButtonType.OK) {
+	                        // Only update the UI fields. 
+	                        // DO NOT call the update/save method here to prevent loops.
+	                        updateFormFields(suggested);
+	                    }
+	                }
+	            });
+	        }
+	    });
 	}
-
+	/**
+	 * Updates the date and time selection fields in the GUI with the suggested values.
+	 * * @param dateTime The suggested date and time to be filled into the fields.
+	 */
+	private void updateFormFields(LocalDateTime dateTime) {
+	    // Assuming these are the names of your fields in ViewReservations_GUI
+	    if (editDatePicker != null) {
+	        editDatePicker.setValue(dateTime.toLocalDate());
+	    }
+	    
+	    if (editTimeCombo != null) {
+	        String timeStr = String.format("%02d:%02d", dateTime.getHour(), dateTime.getMinute());
+	        editTimeCombo.setValue(timeStr);
+	    }
+	}
 	public void showSuccessAlert() {
 		Alert alert = new Alert(Alert.AlertType.INFORMATION, "Reservation updated successfully!", ButtonType.OK);
 		alert.showAndWait();

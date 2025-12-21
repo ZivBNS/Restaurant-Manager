@@ -11,6 +11,7 @@ import gui.ConnectToServer_GUI;
 import gui.MainScreen_GUI;
 import gui.ManageOrders_GUI;
 import gui.ManageUsers_GUI;
+import gui.ManageTables_GUI;
 import gui.User_Session;
 import gui.ViewReservations_GUI;
 import javafx.application.Platform;
@@ -18,12 +19,14 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.stage.Stage;
 import entities.Casual_Customer;
 import entities.LoginData;
 import entities.Opening_Hours;
 import entities.Reservation;
 import entities.Restaurant;
+import entities.Restaurant_Table;
 import entities.Subscribed_Customer;
 import entities.UserRecord;
 import messages.Message;
@@ -481,6 +484,44 @@ public class Client_Controller implements ChatIF {
 							}
 						}});
 					break;
+				case RETURN_ALL_TABLES:
+				    @SuppressWarnings("unchecked")
+				    final List<Restaurant_Table> tables =
+				        (List<Restaurant_Table>) recivedMessage.getContent();
+
+				    Platform.runLater(new Runnable() {
+				        @Override
+				        public void run() {
+				            if (ManageTables_GUI.instance != null) {
+				                ManageTables_GUI.instance.loadTables(tables);
+				            }
+				        }
+				    });
+				    break;
+				    
+				case TABLE_OPERATION_FAILED:
+				    final String error = (String) recivedMessage.getContent();
+				    Platform.runLater(() -> {
+				    	//Refresh after ADD / UPDATE / DELETE
+				        Alert alert = new Alert(Alert.AlertType.ERROR);
+				        alert.setTitle("Table Operation Failed");
+				        alert.setHeaderText(null);
+				        alert.setContentText(error != null ? error : "Operation failed");
+				        alert.showAndWait();
+				    });
+				    break;
+				    
+				case TABLE_OPERATION_SUCCESS:
+				    Platform.runLater(() -> {
+				        if (ManageTables_GUI.instance != null) {
+				            ConnectToServer_GUI.clientController.sendComplexObject(
+				                new Message(MessageType.GET_ALL_TABLES, null)
+				            );
+				        }
+				    });
+				    break;
+
+
 
 				default:
 					System.out.println("Client_Controller: Received unhandled message type: " + recivedMessage.getType() + recivedMessage.getContent());
