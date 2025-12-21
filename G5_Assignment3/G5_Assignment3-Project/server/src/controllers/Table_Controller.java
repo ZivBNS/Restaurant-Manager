@@ -36,10 +36,15 @@ public class Table_Controller {
             );
 
         case DELETE_TABLE_REQUEST:
-            int id = (int) msg.getContent();
-            return repo.deleteById(id)
-                ? new Message(MessageType.TABLE_OPERATION_SUCCESS, null)
-                : new Message(MessageType.TABLE_OPERATION_FAILED, "Delete table failed");
+            int tableNumber = (int) msg.getContent();
+            boolean success = repo.deleteById(tableNumber);
+
+            if (success) {
+                repo.init();
+                return new Message(MessageType.TABLE_OPERATION_SUCCESS, null);
+            } else {
+                return new Message(MessageType.TABLE_OPERATION_FAILED, "Delete table failed");
+            }
 
         default:
             return null;

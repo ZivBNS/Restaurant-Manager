@@ -236,11 +236,15 @@ public class Table_Repository implements Repository_Interface<Restaurant_Table> 
             if (pConn != null) db.releaseConnection(pConn);
         }
     }
-
+    
+    /**
+     * Deletes table by table_number (NOT by DB primary key id).
+     * Parameter 'id' represents table_number.
+     */
     @Override
     public boolean deleteById(int id) {
 
-        String sql = "DELETE FROM tables WHERE ID = ?";
+    	String sql = "DELETE FROM tables WHERE TableNumber = ?";
 
         PooledConnection pConn = null;
 

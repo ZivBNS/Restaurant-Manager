@@ -115,6 +115,15 @@ public class Server_Controller extends AbstractServer {
                     Opening_Hours hours = Restaurant.getInstance().getOpeningHours();  
                     serverResponse= new Message(MessageType.RETURN_OPENING_HOURS, hours);
                     break;
+                    
+                 // --- Tables Management ---
+                case GET_ALL_TABLES:
+                case ADD_TABLE_REQUEST:
+                case UPDATE_TABLE_REQUEST:
+                case DELETE_TABLE_REQUEST:
+                    serverResponse = Table_Controller.handle(clientMsg);
+                    break;
+
 
                 case GET_USER_DETAILS:
                     

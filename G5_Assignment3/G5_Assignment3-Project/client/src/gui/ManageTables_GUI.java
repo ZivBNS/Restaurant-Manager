@@ -10,8 +10,6 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.util.List;
 
-import controllers.Client_Controller;
-import entities.Restaurant;
 import entities.Restaurant_Table;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -29,18 +27,12 @@ public class ManageTables_GUI {
     @FXML private TextField  tableSizeField;
     @FXML private CheckBox activeCheckBox;
     
-    private Client_Controller clientController;
-    
-    public void setClientController(Client_Controller clientController) {
-        this.clientController = clientController;
-
-        this.clientController.sendComplexObject(
-            new Message(MessageType.GET_ALL_TABLES, null)
-        );
-    }
+    public static ManageTables_GUI instance;
 
     @FXML
     public void initialize() {
+    	
+    	instance = this;
 
         colTableNumber.setCellValueFactory(data ->
             new SimpleIntegerProperty(
@@ -66,18 +58,16 @@ public class ManageTables_GUI {
                     tableNumberField.setText(
                         String.valueOf(selected.getTableNumber())
                     );
-                    tableNumberField.setText(
+                    tableSizeField.setText(
                             String.valueOf(selected.getSize())
                         );
                     activeCheckBox.setSelected(selected.isActive());
                 }
             });
-    }
-    
-    public void loadTables() {
-        tablesTable.getItems().setAll(
-            Restaurant.getInstance().getTables()
-        );
+        
+        ConnectToServer_GUI.clientController.sendComplexObject(
+                new Message(MessageType.GET_ALL_TABLES, null)
+            );
     }
 
     @FXML
@@ -119,7 +109,7 @@ public class ManageTables_GUI {
             Restaurant_Table newTable =
                 new Restaurant_Table(-1, tableNumber, tableSize, active);
 
-            clientController.sendComplexObject(
+            ConnectToServer_GUI.clientController.sendComplexObject(
             	    new Message(MessageType.ADD_TABLE_REQUEST, newTable)
             	);
 
@@ -130,7 +120,7 @@ public class ManageTables_GUI {
             selected.setTableSize(tableSize);
             selected.setActive(active);
 
-            clientController.sendComplexObject(
+            ConnectToServer_GUI.clientController.sendComplexObject(
             	    new Message(MessageType.UPDATE_TABLE_REQUEST, selected)
             	);
 
@@ -161,13 +151,15 @@ public class ManageTables_GUI {
             return;
         }
 
-        clientController.sendComplexObject(
-            new Message(
-                MessageType.DELETE_TABLE_REQUEST,
-                selected.getId()
-            )
+        int tableNumber = selected.getTableNumber();
+
+        tablesTable.getSelectionModel().clearSelection();
+
+        ConnectToServer_GUI.clientController.sendComplexObject(
+            new Message(MessageType.DELETE_TABLE_REQUEST, tableNumber)
         );
     }
+
     @FXML
     private void onBackClicked() {
         try {
