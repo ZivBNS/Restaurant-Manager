@@ -171,49 +171,79 @@ public class ViewReservations_GUI {
 	}
 
 	/**
-	 * Validates input and sends an update request to the server.
-	 */
-	@FXML
-	void onUpdateClicked(ActionEvent event) {
-		Reservation selected = reservationsTable.getSelectionModel().getSelectedItem();
-		if (selected == null) return;
+     * Validates updated input and dynamically adjusts the reservation date for 
+     * post-midnight time slots before sending the update request to the server.
+     * This ensures chronological consistency if a user moves a booking to a time
+     * that falls after midnight in a single business shift.
+     * * @param event The action event triggered by the Update button.
+     */
+    @FXML
+    void onUpdateClicked(ActionEvent event) {
+        Reservation selected = reservationsTable.getSelectionModel().getSelectedItem();
+        if (selected == null) return;
 
-		// 1. Validation: Check empty fields
-		if (editDatePicker.getValue() == null || editTimeCombo.getValue() == null || editGuestsField.getText().trim().isEmpty()) {
-			showErrorAlert("Input Error", "All fields are required for the update.");
-			return;
-		}
+        // 1. Validation: Check for empty fields
+        if (editDatePicker.getValue() == null || editTimeCombo.getValue() == null || editGuestsField.getText().trim().isEmpty()) {
+            showErrorAlert("Input Error", "All fields are required for the update.");
+            return;
+        }
 
-		int diners;
-		try {
-			// 2. Validation: Numeric check (no letters)
-			diners = Integer.parseInt(editGuestsField.getText().trim());
-		} catch (NumberFormatException e) {
-			showErrorAlert("Input Error", "Number of guests must be a valid number.");
-			return;
-		}
+        int diners;
+        try {
+            // 2. Validation: Numeric check
+            diners = Integer.parseInt(editGuestsField.getText().trim());
+            if (diners < 1) throw new NumberFormatException();
+        } catch (NumberFormatException e) {
+            showErrorAlert("Input Error", "Number of guests must be a valid positive number.");
+            return;
+        }
 
-		// 3. Validation: Minimum 1 guest
-		if (diners < 1) {
-			showErrorAlert("Input Error", "At least one diner is required.");
-			return;
-		}
+        try {
+            // --- START OF DYNAMIC DATE ADJUSTMENT LOGIC ---
+            
+            LocalDate selectedDate = editDatePicker.getValue();
+            LocalTime selectedTime = LocalTime.parse(editTimeCombo.getValue());
+            
+            // Fetch opening hours to determine the start of the business day
+            Opening_Hours oh = Restaurant.getInstance().getOpeningHours();
+            LocalTime openTime = null;
 
-		try {
-			LocalTime time = LocalTime.parse(editTimeCombo.getValue());
-			LocalDateTime newStart = LocalDateTime.of(editDatePicker.getValue(), time);
+            if (oh != null) {
+                // Determine opening time for the specific day
+                if (oh.getExceptionSchedule().containsKey(selectedDate)) {
+                    openTime = oh.getExceptionSchedule().get(selectedDate).getOpenTime();
+                } else {
+                    openTime = oh.getRegularSchedule().get(selectedDate.getDayOfWeek()).getOpenTime();
+                }
+            }
 
-			selected.setOrderStartTime(newStart);
-			selected.setOrderEndTime(newStart.plusHours(2));
-			selected.setNumberOfDiners(diners);
+            /**
+             * Dynamic Midnight Fix:
+             * If the selected time is chronologically BEFORE the opening time, 
+             * it belongs to the following calendar day (e.g., Selected 01:00 AM 
+             * when opening is 16:00 PM).
+             */
+            if (openTime != null && selectedTime.isBefore(openTime)) {
+                selectedDate = selectedDate.plusDays(1);
+            }
 
-			Message msg = new Message(MessageType.UPDATE_RESERVATION_REQUEST, selected);
-			ConnectToServer_GUI.clientController.sendComplexObject(msg);
+            LocalDateTime newStart = LocalDateTime.of(selectedDate, selectedTime);
+            
+            // --- END OF DYNAMIC DATE ADJUSTMENT LOGIC ---
 
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+            // Apply changes to the selected object
+            selected.setOrderStartTime(newStart);
+            selected.setOrderEndTime(newStart.plusHours(2)); // Standard 2-hour duration
+            selected.setNumberOfDiners(diners);
+
+            // Send updated object to server via the pipeline
+            Message msg = new Message(MessageType.UPDATE_RESERVATION_REQUEST, selected);
+            ConnectToServer_GUI.clientController.sendComplexObject(msg);
+
+        } catch (Exception e) {
+            showErrorAlert("System Error", "Failed to process update: " + e.getMessage());
+        }
+    }
 
 	/**
 	 * Helper method to display error alerts.

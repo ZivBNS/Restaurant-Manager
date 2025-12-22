@@ -147,7 +147,11 @@ public class AddManualReservation_GUI {
     }
 
     /**
-     * Validates input locally before sending the request to the server.
+     * Validates input locally and dynamically adjusts the reservation date based on 
+     * the restaurant's opening hours. If the selected time is before the opening time 
+     * of the selected business day, the system treats it as a post-midnight booking 
+     * and increments the calendar day.
+     * * @param event The action event triggered by the Save button.
      */
     @FXML
     void onSave(ActionEvent event) {
@@ -155,47 +159,69 @@ public class AddManualReservation_GUI {
         String email = mEmail.getText().trim();
         String guestsStr = mGuests.getText().trim();
 
-        // 1. Validation: At least one contact method must be provided.
-        if (phone.isEmpty() && email.isEmpty()) {
-            showErrorAlert("Validation Error", "Please provide either a Phone number or an Email address.");
-            return;
-        }
-
-        // 2. Validation: Diners and Time are mandatory.
-        if (guestsStr.isEmpty() || mTimeCombo.getValue() == null) {
-            showErrorAlert("Validation Error", "Number of guests and arrival time are required.");
+        // 1. Validation: Basic fields check
+        if ((phone.isEmpty() && email.isEmpty()) || guestsStr.isEmpty() || 
+            mDatePicker.getValue() == null || mTimeCombo.getValue() == null) {
+            showErrorAlert("Validation Error", "Please fill in all mandatory fields.");
             return;
         }
 
         int diners;
         try {
-            // 3. Validation: Guests count must be numeric (No letters).
             diners = Integer.parseInt(guestsStr);
+            if (diners < 1) throw new NumberFormatException();
         } catch (NumberFormatException e) {
-            showErrorAlert("Input Error", "The 'Guests' field must contain numbers only.");
-            return;
-        }
-
-        // 4. Validation: Minimum 1 diner.
-        if (diners < 1) {
-            showErrorAlert("Validation Error", "The number of diners must be at least 1.");
+            showErrorAlert("Input Error", "Please enter a valid number of diners (minimum 1).");
             return;
         }
 
         try {
             Integer userId = mUserID.getText().trim().isEmpty() ? null : Integer.parseInt(mUserID.getText());
-            LocalTime time = LocalTime.parse(mTimeCombo.getValue());
-            LocalDateTime start = LocalDateTime.of(mDatePicker.getValue(), time);
             
+            // --- START OF DYNAMIC DATE ADJUSTMENT LOGIC ---
+            
+            LocalDate selectedDate = mDatePicker.getValue();
+            LocalTime selectedTime = LocalTime.parse(mTimeCombo.getValue());
+            
+            // Fetch opening hours from the Restaurant singleton
+            Opening_Hours oh = Restaurant.getInstance().getOpeningHours();
+            LocalTime openTime = null;
+
+            if (oh != null) {
+                // Get the opening time for either an exception day or a regular day
+                if (oh.getExceptionSchedule().containsKey(selectedDate)) {
+                    openTime = oh.getExceptionSchedule().get(selectedDate).getOpenTime();
+                } else {
+                    openTime = oh.getRegularSchedule().get(selectedDate.getDayOfWeek()).getOpenTime();
+                }
+            }
+
+            /**
+             * Dynamic Midnight Crossing:
+             * If the selected time is chronologically BEFORE the opening time of the shift 
+             * (e.g., Selected 00:30 but Opening is 16:00), it means the reservation 
+             * belongs to the early morning of the FOLLOWING calendar day.
+             */
+            if (openTime != null && selectedTime.isBefore(openTime)) {
+                selectedDate = selectedDate.plusDays(1);
+            }
+
+            LocalDateTime start = LocalDateTime.of(selectedDate, selectedTime);
+            
+            // --- END OF DYNAMIC DATE ADJUSTMENT LOGIC ---
+
+            // Create the reservation entity with a 2-hour duration
             Reservation newRes = new Reservation(userId, phone, email, start, start.plusHours(2), diners);
             
-            // Trigger the server's availability algorithm
+            // Send the request to the server
             ConnectToServer_GUI.clientController.sendNewReservationRequest(newRes);
+            
+        } catch (NumberFormatException e) {
+            showErrorAlert("Input Error", "The 'User ID' field must contain numbers only.");
         } catch (Exception e) {
             showErrorAlert("System Error", "Failed to process input: " + e.getMessage());
         }
     }
-
     private void showErrorAlert(String title, String content) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle(title);

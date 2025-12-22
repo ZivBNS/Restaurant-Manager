@@ -212,15 +212,11 @@ public class AddReservation_GUI {
 		}
 	}
 
-	/**
-	 * Handles the creation of a new reservation. Uses session data to link the
-	 * reservation to the correct customer.
-	 * 
-	 * @param event The button click event.
-	 */
+
 	/**
 	 * Handles the creation of a new reservation. Performs local validation checks
-	 * before sending the request to the server.
+	 * and dynamically adjusts the reservation date for post-midnight time slots 
+	 * based on the restaurant's opening hours before sending the request to the server.
 	 * * @param event The button click event.
 	 */
 	@FXML
@@ -233,7 +229,7 @@ public class AddReservation_GUI {
 
 		int diners;
 		try {
-			// 2. Local Validation: Check if guests count is a valid number (no letters)
+			// 2. Local Validation: Check if guests count is a valid number
 			diners = Integer.parseInt(guestsField.getText().trim());
 		} catch (NumberFormatException e) {
 			showErrorAlert("Input Error", "Number of guests must be a numeric value.");
@@ -247,10 +243,40 @@ public class AddReservation_GUI {
 		}
 
 		try {
-			// Gather time data
-			String selectedTime = timeCombo.getValue();
-			LocalTime time = LocalTime.parse(selectedTime);
-			LocalDateTime startDateTime = LocalDateTime.of(datePicker.getValue(), time);
+			// --- START OF DYNAMIC DATE ADJUSTMENT LOGIC ---
+			
+			// Get the base components from the UI
+			LocalDate selectedDate = datePicker.getValue();
+			String timeStr = timeCombo.getValue();
+			LocalTime time = LocalTime.parse(timeStr);
+
+			// Fetch opening hours to determine the start of the business day
+			Opening_Hours oh = Restaurant.getInstance().getOpeningHours();
+			LocalTime openTime = null;
+
+			if (oh != null) {
+				// Determine opening time for either an exception or a regular day
+				if (oh.getExceptionSchedule().containsKey(selectedDate)) {
+					openTime = oh.getExceptionSchedule().get(selectedDate).getOpenTime();
+				} else {
+					openTime = oh.getRegularSchedule().get(selectedDate.getDayOfWeek()).getOpenTime();
+				}
+			}
+
+			/**
+			 * Dynamic Midnight Crossing Fix:
+			 * If the selected time is chronologically BEFORE the opening time of the shift 
+			 * (e.g., Selected 00:30 when opening is 16:00), it belongs to the following 
+			 * calendar day.
+			 */
+			if (openTime != null && time.isBefore(openTime)) {
+				selectedDate = selectedDate.plusDays(1);
+			}
+
+			// Create the finalized LocalDateTime
+			LocalDateTime startDateTime = LocalDateTime.of(selectedDate, time);
+			
+			// --- END OF DYNAMIC DATE ADJUSTMENT LOGIC ---
 
 			// Per requirements, reservations are for a 2-hour duration
 			LocalDateTime endDateTime = startDateTime.plusHours(2);
@@ -259,16 +285,17 @@ public class AddReservation_GUI {
 			Reservation newRes;
 			if (User_Session.getLoggedInUser() != null) {
 				// User is a Subscriber
-				System.out.println("AddReservation_GUI: "+User_Session.getLoggedInUser());
-				newRes = new Reservation(User_Session.getLoggedInUser().getSubscriberCode(), User_Session.getLoggedInUser().getPhone(), User_Session.getLoggedInUser().getEmail(), startDateTime, endDateTime,
-						diners);
+				newRes = new Reservation(User_Session.getLoggedInUser().getSubscriberCode(), 
+						User_Session.getLoggedInUser().getPhone(), 
+						User_Session.getLoggedInUser().getEmail(), 
+						startDateTime, endDateTime, diners);
 			} else {
 				// User is a Casual Customer
-				newRes = new Reservation(null, User_Session.getCasualPhone(), User_Session.getCasualEmail(),
-						startDateTime, endDateTime, diners);
+				newRes = new Reservation(null, User_Session.getCasualPhone(), 
+						User_Session.getCasualEmail(), startDateTime, endDateTime, diners);
 			}
 
-			// 3. Send to Client_controller 
+			// Send to Client_controller
 			ConnectToServer_GUI.clientController.sendNewReservationRequest(newRes);
 
 		} catch (Exception e) {
