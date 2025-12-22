@@ -63,7 +63,8 @@
 
 			<HBox spacing="15" alignment="CENTER">
 			     <Button text="Back" onAction="#onBackClicked" style="-fx-background-color: #7f8c8d; -fx-text-fill: white; -fx-padding: 10 20;" />   
-			     <Button text="Save / Update Table" onAction="#onSaveClicked" style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20;" />
+			     <Button text="Update Table" onAction="#onUpdateClicked" style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20;" />
+			      <Button text="Save New Table" onAction="#onSaveNewClicked" style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20;" />
 			     <Button text="Delete Table" onAction="#onDeleteClicked" style="-fx-background-color: #c0392b; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20;" />  
 			</HBox>
 		</VBox>

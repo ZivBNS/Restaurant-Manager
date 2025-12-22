@@ -10,6 +10,7 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.util.List;
 
+import entities.Reservation;
 import entities.Restaurant_Table;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -71,15 +72,16 @@ public class ManageTables_GUI {
     }
 
     @FXML
-    private void onSaveClicked() {
+    private void onSaveNewClicked() {
 
+        // --- Validation ---
         if (tableNumberField.getText().isEmpty()) {
             showAlert("Please enter table number");
             return;
         }
 
         if (tableSizeField.getText().isEmpty()) {
-            showAlert("Please select table size");
+            showAlert("Please enter table size");
             return;
         }
 
@@ -95,42 +97,96 @@ public class ManageTables_GUI {
         try {
             tableSize = Integer.parseInt(tableSizeField.getText());
         } catch (NumberFormatException e) {
-            showAlert("Table Size must be a number");
+            showAlert("Table size must be a number");
             return;
         }
-        
+
         boolean active = activeCheckBox.isSelected();
 
-        Restaurant_Table selected =
-            tablesTable.getSelectionModel().getSelectedItem();
+        // --- Duplicate check (CLIENT SIDE) ---
+        boolean exists = tablesTable.getItems().stream()
+            .anyMatch(t -> t.getTableNumber() == tableNumber);
 
-        if (selected == null) {
-            // ADD
-            Restaurant_Table newTable =
-                new Restaurant_Table(-1, tableNumber, tableSize, active);
-
-            ConnectToServer_GUI.clientController.sendComplexObject(
-            	    new Message(MessageType.ADD_TABLE_REQUEST, newTable)
-            	);
-
-
-        } else {
-            // UPDATE
-            selected.setTableNumber(tableNumber);
-            selected.setTableSize(tableSize);
-            selected.setActive(active);
-
-            ConnectToServer_GUI.clientController.sendComplexObject(
-            	    new Message(MessageType.UPDATE_TABLE_REQUEST, selected)
-            	);
-
+        if (exists) {
+            showAlert("Table number already exists");
+            return;
         }
 
+        // --- Create and send ADD request ---
+        Restaurant_Table newTable =
+            new Restaurant_Table(-1, tableNumber, tableSize, active);
+
+        ConnectToServer_GUI.clientController.sendComplexObject(
+            new Message(MessageType.ADD_TABLE_REQUEST, newTable)
+        );
+
+        // --- Clear UI ---
         tablesTable.getSelectionModel().clearSelection();
         tableNumberField.clear();
         tableSizeField.clear();
         activeCheckBox.setSelected(false);
     }
+
+    
+    @FXML
+    private void onUpdateClicked() {
+
+        Restaurant_Table selected =
+            tablesTable.getSelectionModel().getSelectedItem();
+
+        if (selected == null) {
+            showAlert("Please select a table to update");
+            return;
+        }
+
+        // --- Validation ---
+        int tableNumber;
+        try {
+            tableNumber = Integer.parseInt(tableNumberField.getText());
+        } catch (NumberFormatException e) {
+            showAlert("Table number must be a number");
+            return;
+        }
+
+        int tableSize;
+        try {
+            tableSize = Integer.parseInt(tableSizeField.getText());
+        } catch (NumberFormatException e) {
+            showAlert("Table size must be a number");
+            return;
+        }
+
+        boolean active = activeCheckBox.isSelected();
+
+        // --- Duplicate check (CLIENT SIDE) ---
+        boolean existsForOther = tablesTable.getItems().stream()
+            .anyMatch(t ->
+                t.getTableNumber() == tableNumber &&
+                t.getId() != selected.getId()   
+            );
+
+        if (existsForOther) {
+            showAlert("Table number already exists");
+            return;
+        }
+
+        // --- Update object ---
+        selected.setTableNumber(tableNumber);
+        selected.setTableSize(tableSize);
+        selected.setActive(active);
+
+        // --- Send UPDATE request ---
+        ConnectToServer_GUI.clientController.sendComplexObject(
+            new Message(MessageType.UPDATE_TABLE_REQUEST, selected)
+        );
+
+        // --- Clear UI ---
+        tablesTable.getSelectionModel().clearSelection();
+        tableNumberField.clear();
+        tableSizeField.clear();
+        activeCheckBox.setSelected(false);
+    }
+
 
     private void showAlert(String msg) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
