@@ -1,15 +1,17 @@
 package Data;
 
+import java.sql.Connection;
+
 public class PooledConnection {
     private java.sql.Connection connection;
     private long lastUsed;
 
-    public PooledConnection(java.sql.Connection connection) {
+    public PooledConnection(Connection connection) {
         this.connection = connection;
         this.lastUsed = System.currentTimeMillis();
     }
 
-    public java.sql.Connection getConnection() {
+    public Connection getConnection() {
         return connection;
     }
 

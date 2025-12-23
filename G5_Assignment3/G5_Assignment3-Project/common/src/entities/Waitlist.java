@@ -9,14 +9,7 @@ public class Waitlist {
     private String status;
     private LocalDateTime creationTime;
     private LocalDateTime tableFreedTime;
-   /* Waitlist entry = new Waitlist(
-            rs.getInt("ID"),
-            rs.getString("CustomerName"),
-            rs.getString("PhoneNumber"),
-            rs.getInt("NumberOfDiners"),
-            rs.getTimestamp("EntryTime").toLocalDateTime()
-        );*/
-    
+
     //Waitlist (ID INT , ReservationID INT, Status VARCHAR(25),creationTime DATETIME, TableFreedTime DATETIME
     //read from db
     public Waitlist(int id, int reservationID, String status, LocalDateTime creationTime, LocalDateTime tableFreedTime) {
