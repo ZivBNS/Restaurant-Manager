@@ -3,12 +3,9 @@ package gui;
 import java.io.IOException;
 import java.util.List;
 
-import entities.Subscribed_Customer;
 import entities.UserRecord;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.*;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -93,6 +90,7 @@ public class ManageUsers_GUI {
              switch (msg.getType()) {
             
                 case MessageType.GET_ALL_USERS_RESPONSE : 
+                	@SuppressWarnings("unchecked") 
                 	List<UserRecord> users = (List<UserRecord>) msg.getContent();
                 	loadUsersRecive(users);
                 	break;

@@ -3,539 +3,458 @@ package controllers;
 import java.io.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import utils.KryoUtil;
-import gui.AddManualReservation_GUI;
-import gui.AddReservation_GUI;
-import gui.ConnectToServer_GUI;
-import gui.MainScreen_GUI;
-import gui.ManageOrders_GUI;
-import gui.ManageUsers_GUI;
-import gui.ManageTables_GUI;
-import gui.User_Session;
-import gui.ViewReservations_GUI;
-import javafx.application.Platform;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.stage.Stage;
-import entities.Casual_Customer;
-import entities.LoginData;
-import entities.Opening_Hours;
-import entities.Reservation;
-import entities.Restaurant;
-import entities.Restaurant_Table;
-import entities.Subscribed_Customer;
-import entities.UserRecord;
+import gui.*;
+import entities.*;
 import messages.Message;
 import messages.MessageType;
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
 
+/**
+ * The main controller for the client-side application.
+ * It manages the network connection to the server and routes incoming responses
+ * to the appropriate GUI screens using a Handler Map pattern.
+ */
 public class Client_Controller implements ChatIF {
 
-	final public static int DEFAULT_PORT = 5555;
-	ChatClient client;
-	private ManageUsers_GUI manageUsers_GUI;
+    final public static int DEFAULT_PORT = 5555;
+    ChatClient client;
+    
+    // Map to store response handlers for each message type
+    private Map<MessageType, ResponseHandler> responseHandlers;
+    
+    // Reference to specific GUIs that need direct updates
+    private ManageUsers_GUI manageUsers_GUI;
 
-	public Client_Controller(String host, int port) throws IOException {
-		try {
-			System.out.println(host);
-			client = new ChatClient(host, port, this);
-		} catch (IOException exception) {
-			System.out.println("Error: Can't setup connection!" + " Terminating client");
-			System.exit(1);
-		}
-	}
-
-	/**
-	 * Requests the list of reservations from the server based on the provided
-	 * identifier. The identifier can be a Subscribed_Customer object or a String
-	 * (Phone/Email). * @param identifier The user identification (Subscriber object
-	 * or String contact info).
-	 */
-	public void sendGetReservationsRequest(Object identifier) {
-		try {
-			Message message;
-
-			if (identifier instanceof Subscribed_Customer) {
-				// Identifier is a member - sending the whole object or just the code
-				System.out.println("Client_Controller: Requesting reservations for Subscriber: "
-						+ ((Subscribed_Customer) identifier).getSubscriberCode());
-				message = new Message(MessageType.GET_RESERVATIONS_BY_USER, identifier);
-			} else if (identifier instanceof String) {
-				// Identifier is a casual customer's phone/email
-				System.out.println("Client_Controller: Requesting reservations for Casual Customer: " + identifier);
-				message = new Message(MessageType.GET_RESERVATIONS_BY_USER, (String) identifier);
-			} else {
-				System.err.println("Client_Controller: Unknown identifier type!");
-				return;
-			}
-
-			// Send the serialized message via Kryo/OCSF
-			sendComplexObject(message);
-
-		} catch (Exception ex) {
-			System.err.println("Unexpected error while sending a reservation request: " + ex.getMessage());
-			ex.printStackTrace();
-		}
-	}
-
-	public void sendUpdateReservationRequest(Reservation reservationToUpdate) {
-		try {
-			Message msg = new Message(MessageType.UPDATE_RESERVATION_REQUEST, reservationToUpdate);
-			// client.handleMessageFromClientUI(msg);
-			sendComplexObject(msg);
-			System.out.println("Update request sent for reservation ID: " + reservationToUpdate.getId());
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * Sends a new reservation request to the server. Use this for both Casual and
-	 * Subscribed customers as it passes a Reservation object.
-	 * 
-	 * @param newRes The reservation entity to be persisted.
-	 */
-	public void sendNewReservationRequest(Reservation newRes) {
-		try {
-			Message msg = new Message(MessageType.CREATE_RESERVATION, newRes);
-			sendComplexObject(msg);
-			System.out.println("Client_Controller: Reservation request sent for: "
-					+ (newRes.getUserId() != null ? "Subscriber " + newRes.getUserId() : "Casual Customer"));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void sendGetOpeningHoursRequest() {
-		try {
-			Message msg = new Message(MessageType.GET_OPENING_HOURS, null);
-			sendComplexObject(msg);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * Sends a request to the server to retrieve all reservations currently in
-	 * 'PENDING' status. This is used specifically for the Employee/Manager
-	 * management dashboard.
-	 */
-	public void sendGetAllPendingReservationsRequest() {
-		try {
-			System.out.println("Client_Controller: Requesting all pending reservations for management.");
-
-			// Create a message with the specific management type
-			Message message = new Message(MessageType.GET_ALL_PENDING_RESERVATIONS, null);
-
-			// Send via the existing serialized OCSF pipeline
-			sendComplexObject(message);
-
-		} catch (Exception e) {
-			System.err.println("Error while sending request for pending reservations: " + e.getMessage());
-			e.printStackTrace();
-		}
-	}
-
-	public void sendComplexObject(Object obj) {
-		try {
-			// Convert to bytes using Kryo
-			byte[] payload = KryoUtil.serialize(obj);
-
-			// Send the byte array using OCSF
-			client.handleMessageFromClientUI(payload);
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void logout() {
-		try {
-			Message msg = new Message(MessageType.LOGOUT_REQUEST, null);
-			sendComplexObject(msg);
-
-			System.out.println("Client_Controller: Logout request sent to server.");
-			client.quit();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-	
-	public void sendSubscriberLoginRequest(LoginData loginData) {
-		System.out.println("Subscriber Login Attempt: " + loginData.getUsername());
-		Message loginMessage = new Message(MessageType.LOGIN_REQUEST_SUB, loginData);
-        if (ConnectToServer_GUI.clientController != null) {
-            try {
-                sendComplexObject(loginMessage);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            //ConnectToServer_GUI.clientController = null;
+    public Client_Controller(String host, int port) throws IOException {
+        try {
+            System.out.println("Connecting to host: " + host);
+            client = new ChatClient(host, port, this);
+            
+            // Initialize the response handler map
+            initializeHandlers();
+            
+        } catch (IOException exception) {
+            System.out.println("Error: Can't setup connection! Terminating client.");
+            System.exit(1);
         }
-	}
-	
-	public void sendGuestLoginRequest(LoginData loginData) {
-		System.out.println("Guest Login Attempt: " + loginData.getEmail() != null ? loginData.getEmail() : loginData.getPhoneNumber());
-		Message loginMessage = new Message(MessageType.LOGIN_REQUEST_GUEST, loginData);
-        if (ConnectToServer_GUI.clientController != null) {
-            try {
-                sendComplexObject(loginMessage);
-            } catch (Exception e) {
-                e.printStackTrace();
+    }
+
+    /**
+     * Sets up the mapping between MessageTypes and their specific handling logic.
+     * This uses Anonymous Inner Classes to avoid Lambda expressions.
+     */
+    private void initializeHandlers() {
+        responseHandlers = new HashMap<>();
+
+        // -----------------------------------------------------------
+        // Authentication Handlers
+        // -----------------------------------------------------------
+
+        responseHandlers.put(MessageType.LOGIN_SUCCESS_GUEST, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                if (MainScreen_GUI.instance != null) {
+                    MainScreen_GUI.instance.onGuestLoginSuccess();
+                }
+            }
+        });
+
+        responseHandlers.put(MessageType.LOGIN_SUCCESS_SUB, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                Subscribed_Customer sub = (Subscribed_Customer) msg.getContent();
+                User_Session.setLoggedInUser(sub);
+                if (MainScreen_GUI.instance != null) {
+                    MainScreen_GUI.instance.onSubLoginSuccess(sub);
+                }
+            }
+        });
+
+        responseHandlers.put(MessageType.LOGIN_FAILED_GUEST, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                if (MainScreen_GUI.instance != null) {
+                    MainScreen_GUI.instance.onGuestLoginFailure(msg);
+                }
+            }
+        });
+
+        responseHandlers.put(MessageType.LOGIN_FAILED_SUB, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                if (MainScreen_GUI.instance != null) {
+                    MainScreen_GUI.instance.onSubLoginFailure();
+                }
+            }
+        });
+
+        // -----------------------------------------------------------
+        // Reservation Queries
+        // -----------------------------------------------------------
+
+        responseHandlers.put(MessageType.RETURN_RESERVATIONS_BY_USER, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                @SuppressWarnings("unchecked")
+                List<Reservation> resList = (List<Reservation>) msg.getContent();
+                if (ViewReservations_GUI.instance != null) {
+                    ViewReservations_GUI.instance.updateTable(resList);
+                }
+            }
+        });
+
+        responseHandlers.put(MessageType.RETURN_ALL_PENDING_RESERVATIONS, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                @SuppressWarnings("unchecked")
+                List<Reservation> adminList = (List<Reservation>) msg.getContent();
+                if (ManageOrders_GUI.instance != null) {
+                    ManageOrders_GUI.instance.updateAdminUI(adminList);
+                }
+            }
+        });
+
+        // -----------------------------------------------------------
+        // Reservation Actions
+        // -----------------------------------------------------------
+
+        responseHandlers.put(MessageType.RESERVATION_CONFIRMED, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                int confirmationCode = (Integer) msg.getContent();
+                if (AddReservation_GUI.instance != null) {
+                    AddReservation_GUI.instance.showSuccessAlert(confirmationCode);
+                } else if (AddManualReservation_GUI.instance != null) {
+                    AddManualReservation_GUI.instance.showSuccessAlert(confirmationCode);
+                }
+            }
+        });
+
+        responseHandlers.put(MessageType.RESERVATION_FAILED_NO_TABLE, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                LocalDateTime suggestedTime = (LocalDateTime) msg.getContent();
+                if (AddReservation_GUI.instance != null) {
+                    AddReservation_GUI.instance.showNoTableAlert(suggestedTime);
+                } else if (AddManualReservation_GUI.instance != null) {
+                    AddManualReservation_GUI.instance.showNoTableAlert(suggestedTime);
+                } else if (ViewReservations_GUI.instance != null) {
+                    ViewReservations_GUI.instance.showNoTableAlert(suggestedTime);
+                }
+            }
+        });
+
+        responseHandlers.put(MessageType.RESERVATION_FAILED_NO_TABLE_FULLY_BOOKED, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                if (AddReservation_GUI.instance != null) {
+                    AddReservation_GUI.instance.showNoTableAlert(null);
+                } else if (ViewReservations_GUI.instance != null) {
+                    ViewReservations_GUI.instance.showNoTableAlert(null);
+                } else if (AddManualReservation_GUI.instance != null) {
+                    AddManualReservation_GUI.instance.showNoTableAlert(null);
+                }
+            }
+        });
+
+        responseHandlers.put(MessageType.RESERVATION_FAILED, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                String errorMsg = (String) msg.getContent();
+                System.err.println("Server Error: " + errorMsg);
+            }
+        });
+
+        // -----------------------------------------------------------
+        // Updates, Cancellations & Admin Actions
+        // -----------------------------------------------------------
+
+        responseHandlers.put(MessageType.RESERVATION_UPDATE_SUCCESS, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                if (ViewReservations_GUI.instance != null) {
+                    ViewReservations_GUI.instance.showSuccessAlert();
+                    refreshUserReservations();
+                }
+            }
+        });
+
+        responseHandlers.put(MessageType.ADMIN_UPDATE_SUCCESS, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                if (ManageOrders_GUI.instance != null) {
+                    ManageOrders_GUI.instance.refreshAdminData();
+                }
+            }
+        });
+
+        responseHandlers.put(MessageType.RESERVATION_CANCELED, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                if (ViewReservations_GUI.instance != null) {
+                    refreshUserReservations();
+                } else if (ManageOrders_GUI.instance != null) {
+                    ManageOrders_GUI.instance.refreshAdminData();
+                }
+            }
+        });
+
+        // -----------------------------------------------------------
+        // General Data (Opening Hours)
+        // -----------------------------------------------------------
+
+        responseHandlers.put(MessageType.RETURN_OPENING_HOURS, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                Opening_Hours oh = (Opening_Hours) msg.getContent();
+                Restaurant.getInstance().setOpeningHours(oh);
+                if (AddReservation_GUI.instance != null) {
+                    LocalDate currentDate = AddReservation_GUI.instance.getDatePicker().getValue();
+                    if (currentDate != null) {
+                        AddReservation_GUI.instance.loadDynamicHours(currentDate);
+                    }
+                }
+            }
+        });
+
+        // -----------------------------------------------------------
+        // User Management
+        // Reused handler for multiple message types to avoid code duplication
+        // -----------------------------------------------------------
+
+        ResponseHandler userHandler = new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                if (manageUsers_GUI != null) {
+                    manageUsers_GUI.handle(msg);
+                }
+            }
+        };
+
+        responseHandlers.put(MessageType.GET_ALL_USERS_RESPONSE, userHandler);
+        responseHandlers.put(MessageType.ADD_USER_RESPONSE_OK, userHandler);
+        responseHandlers.put(MessageType.ADD_USER_RESPONSE_ERR, userHandler);
+        responseHandlers.put(MessageType.EDIT_USER_RESPONSE_OK, userHandler);
+        responseHandlers.put(MessageType.EDIT_USER_RESPONSE_ERR, userHandler);
+        responseHandlers.put(MessageType.DELETE_USER_RESPONSE_OK, userHandler);
+        responseHandlers.put(MessageType.DELETE_USER_RESPONSE_ERR, userHandler);
+
+        // -----------------------------------------------------------
+        // Table Management
+        // -----------------------------------------------------------
+
+        responseHandlers.put(MessageType.RETURN_ALL_TABLES, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                @SuppressWarnings("unchecked")
+                List<Restaurant_Table> tables = (List<Restaurant_Table>) msg.getContent();
+                if (ManageTables_GUI.instance != null) {
+                    ManageTables_GUI.instance.loadTables(tables);
+                }
+            }
+        });
+
+        responseHandlers.put(MessageType.TABLE_OPERATION_FAILED, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                final String error = (String) msg.getContent();
+                // Alert must be shown on JavaFX thread (handled by display wrapper)
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Table Operation Failed");
+                alert.setHeaderText(null);
+                alert.setContentText(error != null ? error : "Operation failed");
+                alert.showAndWait();
+            }
+        });
+
+        responseHandlers.put(MessageType.TABLE_OPERATION_SUCCESS, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                if (ManageTables_GUI.instance != null) {
+                    // Refresh table list
+                    sendComplexObject(new Message(MessageType.GET_ALL_TABLES, null));
+                }
+            }
+        });
+    }
+
+    /**
+     * Helper method to refresh reservations for the currently logged-in user.
+     * Used after updates or cancellations.
+     */
+    private void refreshUserReservations() {
+        Object user;
+        if (User_Session.getLoggedInUser() != null) {
+            user = User_Session.getLoggedInUser();
+        } else {
+            user = User_Session.getCasualPhone();
+        }
+        sendGetReservationsRequest(user);
+    }
+
+    /**
+     * Handles messages received from the server. Deserializes the byte array and
+     * routes the response to the appropriate handler using the map.
+     * All UI updates are executed on the JavaFX Application Thread.
+     * * @param message The serialized message (byte array) received from the server.
+     */
+    @Override
+    public void display(Object message) {
+        if (message instanceof byte[]) {
+            Object obj = KryoUtil.deserialize((byte[]) message);
+            
+            if (obj instanceof Message) {
+                final Message receivedMsg = (Message) obj;
+                MessageType type = receivedMsg.getType();
+
+                // Check if a handler is registered for this message type
+                if (responseHandlers.containsKey(type)) {
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                responseHandlers.get(type).handle(receivedMsg);
+                            } catch (Exception e) {
+                                System.err.println("Error in handler for type: " + type);
+                                e.printStackTrace();
+                            }
+                        }
+                    });
+                } else {
+                    System.out.println("Client_Controller: Received unhandled message type: " 
+                            + type + " Content: " + receivedMsg.getContent());
+                }
             }
         }
-	}
-	
-	public void sendGetAllUsersRequest() {
-		System.out.println("Get all users attempt");
-		Message message = new Message(MessageType.GET_ALL_USERS_REQUEST);
-        if (ConnectToServer_GUI.clientController != null) {
-            try {
-                sendComplexObject(message);
-            } catch (Exception e) {
-                e.printStackTrace();
+    }
+
+    
+    // ----------------------------------------------------------------------
+    // Request Sending Methods 
+    // ----------------------------------------------------------------------
+
+    public void setManageUsersGUI(ManageUsers_GUI manageUsers_GUI) {
+        this.manageUsers_GUI = manageUsers_GUI;
+    }
+
+    public void sendGetReservationsRequest(Object identifier) {
+        try {
+            Message message;
+            if (identifier instanceof Subscribed_Customer) {
+                System.out.println("Client_Controller: Requesting reservations for Subscriber: "
+                        + ((Subscribed_Customer) identifier).getSubscriberCode());
+                message = new Message(MessageType.GET_RESERVATIONS_BY_USER, identifier);
+            } else if (identifier instanceof String) {
+                System.out.println("Client_Controller: Requesting reservations for Casual Customer: " + identifier);
+                message = new Message(MessageType.GET_RESERVATIONS_BY_USER, (String) identifier);
+            } else {
+                System.err.println("Client_Controller: Unknown identifier type!");
+                return;
             }
+            sendComplexObject(message);
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
-	}
-	
-	public void sendAddUserRequest(UserRecord newUser) {
-		System.out.println("Add new user attempt");
-		Message message = new Message(MessageType.ADD_USER_REQUEST, newUser);
+    }
+    
+    public void sendUpdateReservationRequest(Reservation reservationToUpdate) {
+        try {
+            Message msg = new Message(MessageType.UPDATE_RESERVATION_REQUEST, reservationToUpdate);
+            sendComplexObject(msg);
+            System.out.println("Update request sent for reservation ID: " + reservationToUpdate.getId());
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    public void sendNewReservationRequest(Reservation newRes) {
+        try {
+            Message msg = new Message(MessageType.CREATE_RESERVATION, newRes);
+            sendComplexObject(msg);
+            System.out.println("Client_Controller: Reservation request sent for: " + 
+                (newRes.getUserId() != null ? "Subscriber " + newRes.getUserId() : "Casual Customer"));
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    public void sendGetOpeningHoursRequest() {
+        try {
+            Message msg = new Message(MessageType.GET_OPENING_HOURS, null);
+            sendComplexObject(msg);
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+    
+    public void sendGetAllPendingReservationsRequest() {
+        try {
+            System.out.println("Client_Controller: Requesting all pending reservations for management.");
+            Message message = new Message(MessageType.GET_ALL_PENDING_RESERVATIONS, null);
+            sendComplexObject(message);
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    public void sendComplexObject(Object obj) {
+        try {
+            byte[] payload = KryoUtil.serialize(obj);
+            client.handleMessageFromClientUI(payload);
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    public void logout() {
+        try {
+            Message msg = new Message(MessageType.LOGOUT_REQUEST, null);
+            sendComplexObject(msg);
+            System.out.println("Client_Controller: Logout request sent to server.");
+            client.quit();
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+    
+    public void sendSubscriberLoginRequest(LoginData loginData) {
+        System.out.println("Subscriber Login Attempt: " + loginData.getUsername());
+        Message loginMessage = new Message(MessageType.LOGIN_REQUEST_SUB, loginData);
         if (ConnectToServer_GUI.clientController != null) {
-            try {
-                sendComplexObject(message);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            try { sendComplexObject(loginMessage); } catch (Exception e) { e.printStackTrace(); }
         }
-	}
-	public void sendEditUserRequest(UserRecord user) {
-		System.out.println("Add new user attempt");
-		Message message = new Message(MessageType.EDIT_USER_REQUEST, user);
+    }
+    
+    public void sendGuestLoginRequest(LoginData loginData) {
+        System.out.println("Guest Login Attempt: " + (loginData.getEmail() != null ? loginData.getEmail() : loginData.getPhoneNumber()));
+        Message loginMessage = new Message(MessageType.LOGIN_REQUEST_GUEST, loginData);
         if (ConnectToServer_GUI.clientController != null) {
-            try {
-                sendComplexObject(message);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            try { sendComplexObject(loginMessage); } catch (Exception e) { e.printStackTrace(); }
         }
-	}
-	public void sendRemoveUserRequest(UserRecord user) {
-		System.out.println("Add new user attempt");
-		Message message = new Message(MessageType.DELETE_USER_REQUEST, user);
+    }
+    
+    public void sendGetAllUsersRequest() {
+        System.out.println("Get all users attempt");
+        Message message = new Message(MessageType.GET_ALL_USERS_REQUEST);
         if (ConnectToServer_GUI.clientController != null) {
-            try {
-                sendComplexObject(message);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            try { sendComplexObject(message); } catch (Exception e) { e.printStackTrace(); }
         }
-	}
-	
-	
-	// this function is a way to set the manage users gui to be reachable by the controller.
-	// its a bit different than what we used before but i think its better because
-	// the manage usres screen decides when its active to avoid problems with javaFX 
-	
-	public void setManageUsersGUI(ManageUsers_GUI manageUsers_GUI) {
-		// TODO Auto-generated method stub
-		this.manageUsers_GUI = manageUsers_GUI;
-	}
-	
-
-	/**
-	 * Handles messages received from the server. Deserializes the byte array using Kryo 
-	 * and routes the response to the active GUI instance.
-	 * All UI updates are wrapped in Platform.runLater using Anonymous Inner Classes 
-	 * to ensure thread safety on the JavaFX Application Thread.
-	 * * @param message The serialized message (byte array) received from the server.
-	 */
-	@Override
-	public void display(Object message) {
-		if (message instanceof byte[]) {
-			// Deserialization using the utility class
-			Object receivedMessageDeserialized = KryoUtil.deserialize((byte[]) message);
-			
-			if (!(receivedMessageDeserialized instanceof Message)) {
-				return;
-			}
-			
-			final Message recivedMessage = (Message) receivedMessageDeserialized;
-
-			try {
-				switch (recivedMessage.getType()) {
-				
-				case LOGIN_SUCCESS_GUEST:
-					
-					Platform.runLater(new Runnable() {
-						@Override
-						public void run() {
-							if (MainScreen_GUI.instance != null) {
-								MainScreen_GUI.instance.onGuestLoginSuccess();
-							}
-						}});
-					break;
-				
-				case LOGIN_SUCCESS_SUB:
-					
-					Subscribed_Customer sub = (Subscribed_Customer)recivedMessage.getContent();
-					User_Session.setLoggedInUser(sub);
-					
-					Platform.runLater(new Runnable() {
-						@Override
-						public void run() {
-							if (MainScreen_GUI.instance != null) {
-								MainScreen_GUI.instance.onSubLoginSuccess(sub);
-							}
-						}});
-					break;
-					
-
-				case LOGIN_FAILED_GUEST:
-					
-					Platform.runLater(new Runnable() {
-						@Override
-						public void run() {
-							if (MainScreen_GUI.instance != null) {
-								MainScreen_GUI.instance.onGuestLoginFailure(recivedMessage);
-							}
-						}});
-					
-					break;
-					
-					
-				case LOGIN_FAILED_SUB:
-					
-					Platform.runLater(new Runnable() {
-						@Override
-						public void run() {
-							if (MainScreen_GUI.instance != null) {
-								MainScreen_GUI.instance.onSubLoginFailure();
-							}
-						}});
-					
-					break;
-
-				case RETURN_RESERVATIONS_BY_USER:
-					@SuppressWarnings("unchecked")
-					final List<Reservation> resList = (List<Reservation>) recivedMessage.getContent();
-					Platform.runLater(new Runnable() {
-						@Override
-						public void run() {
-							if (ViewReservations_GUI.instance != null) {
-								ViewReservations_GUI.instance.updateTable(resList);
-							}
-						}
-					});
-					break;
-
-				case RETURN_ALL_PENDING_RESERVATIONS:
-					@SuppressWarnings("unchecked")
-					final List<Reservation> adminList = (List<Reservation>) recivedMessage.getContent();
-					Platform.runLater(new Runnable() {
-						@Override
-						public void run() {
-							if (ManageOrders_GUI.instance != null) {
-								ManageOrders_GUI.instance.updateAdminUI(adminList);
-							}
-						}
-					});
-					break;
-
-				case RESERVATION_CONFIRMED:
-					final int confirmationCode = (Integer) recivedMessage.getContent();
-					Platform.runLater(new Runnable() {
-						@Override
-						public void run() {
-							if (AddReservation_GUI.instance != null) {
-								AddReservation_GUI.instance.showSuccessAlert(confirmationCode);
-							} else if (AddManualReservation_GUI.instance != null) {
-								AddManualReservation_GUI.instance.showSuccessAlert(confirmationCode);
-							}
-						}
-					});
-					break;
-
-				case RESERVATION_FAILED_NO_TABLE:
-					/**
-					 * The server found no availability for the requested time but provided a suggestion.
-					 * Content: LocalDateTime (the suggested alternative slot).
-					 */
-					final LocalDateTime suggestedTime = (LocalDateTime) recivedMessage.getContent();
-					Platform.runLater(new Runnable() {
-						@Override
-						public void run() {
-							// Route to Add Reservation Screen
-							if (AddReservation_GUI.instance != null) {
-								AddReservation_GUI.instance.showNoTableAlert(suggestedTime);
-							} 
-							// Route to Staff Manual Entry Screen
-							else if (AddManualReservation_GUI.instance != null) {
-								AddManualReservation_GUI.instance.showNoTableAlert(suggestedTime);
-							}
-							// Route to View/Edit Screen (Crucial for existing order updates)
-							else if (ViewReservations_GUI.instance != null) {
-								ViewReservations_GUI.instance.showNoTableAlert(suggestedTime);
-							}
-						}
-					});
-					break;
-
-				case RESERVATION_FAILED_NO_TABLE_FULLY_BOOKED:
-					/**
-					 * The server found no availability and no suggestions for the rest of the day.
-					 */
-					Platform.runLater(new Runnable() {
-						@Override
-						public void run() {
-							if (AddReservation_GUI.instance != null) {
-								AddReservation_GUI.instance.showNoTableAlert(null);
-							} else if (ViewReservations_GUI.instance != null) {
-								ViewReservations_GUI.instance.showNoTableAlert(null);
-							} else if (AddManualReservation_GUI.instance != null) {
-								AddManualReservation_GUI.instance.showNoTableAlert(null);
-							}
-						}
-					});
-					break;
-
-				case RESERVATION_FAILED:
-					/**
-					 * General failure (e.g., Database error).
-					 */
-					final String errorMsg = (String) recivedMessage.getContent();
-					Platform.runLater(new Runnable() {
-						@Override
-						public void run() {
-							// Display generic error to whichever screen initiated the request
-							System.err.println("Server Error: " + errorMsg);
-						}
-					});
-					break;
-
-				case RESERVATION_UPDATE_SUCCESS:
-					Platform.runLater(new Runnable() {
-						@Override
-						public void run() {
-							if (ViewReservations_GUI.instance != null) {
-								ViewReservations_GUI.instance.showSuccessAlert();
-								sendGetReservationsRequest(
-										User_Session.getLoggedInUser() != null ? User_Session.getLoggedInUser()
-												: User_Session.getCasualPhone());
-							}
-						}
-					});
-					break;
-
-				case ADMIN_UPDATE_SUCCESS:
-					Platform.runLater(new Runnable() {
-						@Override
-						public void run() {
-							if (ManageOrders_GUI.instance != null) {
-								ManageOrders_GUI.instance.refreshAdminData();
-							}
-						}
-					});
-					break;
-
-				case RESERVATION_CANCELED:
-					Platform.runLater(new Runnable() {
-						@Override
-						public void run() {
-							if (ViewReservations_GUI.instance != null) {
-								sendGetReservationsRequest(
-										User_Session.getLoggedInUser() != null ? User_Session.getLoggedInUser()
-												: User_Session.getCasualPhone());
-							} else if (ManageOrders_GUI.instance != null) {
-								ManageOrders_GUI.instance.refreshAdminData();
-							}
-						}
-					});
-					break;
-
-				case RETURN_OPENING_HOURS:
-					final Opening_Hours oh = (Opening_Hours) recivedMessage.getContent();
-					Restaurant.getInstance().setOpeningHours(oh);
-					Platform.runLater(new Runnable() {
-						@Override
-						public void run() {
-							if (AddReservation_GUI.instance != null) {
-								LocalDate currentDate = AddReservation_GUI.instance.getDatePicker().getValue();
-								if (currentDate != null) {
-									AddReservation_GUI.instance.loadDynamicHours(currentDate);
-								}
-							}
-						}
-					});
-					break;
-					
-				case GET_ALL_USERS_RESPONSE:
-				case ADD_USER_RESPONSE_OK:
-				case ADD_USER_RESPONSE_ERR:
-					Platform.runLater(new Runnable() {
-						@Override
-						public void run() {
-							if (manageUsers_GUI != null) {
-								manageUsers_GUI.handle(recivedMessage);
-							}
-						}});
-					break;
-				case RETURN_ALL_TABLES:
-				    @SuppressWarnings("unchecked")
-				    final List<Restaurant_Table> tables =
-				        (List<Restaurant_Table>) recivedMessage.getContent();
-
-				    Platform.runLater(new Runnable() {
-				        @Override
-				        public void run() {
-				            if (ManageTables_GUI.instance != null) {
-				                ManageTables_GUI.instance.loadTables(tables);
-				            }
-				        }
-				    });
-				    break;
-				    
-				case TABLE_OPERATION_FAILED:
-				    final String error = (String) recivedMessage.getContent();
-				    Platform.runLater(() -> {
-				    	//Refresh after ADD / UPDATE / DELETE
-				        Alert alert = new Alert(Alert.AlertType.ERROR);
-				        alert.setTitle("Table Operation Failed");
-				        alert.setHeaderText(null);
-				        alert.setContentText(error != null ? error : "Operation failed");
-				        alert.showAndWait();
-				    });
-				    break;
-				    
-				case TABLE_OPERATION_SUCCESS:
-				    Platform.runLater(() -> {
-				        if (ManageTables_GUI.instance != null) {
-				            ConnectToServer_GUI.clientController.sendComplexObject(
-				                new Message(MessageType.GET_ALL_TABLES, null)
-				            );
-				        }
-				    });
-				    break;
-
-
-
-				default:
-					System.out.println("Client_Controller: Received unhandled message type: " + recivedMessage.getType() + recivedMessage.getContent());
-					break;
-				}
-			} catch (Exception e) {
-				System.err.println("Client_Controller: Critical error while processing server response.");
-				e.printStackTrace();
-			}
-		}
-	}
-
-
-
-	
-
+    }
+    
+    public void sendAddUserRequest(UserRecord newUser) {
+        System.out.println("Add new user attempt");
+        Message message = new Message(MessageType.ADD_USER_REQUEST, newUser);
+        if (ConnectToServer_GUI.clientController != null) {
+            try { sendComplexObject(message); } catch (Exception e) { e.printStackTrace(); }
+        }
+    }
+    
+    public void sendEditUserRequest(UserRecord user) {
+        System.out.println("Add new user attempt");
+        Message message = new Message(MessageType.EDIT_USER_REQUEST, user);
+        if (ConnectToServer_GUI.clientController != null) {
+            try { sendComplexObject(message); } catch (Exception e) { e.printStackTrace(); }
+        }
+    }
+    
+    public void sendRemoveUserRequest(UserRecord user) {
+        System.out.println("Add new user attempt");
+        Message message = new Message(MessageType.DELETE_USER_REQUEST, user);
+        if (ConnectToServer_GUI.clientController != null) {
+            try { sendComplexObject(message); } catch (Exception e) { e.printStackTrace(); }
+        }
+    }
 }

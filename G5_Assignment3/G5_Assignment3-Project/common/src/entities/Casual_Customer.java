@@ -1,7 +1,5 @@
 package entities;
 
-import java.io.Serializable;
-
 public class Casual_Customer{
 
 	private String phone;

@@ -1,160 +1,111 @@
 package controllers;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import commands.*; 
 import utils.KryoUtil;
-import entities.LoginData;
-import entities.Opening_Hours;
-import entities.Restaurant;
 import gui.Server_GUI;
 import messages.Message;
 import messages.MessageType;
 import ocsf.server.AbstractServer;
 import ocsf.server.ConnectionToClient;
 
-/**
- * Main Server Controller that handles OCSF connections and Kryo serialization.
- * Acts as the primary router for all client requests.
- */
 public class Server_Controller extends AbstractServer {
 
     final public static int DEFAULT_PORT = 5555;
     private Server_GUI gui;
     private final User_Controller userController;
+    // The Command Map
+    private Map<MessageType, Command> commands;
 
     public Server_Controller(int port, Server_GUI gui) {
-        super(port); 
+        super(port);
         this.gui = gui;
         this.userController = new User_Controller();
+        initializeCommands();
     }
 
     /**
-     * Handles incoming byte arrays from clients, deserializes them, 
-     * and routes them to the appropriate logic controller.
+     * Registers all command handlers in the HashMap.
      */
+    private void initializeCommands() {
+        commands = new HashMap<>();
+        
+        // --- Authentication ---
+        Command loginCmd = new LoginCommand();
+        commands.put(MessageType.LOGIN_REQUEST_SUB, loginCmd);
+        commands.put(MessageType.LOGIN_REQUEST_GUEST, loginCmd);
+        
+        // --- Reservations ---
+        Command resCmd = new ReservationCommand();
+        commands.put(MessageType.CREATE_RESERVATION, resCmd);
+        commands.put(MessageType.CANCEL_RESERVATION, resCmd);
+        commands.put(MessageType.GET_RESERVATIONS_BY_USER, resCmd);
+        commands.put(MessageType.UPDATE_RESERVATION_REQUEST, resCmd);
+        commands.put(MessageType.GET_ALL_PENDING_RESERVATIONS, resCmd);
+        commands.put(MessageType.ADMIN_UPDATE_RESERVATION, resCmd);
+        commands.put(MessageType.CHECK_IN_REQUEST, resCmd);
+
+        // --- Tables ---
+        Command tableCmd = new TableCommand();
+        commands.put(MessageType.GET_ALL_TABLES, tableCmd);
+        commands.put(MessageType.ADD_TABLE_REQUEST, tableCmd);
+        commands.put(MessageType.UPDATE_TABLE_REQUEST, tableCmd);
+        commands.put(MessageType.DELETE_TABLE_REQUEST, tableCmd);
+
+        // --- Users ---
+        UserCommand userCmd = new UserCommand(this.userController);
+        commands.put(MessageType.GET_ALL_USERS_REQUEST, userCmd);
+        commands.put(MessageType.ADD_USER_REQUEST, userCmd);
+        commands.put(MessageType.EDIT_USER_REQUEST, userCmd);
+        commands.put(MessageType.DELETE_USER_REQUEST, userCmd);
+        
+        // --- General ---
+        commands.put(MessageType.GET_OPENING_HOURS, new OpeningHoursCommand());
+        
+        // LOGOUT is special, handle directly or via command that returns null
+        commands.put(MessageType.LOGOUT_REQUEST, (msg, client) -> {
+            log("Client disconnected: " + client.getInetAddress());
+            try { client.close(); } catch (IOException e) { e.printStackTrace(); }
+            return null; // No response needed
+        });
+    }
+
     @Override
     protected void handleMessageFromClient(Object msg, ConnectionToClient client) {
-        // 1. Deserialization using Kryo
+        // 1. Deserialization
         Object receivedMessageDeserialized = KryoUtil.deserialize((byte[]) msg);
-        
-        // 2. Input Validation
-        if (receivedMessageDeserialized == null || !(receivedMessageDeserialized instanceof Message)) {
+
+        if (!(receivedMessageDeserialized instanceof Message)) {
             log("Error: Invalid message format from " + client);
             return;
         }
 
         Message clientMsg = (Message) receivedMessageDeserialized;
-        Message serverResponse = null;
+        MessageType type = clientMsg.getType();
+        
+        log("Processing command: " + type);
 
-        log("Processing command: " + clientMsg.getType());
-
-        try {
-            // 3. Routing Logic: Handle specific commands based on MessageType
-            switch (clientMsg.getType()) {
-
-                // --- Authentication ---
-                case LOGIN_REQUEST_SUB:
-                    if(clientMsg.getContent() instanceof LoginData) {
-                    	serverResponse = Login_Controller.handleSubLogin((LoginData)clientMsg.getContent());
-                    	break;
-                    }else {
-                    	serverResponse = new Message(MessageType.LOGIN_FAILED_SUB, "Unexpected user data");
-                    	break;
-                    }
-                    
-                case LOGIN_REQUEST_GUEST:
-                    if(clientMsg.getContent() instanceof LoginData) {
-                    	serverResponse = Login_Controller.handleGuestLogin((LoginData)clientMsg.getContent());
-                    	break;
-                    }else {
-                    	serverResponse = new Message(MessageType.LOGIN_FAILED_GUEST, "Unexpected user data");
-                    	break;
-                    }
-                    
-
-                case LOGOUT_REQUEST:
-                    log("Client disconnected: " + client.getInetAddress());
-                    try {
-                        client.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    break;
-
-                // --- Reservation Management ---
-                case CREATE_RESERVATION:
-                case CANCEL_RESERVATION:
-                case GET_RESERVATIONS_BY_USER:
-                case UPDATE_RESERVATION_REQUEST:
-                case GET_ALL_PENDING_RESERVATIONS: 
-                case ADMIN_UPDATE_RESERVATION:    
-                    log("Handling Reservation Request: " + clientMsg.getType());
-                    // Static call to the logic controller as per your existing pattern
-                    serverResponse = Reservation_Controller.handleMessage(clientMsg);
-                    break;
-                    
-                // --- Waitlist Management ---
-                case JOIN_WAITLIST:
-                    // Logic to be implemented in Waitlist_Controller
-                    serverResponse = new Message(MessageType.SUCCESS_RESPONSE, "Added to Waitlist");
-                    break;
-
-                // --- Restaurant Status ---
-                case GET_TABLES_STATUS:
-                    serverResponse = new Message(MessageType.TEXT_MESSAGE, "Table status list (Mock)");
-                    break;
-
-                case UPDATE_TABLE_STATUS:
-                    // Logic to update bistro_tables
-                    break;
+        // 2. Command Execution via HashMap
+        if (commands.containsKey(type)) {
+            try {
+                // Execute the specific command
+                Message response = commands.get(type).execute(clientMsg, client);
                 
-                // Reports (Manager Only)
-                case GET_REPORTS:
-                    // Logic to be implemented in Report_Controller
-                    break;
-                case GET_OPENING_HOURS:
-                    // The OpeningHours_Repository has already loaded the hours into the Restaurant singleton during init()
-                    Opening_Hours hours = Restaurant.getInstance().getOpeningHours();  
-                    serverResponse= new Message(MessageType.RETURN_OPENING_HOURS, hours);
-                    break;
-                    
-                 // --- Tables Management ---
-                case GET_ALL_TABLES:
-                case ADD_TABLE_REQUEST:
-                case UPDATE_TABLE_REQUEST:
-                case DELETE_TABLE_REQUEST:
-                    serverResponse = Table_Controller.handle(clientMsg);
-                    break;
-
-
-                case GET_ALL_USERS_REQUEST:
-                	serverResponse = userController.handle(clientMsg);
-                    break;
-                    
-                case ADD_USER_REQUEST:
-                case EDIT_USER_REQUEST:
-                case DELETE_USER_REQUEST:
-                	serverResponse = userController.handle(clientMsg);
-                    break;
-                default:
-                    log("Warning: Unknown command received: " + clientMsg.getType());
-                    serverResponse = new Message(MessageType.ERROR_RESPONSE, "Unknown Command");
-            }
-
-            // 4. Send Response: Serialize and send back to the specific client
-            if (serverResponse != null) {
-            	log("Sending message to client: " + serverResponse.getType());
-                try {
-                    byte[] payload = KryoUtil.serialize(serverResponse);
-                    client.sendToClient(payload); 
-                } catch (IOException e) {
-                    log("Error sending response to client: " + e.getMessage());
-                    e.printStackTrace();
+                // 3. Send Response
+                if (response != null) {
+                    client.sendToClient(KryoUtil.serialize(response));
                 }
+            } catch (Exception e) {
+                log("Error executing command " + type + ": " + e.getMessage());
+                e.printStackTrace();
             }
-
-        } catch (Exception e) {
-            log("Critical Error during message processing: " + e.getMessage());
-            e.printStackTrace();
+        } else {
+            log("Warning: No command registered for " + type);
+            try {
+                client.sendToClient(KryoUtil.serialize(new Message(MessageType.ERROR_RESPONSE, "Unknown Command")));
+            } catch (IOException e) { e.printStackTrace(); }
         }
     }
 

@@ -1,16 +1,13 @@
 package controllers;
 
 import Data.User_Repository;
-import entities.Subscribed_Customer;
 import entities.UserRecord;
 import messages.Message;
 import messages.MessageType;
 
 import java.util.List;
 
-
 public class User_Controller {
-
 
     private final User_Repository repo;
 
@@ -18,6 +15,9 @@ public class User_Controller {
         this.repo = User_Repository.getInstance();
     }
 
+    /**
+     * Main handle method. Changed from static to instance method.
+     */
     public Message handle(Message msg) {
         try {
             return switch (msg.getType()) {
@@ -29,12 +29,10 @@ public class User_Controller {
                 case MessageType.EDIT_USER_REQUEST -> handleUpdate((UserRecord) msg.getContent());
 
                 case MessageType.DELETE_USER_REQUEST -> handleDelete((UserRecord) msg.getContent()); 
-                // e.g. delete by username (or id)
 
                 default -> new Message(MessageType.USERS_ERROR, "Unknown user action: " + msg.getType());
             };
         } catch (ClassCastException e) {
-            // happens if the client sent the wrong object type
             return new Message(MessageType.USERS_ERROR, "Bad request (wrong data type).");
         } catch (Exception e) {
             e.printStackTrace();
@@ -51,19 +49,18 @@ public class User_Controller {
         String err = validateForAdd(u);
         if (err != null) return new Message(MessageType.ADD_USER_RESPONSE_ERR, err);
 
-        // uniqueness checks
         if (repo.existsByUsername(u.getUsername())) {
             return new Message(MessageType.ADD_USER_RESPONSE_ERR, "Username already exists.");
         }
         
         int phone = 0;
         try {
-        	phone = Integer.parseInt(u.getPhone());
+            phone = Integer.parseInt(u.getPhone());
         } catch (NumberFormatException e) {
-            // handle invalid number
             System.out.println("Not a valid number");
         }
-        if (repo.getByEmailOrPhone(u.getEmail(),phone)) {
+        
+        if (repo.getByEmailOrPhone(u.getEmail(), phone)) {
             return new Message(MessageType.ADD_USER_RESPONSE_ERR, "Email or phone already exists.");
         }
 
@@ -84,7 +81,7 @@ public class User_Controller {
     }
 
     private Message handleDelete(UserRecord u) {
-    	int id = u.getId();
+        int id = u.getId();
         if (id == 0) {
             return new Message(MessageType.DELETE_USER_RESPONSE_ERR, "ID is required.");
         }
@@ -94,8 +91,6 @@ public class User_Controller {
             ? new Message(MessageType.DELETE_USER_RESPONSE_OK, "User deleted.")
             : new Message(MessageType.DELETE_USER_RESPONSE_ERR, "Failed to delete user.");
     }
-
-    // ---------- Validation ----------
 
     private String validateForAdd(UserRecord u) {
         if (u == null) return "Missing user data.";
@@ -112,7 +107,6 @@ public class User_Controller {
         if (u == null) return "Missing user data.";
 
         if (isBlank(u.getUsername())) return "Username required.";
-        // password might be optional on update (only update if provided)
         if (isBlank(u.getEmail()) && isBlank(u.getPhone())) return "Email or phone required.";
 
         return null;

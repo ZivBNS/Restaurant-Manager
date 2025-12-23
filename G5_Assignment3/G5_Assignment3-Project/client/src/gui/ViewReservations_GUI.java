@@ -45,8 +45,6 @@ public class ViewReservations_GUI {
 	@FXML private TextField editGuestsField;
 
 	private ObservableList<Reservation> masterData = FXCollections.observableArrayList();
-	private final DateTimeFormatter displayFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
-
 	@FXML
 	public void initialize() {
 		instance = this;

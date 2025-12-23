@@ -2,7 +2,6 @@ package gui;
 
 import java.io.IOException;
 
-import entities.Casual_Customer;
 import entities.LoginData;
 import entities.Subscribed_Customer;
 import javafx.application.Platform; // Added for Platform.exit()
@@ -24,7 +23,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent; // Added for WindowEvent
 import messages.Message;
-import messages.MessageType;
 
 public class MainScreen_GUI {
 	public static MainScreen_GUI instance;
@@ -35,7 +33,6 @@ public class MainScreen_GUI {
     @FXML private TextField empUserField;
     @FXML private PasswordField empPassField;
     @FXML private Button empSubmitBtn;
-    
     @FXML private TextField guestContactField;
     @FXML private ToggleGroup guestIdentGroup;
     @FXML private Button guestLoginBtn;
