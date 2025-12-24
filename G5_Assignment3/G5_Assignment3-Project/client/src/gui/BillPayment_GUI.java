@@ -8,6 +8,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import messages.Message;
+import messages.MessageType;
+import entities.Reservation;
 import javafx.event.ActionEvent;
 
 public class BillPayment_GUI {
@@ -21,6 +24,7 @@ public class BillPayment_GUI {
     @FXML
     private void onPay(ActionEvent event) {
         String amountText = paymentField.getText().trim();
+        Double bill = 1000.0;
 
         if (amountText.isEmpty()) {
             showAlert("Error", "Please enter an amount.");
@@ -29,6 +33,10 @@ public class BillPayment_GUI {
 
         try {
             double amount = Double.parseDouble(amountText);
+            if (amount != bill) {
+            	showAlert("Error", "Insufficient amount of money.");
+                return;
+            }
 
             if (amount <= 0) {
                 showAlert("Error", "Amount must be greater than zero.");

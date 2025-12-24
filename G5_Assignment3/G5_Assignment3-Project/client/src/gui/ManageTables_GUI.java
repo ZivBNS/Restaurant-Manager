@@ -97,6 +97,11 @@ public class ManageTables_GUI {
             showAlert("Table size must be a number");
             return;
         }
+        
+        if ((tableNumber < 0) || (tableSize < 0)) {
+        	showAlert("Invalid table Information.");
+        	return;
+        }
 
         boolean active = activeCheckBox.isSelected();
 
