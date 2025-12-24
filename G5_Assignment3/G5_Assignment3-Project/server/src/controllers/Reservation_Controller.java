@@ -36,11 +36,19 @@ public class Reservation_Controller {
             case GET_ALL_PENDING_RESERVATIONS: return fetchAllPending(msg);
             case ADMIN_UPDATE_RESERVATION: return processAdminUpdate(msg);
             case CHECK_IN_REQUEST: return handleCheckIn(msg);
+            case GET_LATEST_RESERVATION_BY_PHONE: return getLatestReservationById(msg);
             default: return null;
         }
     }
 
-    private static Message createReservation(Message msg) {
+    private static Message getLatestReservationById(Message msg) {
+    	String phone = (String) msg.getContent();
+        Reservation r = Reservation_Repository.getInstance().getLatestReservationByPhone(phone);
+        return new Message(
+                MessageType.RETURN_LATEST_RESERVATION_BY_PHONE,r);
+	}
+
+	private static Message createReservation(Message msg) {
         try {
             Reservation reservation = (Reservation) msg.getContent();
             LocalDateTime startTime = reservation.getOrderStartTime();

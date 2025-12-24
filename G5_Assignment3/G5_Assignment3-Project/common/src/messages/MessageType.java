@@ -78,6 +78,10 @@ public enum MessageType {
     BILL_RETURN_DETAILS,
     BILL_PAYMENT_SUCCESS,
     BILL_PAYMENT_FAILED,
+    GET_LATEST_RESERVATION_BY_PHONE,
+    RETURN_LATEST_RESERVATION_BY_PHONE,
+
+
     
     //--- Opening hours ---
     GET_OPENING_HOURS,
@@ -106,6 +110,6 @@ public enum MessageType {
     ERROR_RESPONSE,         // Server sends an error message (Content=String)
     SUCCESS_RESPONSE,        // Server confirms successful operation
     
-    TEXT_MESSAGE,
+    TEXT_MESSAGE, 
     
 }

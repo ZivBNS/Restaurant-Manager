@@ -175,6 +175,16 @@ public class Client_Controller implements ChatIF {
                 System.err.println("Server Error: " + errorMsg);
             }
         });
+        
+        responseHandlers.put(
+        	    MessageType.RETURN_LATEST_RESERVATION_BY_PHONE,
+        	    msg -> {
+        	        Reservation r = (Reservation) msg.getContent();
+        	        if (BillPayment_GUI.instance != null) {
+        	            BillPayment_GUI.instance.displayReservation(r);
+        	        }
+        	    }
+        	);
 
         // -----------------------------------------------------------
         // Updates, Cancellations & Admin Actions
@@ -301,6 +311,16 @@ public class Client_Controller implements ChatIF {
                 if (ManageTables_GUI.instance != null) {
                     // Refresh table list
                     sendComplexObject(new Message(MessageType.GET_ALL_TABLES, null));
+                }
+            }
+        });
+        
+        responseHandlers.put(MessageType.RETURN_LATEST_RESERVATION_BY_PHONE, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                Reservation r = (Reservation) msg.getContent();
+                if (BillPayment_GUI.instance != null) {
+                    BillPayment_GUI.instance.displayReservation(r);
                 }
             }
         });

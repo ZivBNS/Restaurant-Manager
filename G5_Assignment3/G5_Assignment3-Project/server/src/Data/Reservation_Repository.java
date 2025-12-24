@@ -1,5 +1,6 @@
 package Data;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -298,4 +299,45 @@ public class Reservation_Repository {
             if (pConn != null) db.releaseConnection(pConn);
         }
     }
+    
+    public Reservation getLatestReservationByPhone(String phone) {
+
+    	String sql =
+    		    "SELECT ID, Phone, ReservationStartTime, NumberOfDiners, TableID, Status " +
+    		    "FROM reservations " +
+    		    "WHERE Phone = ? " +
+    		    "AND ReservationStartTime >= NOW() " +
+    		    "ORDER BY ReservationStartTime ASC " +
+    		    "LIMIT 1";
+
+        PooledConnection pConn = null;
+
+        try {
+            pConn = db.getConnection();
+            Connection conn = pConn.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, phone);
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+            	return new Reservation(
+            		    rs.getInt("ID"),
+            		    rs.getString("Phone"),
+            		    rs.getTimestamp("ReservationStartTime").toLocalDateTime(),
+            		    rs.getInt("NumberOfDiners"),
+            		    (Integer) rs.getObject("TableID"),
+            		    rs.getString("Status")
+            		);
+            }
+
+        } catch (Exception e) {
+            System.out.println("getLatestReservationByPhone ERROR: " + e.getMessage());
+        } finally {
+            if (pConn != null)
+                db.releaseConnection(pConn);
+        }
+
+        return null;
+    }   
 }

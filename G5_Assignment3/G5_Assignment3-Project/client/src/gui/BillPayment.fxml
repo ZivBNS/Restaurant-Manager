@@ -1,167 +1,67 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
 
-<AnchorPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
+<AnchorPane prefWidth="450" prefHeight="600"
+            xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="gui.BillPayment_GUI"
-            prefWidth="460" prefHeight="650"
-            style="
-                -fx-background-color: #1e1e2f;
-            ">
+            style="-fx-background-color: linear-gradient(to bottom right, #1f2c3c, #243447);">
 
-    <!-- Header -->
-    <VBox spacing="6"
-          AnchorPane.topAnchor="24"
-          AnchorPane.leftAnchor="0"
-          AnchorPane.rightAnchor="0"
-          alignment="CENTER">
+    <children>
 
-        <Label text="Bistro"
-               style="
-                   -fx-font-size: 26px;
-                   -fx-font-weight: bold;
-                   -fx-text-fill: #ffffff;
-               "/>
+        <VBox alignment="CENTER" spacing="20"
+              AnchorPane.leftAnchor="40"
+              AnchorPane.rightAnchor="40"
+              AnchorPane.topAnchor="60">
 
-        <Label text="Order Payment"
-               style="
-                   -fx-font-size: 14px;
-                   -fx-text-fill: #b0b3c6;
-               "/>
-    </VBox>
+            <Label text="Bill Payment"
+                   style="-fx-font-size:28; -fx-text-fill:white; -fx-font-weight:bold;" />
 
-    <!-- Main Card -->
-    <VBox spacing="26"
-          AnchorPane.topAnchor="100"
-          AnchorPane.leftAnchor="35"
-          AnchorPane.rightAnchor="35"
-          style="
-              -fx-background-color: #26283b;
-              -fx-background-radius: 22;
-              -fx-padding: 30;
-              -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 30, 0, 0, 10);
-          ">
+            <VBox spacing="12" style="-fx-background-color:#2c3e50; -fx-padding:20; -fx-background-radius:15;">
 
-        <!-- Order Details -->
-        <VBox spacing="10">
-            <Label text="Order Summary"
-                   style="
-                       -fx-font-size: 20px;
-                       -fx-font-weight: bold;
-                       -fx-text-fill: #ffffff;
-                   "/>
+                <Label text="Reservation Details"
+                       style="-fx-font-size:16; -fx-text-fill:white;" />
 
-            <Separator opacity="0.3"/>
+                <HBox spacing="10">
+                    <Label text="Date:" style="-fx-text-fill:#7f85a3;"/>
+                    <Label fx:id="lblDate" style="-fx-text-fill:white;"/>
+                </HBox>
 
-            <HBox spacing="10">
-                <Label text="Order ID"
-                       style="-fx-text-fill: #b0b3c6;"/>
-                <Label fx:id="orderIdLabel"
-                       style="-fx-text-fill: #ffffff;"/>
-            </HBox>
+                <HBox spacing="10">
+                    <Label text="Time:" style="-fx-text-fill:#7f85a3;"/>
+                    <Label fx:id="lblTime" style="-fx-text-fill:white;"/>
+                </HBox>
 
-            <HBox spacing="10">
-                <Label text="Table"
-                       style="-fx-text-fill: #b0b3c6;"/>
-                <Label fx:id="tableNumberLabel"
-                       style="-fx-text-fill: #ffffff;"/>
-            </HBox>
+                <HBox spacing="10">
+                    <Label text="Guests:" style="-fx-text-fill:#7f85a3;"/>
+                    <Label fx:id="lblGuests" style="-fx-text-fill:white;"/>
+                </HBox>
 
-            <HBox spacing="10">
-                <Label text="Date"
-                       style="-fx-text-fill: #b0b3c6;"/>
-                <Label fx:id="dateLabel"
-                       style="-fx-text-fill: #ffffff;"/>
-            </HBox>
+                <HBox spacing="10">
+                    <Label text="Table:" style="-fx-text-fill:#7f85a3;"/>
+                    <Label fx:id="lblTable" style="-fx-text-fill:white;"/>
+                </HBox>
 
-            <HBox spacing="10">
-                <Label text="Time"
-                       style="-fx-text-fill: #b0b3c6;"/>
-                <Label fx:id="timeLabel"
-                       style="-fx-text-fill: #ffffff;"/>
-            </HBox>
-
-            <HBox spacing="10">
-                <Label text="Total"
-                       style="-fx-text-fill: #b0b3c6;"/>
-                <Label fx:id="totalAmountLabel"
-                       style="
-                           -fx-text-fill: #ff6b6b;
-                           -fx-font-size: 18px;
-                           -fx-font-weight: bold;
-                       "/>
-            </HBox>
-        </VBox>
-
-        <Separator opacity="0.25"/>
-
-        <!-- Payment Section -->
-        <VBox spacing="14" alignment="CENTER">
-
-            <Label text="Payment"
-                   style="
-                       -fx-font-size: 18px;
-                       -fx-font-weight: bold;
-                       -fx-text-fill: #ffffff;
-                   "/>
+            </VBox>
 
             <TextField fx:id="paymentField"
-                       promptText="Enter amount"
-                       prefWidth="280"
-                       style="
-                           -fx-background-color: #1e1e2f;
-                           -fx-text-fill: white;
-                           -fx-prompt-text-fill: #7f85a3;
-                           -fx-background-radius: 10;
-                           -fx-padding: 12;
-                           -fx-border-color: #3a3d5c;
-                           -fx-border-radius: 10;
-                       "/>
+                       promptText="Enter payment amount"
+                       style="-fx-background-radius:10; -fx-padding:12;"/>
 
-            <!-- Buttons -->
-            <VBox spacing="10" alignment="CENTER">
+            <Button text="Pay"
+                    onAction="#onPay"
+                    style="-fx-background-color:#27ae60; -fx-text-fill:white; -fx-font-weight:bold; -fx-padding:12 40; -fx-background-radius:15;"/>
 
-                <Button text="Pay Now"
-                        prefWidth="280"
-                        onAction="#onPay"
-                        style="
-                            -fx-background-color: linear-gradient(
-                                to right,
-                                #ff6b6b,
-                                #ff4757
-                            );
-                            -fx-text-fill: white;
-                            -fx-font-size: 15px;
-                            -fx-font-weight: bold;
-                            -fx-background-radius: 14;
-                            -fx-cursor: hand;
-                        "/>
+            <Button text="Back"
+                    onAction="#onBackClicked"
+                    style="-fx-background-color:#34495e; -fx-text-fill:white; -fx-padding:10 35; -fx-background-radius:15;"/>
 
-                <Button text="Back"
-                        prefWidth="280"
-                        onAction="#onBackClicked"
-                        style="
-                            -fx-background-color: #2f324a;
-                            -fx-text-fill: #b0b3c6;
-                            -fx-font-size: 13px;
-                            -fx-background-radius: 14;
-                            -fx-cursor: hand;
-                        "/>
-            </VBox>
         </VBox>
-
-    </VBox>
-
+    </children>
 </AnchorPane>
-
-
 
 
 

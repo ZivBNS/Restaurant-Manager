@@ -78,6 +78,17 @@ public class Reservation implements Serializable {
         this.actualDepartureTime = null;
         this.creationTime = LocalDateTime.now(); 
     }
+    
+    public Reservation(int id, String phone, LocalDateTime startTime,
+            int numberOfDiners, Integer tableId, String status) {
+    	this.id = id;
+        this.phone = phone;
+        this.orderStartTime = startTime;
+        this.numberOfDiners = numberOfDiners;
+        this.tableId = tableId;
+        this.status = status;
+    }
+
 
     // --- Getters and Setters ---
 

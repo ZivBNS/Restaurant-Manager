@@ -6,6 +6,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import messages.Message;
@@ -15,67 +16,86 @@ import javafx.event.ActionEvent;
 
 public class BillPayment_GUI {
 
-    @FXML
-    private TextField paymentField;
+    public static BillPayment_GUI instance;
+    private Reservation currentReservation;
 
-    /**
-     * Called when the user clicks "Pay".
-     */
+    @FXML private TextField paymentField;
+    @FXML private Label lblDate;
+    @FXML private Label lblTime;
+    @FXML private Label lblGuests;
+    @FXML private Label lblTable;
+
+    @FXML
+    public void initialize() {
+        instance = this;
+
+        String phone = User_Session.getCasualPhone();
+
+        ConnectToServer_GUI.clientController.sendComplexObject(
+                new Message(MessageType.GET_LATEST_RESERVATION_BY_PHONE, phone)
+        );
+    }
+
+    public void displayReservation(Reservation r) {
+
+        currentReservation = r;
+
+        if (r == null) {
+            lblDate.setText("No upcoming reservation");
+            lblTime.setText("-");
+            lblGuests.setText("-");
+            lblTable.setText("-");
+            return;
+        }
+
+        lblDate.setText(r.getOrderStartTime().toLocalDate().toString());
+        lblTime.setText(r.getOrderStartTime().toLocalTime().toString());
+        lblGuests.setText(String.valueOf(r.getNumberOfDiners()));
+        lblTable.setText(r.getTableId() == null ? "-" : String.valueOf(r.getTableId()));
+    }
+
     @FXML
     private void onPay(ActionEvent event) {
+
+        if (currentReservation == null) {
+            showAlert("Error", "No reservation found to pay.");
+            return;
+        }
+
         String amountText = paymentField.getText().trim();
-        Double bill = 1000.0;
 
         if (amountText.isEmpty()) {
-            showAlert("Error", "Please enter an amount.");
+            showAlert("Error", "Please enter payment amount.");
             return;
         }
 
         try {
             double amount = Double.parseDouble(amountText);
-            if (amount != bill) {
-            	showAlert("Error", "Insufficient amount of money.");
-                return;
-            }
 
             if (amount <= 0) {
-                showAlert("Error", "Amount must be greater than zero.");
+                showAlert("Error", "Invalid amount.");
                 return;
             }
 
-            System.out.println("Payment submitted: " + amount);
-
-            showAlert("Success", "Payment of " + amount + " was processed.");
-
+            showAlert("Success", "Payment of " + amount + "₪ was completed.");
             paymentField.clear();
 
         } catch (NumberFormatException e) {
-            showAlert("Error", "Amount must be a valid number.");
+            showAlert("Error", "Amount must be a number.");
         }
     }
 
-    /**
-     * Called when clicking "Back".
-     */
     @FXML
     private void onBackClicked(ActionEvent event) {
         try {
             Parent previousScreen = FXMLLoader.load(getClass().getResource("/gui/CasualCustomer.fxml"));
-
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(previousScreen));
-            stage.setTitle("Casual Customer Menu");
-            stage.show();
-
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-
-    /**
-     * Helper method for showing popup alerts.
-     */
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
@@ -84,3 +104,4 @@ public class BillPayment_GUI {
         alert.showAndWait();
     }
 }
+
