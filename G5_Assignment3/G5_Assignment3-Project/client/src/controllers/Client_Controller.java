@@ -69,18 +69,24 @@ public class Client_Controller implements ChatIF {
             public void handle(Message msg) {
                 Subscribed_Customer sub = (Subscribed_Customer) msg.getContent();
                 User_Session.setLoggedInUser(sub);
-                if (MainScreen_GUI.instance != null) {
+                if (Terminal_GUI.instance!=null)
+                	Terminal_GUI.instance.handleMessageIfLoggedIn(sub);
+                else if (MainScreen_GUI.instance != null) {
                     MainScreen_GUI.instance.onSubLoginSuccess(sub);
                 }
+
             }
         });
 
         responseHandlers.put(MessageType.LOGIN_FAILED_GUEST, new ResponseHandler() {
             @Override
             public void handle(Message msg) {
-                if (MainScreen_GUI.instance != null) {
+                if (Terminal_GUI.instance!=null)
+                	Terminal_GUI.instance.handleMessageIfLoggedIn(null);
+                else if (MainScreen_GUI.instance != null) {
                     MainScreen_GUI.instance.onGuestLoginFailure(msg);
                 }
+
             }
         });
 

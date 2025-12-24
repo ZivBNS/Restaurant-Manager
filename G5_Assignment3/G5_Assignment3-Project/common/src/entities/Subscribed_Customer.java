@@ -8,7 +8,7 @@ public class Subscribed_Customer extends Casual_Customer implements User {
 	private String username;
 	private String password;
 	private String digitalCard;
-	private int subscriberCode;
+	private Integer subscriberCode;
 
 	public Subscribed_Customer(String firstName, String lastName, String phone, String email, String username,String password) {
 		super(phone, email);

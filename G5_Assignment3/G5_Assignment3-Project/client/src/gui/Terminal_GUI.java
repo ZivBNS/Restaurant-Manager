@@ -11,11 +11,13 @@ import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+
 import java.io.IOException;
 import java.time.LocalDateTime;
 
-import controllers.Client_Controller;
+import entities.LoginData;
 import entities.Reservation;
+import entities.Subscribed_Customer;
 
 /**
  * Controller for the Restaurant Terminal (Self-Service Kiosk).
@@ -24,6 +26,7 @@ import entities.Reservation;
 public class Terminal_GUI {
 
     public static Terminal_GUI instance;
+    private Subscribed_Customer loggedInUser = null; 
 
     @FXML private BorderPane terminalRoot;
     @FXML private AnchorPane welcomeView;
@@ -42,6 +45,13 @@ public class Terminal_GUI {
     @FXML private TextField welcomeUserField;
     @FXML private PasswordField welcomePassField;
     @FXML private Button btnWelcomeLogin, btnContinueAsGuest;
+    @FXML private Label welcomeErrorLabel;
+
+    @FXML private Hyperlink hlForgotCode;
+    @FXML private VBox forgotCodeView;
+    @FXML private TextField forgotPhoneField, forgotEmailField;
+    @FXML private Button btnSubmitForgot, btnCloseForgot;
+    @FXML private ListView<String> lvReservations;
 
     /**
      * Initializes the terminal controller. 
@@ -51,11 +61,13 @@ public class Terminal_GUI {
     public void initialize() {
         instance = this;
         instDinersSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 15, 2));
-
-        // Navigation Handlers using Anonymous Inner Classes
+        
+        btnCancelRes.setText("CANCEL RES/\nWAITLIST");
+        btnCancelRes.setStyle("-fx-text-alignment: center;");
         btnContinueAsGuest.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
+                loggedInUser = null;
                 showTerminal(null);
             }
         });
@@ -67,7 +79,6 @@ public class Terminal_GUI {
             }
         });
 
-        // Form Toggling Handlers
         btnCheckIn.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
@@ -81,6 +92,25 @@ public class Terminal_GUI {
             public void handle(ActionEvent event) {
                 toggleForm(instantForm);
                 highlightButton(btnInstantBooking);
+                if(loggedInUser != null) {
+                	instPhoneField.setText(loggedInUser.getPhone());
+                    instEmailField.setText(loggedInUser.getEmail());
+                    instPhoneField.setVisible(true);
+                    instEmailField.setVisible(true);
+                    instPhoneField.setEditable(false);
+                    instEmailField.setEditable(false);
+                    instPhoneField.setStyle("-fx-background-color: #f4f4f4; -fx-text-fill: #7f8c8d;");
+                    instEmailField.setStyle("-fx-background-color: #f4f4f4; -fx-text-fill: #7f8c8d;");
+                } else {
+                	instPhoneField.clear();
+                    instEmailField.clear();
+                    instPhoneField.setVisible(true);
+                    instEmailField.setVisible(true);
+                    instPhoneField.setEditable(true);
+                    instEmailField.setEditable(true);
+                    instPhoneField.setStyle("");
+                    instEmailField.setStyle("");
+                }
             }
         });
 
@@ -100,7 +130,6 @@ public class Terminal_GUI {
             }
         });
 
-        // Submission Logic Handlers
         btnSubmitCheckIn.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
@@ -150,6 +179,21 @@ public class Terminal_GUI {
             }
         });
 
+        hlForgotCode.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                handleForgotCodeClick();
+            }
+        });
+
+        btnCloseForgot.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                forgotCodeView.setVisible(false);
+                
+            }
+        });
+
         btnGoToPayment.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
@@ -164,18 +208,20 @@ public class Terminal_GUI {
                 else resetToWelcome();
             }
         });
+        hlForgotCode.setVisible(false);
     }
-
-    /**
-     * Logic for walk-in customers to book a table for "Now".
-     * Requires at least one contact method (Phone or Email).
-     */
+//*************************************************************//
     private void handleInstantBookingSubmit() {
-        String phone = instPhoneField.getText().trim();
-        String email = instEmailField.getText().trim();
         int diners = instDinersSpinner.getValue();
 
-        // Validate: At least one contact method required
+        if (loggedInUser != null) {
+            System.out.println("SYSO: Instant Booking requested by Subscriber: " + loggedInUser.getUsername() + " for " + diners + " diners.");
+            return;
+        }
+
+        String phone = instPhoneField.getText().trim();
+        String email = instEmailField.getText().trim();
+
         if (phone.isEmpty() && email.isEmpty()) {
             instStatusLabel.setText("Error: Provide Phone or Email!");
             instStatusLabel.setStyle("-fx-text-fill: #e74c3c;");
@@ -184,24 +230,16 @@ public class Terminal_GUI {
         }
 
         try {
-            // Create a reservation starting "Now"
             Reservation instantRes = new Reservation(null, phone, email, LocalDateTime.now(), LocalDateTime.now().plusHours(2), diners);
-            
             instStatusLabel.setText("Checking availability...");
             instStatusLabel.setStyle("-fx-text-fill: #e67e22;");
             instStatusLabel.setVisible(true);
-            
-            // Send request to server
             ConnectToServer_GUI.clientController.sendNewReservationRequest(instantRes);
-            
         } catch (Exception e) {
             instStatusLabel.setText("Error processing request.");
         }
     }
 
-    /**
-     * Updates the status label for generic operations.
-     */
     private void handleStatus(TextField field, Label statusLabel, String successMsg) {
         if (field.getText().isEmpty()) {
             statusLabel.setText("Input required.");
@@ -213,41 +251,76 @@ public class Terminal_GUI {
         statusLabel.setVisible(true);
     }
 
-    /**
-     * Highlights the active action button in the terminal.
-     * @param selected The button to highlight.
-     */
     private void highlightButton(Button selected) {
         Button[] btns = {btnCheckIn, btnInstantBooking, btnPayBill, btnCancelRes};
         for (Button b : btns) b.setStyle("-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand;");
-        selected.setStyle("-fx-background-color: #dcdde1; -fx-background-radius: 10; -fx-border-color: #34495e; -fx-border-width: 2;");
+        if (selected != null) {
+            selected.setStyle("-fx-background-color: #dcdde1; -fx-background-radius: 10; -fx-border-color: #34495e; -fx-border-width: 2;");
+        }
     }
 
     private void toggleForm(VBox formToShow) {
         VBox[] forms = {checkInForm, instantForm, payBillForm, cancelForm};
         for (VBox f : forms) f.setVisible(false);
-        formToShow.setVisible(true);
+        if (formToShow != null) formToShow.setVisible(true);
         billDetailsBox.setVisible(false);
+        if (forgotCodeView != null) forgotCodeView.setVisible(false);
     }
 
     private void showTerminal(String name) {
+    	System.out.println("IS THERE SUBSCRIBER? ");
+    	if (name!=null) System.out.println(loggedInUser.toString());
+    	else System.out.println("GUEST");
         lblUserGreeting.setText(name == null ? "Please choose an action" : "Hello, " + name);
         welcomeView.setVisible(false);
         terminalView.setVisible(true);
+        welcomeErrorLabel.setVisible(false);
         toggleForm(checkInForm);
         highlightButton(btnCheckIn);
+        hlForgotCode.setVisible(true);
     }
 
     private void resetToWelcome() {
+    	loggedInUser=null;
         welcomeView.setVisible(true);
         terminalView.setVisible(false);
         welcomeUserField.clear();
         welcomePassField.clear();
+        welcomeErrorLabel.setVisible(false);
+        loggedInUser = null;
+        hlForgotCode.setVisible(false);
     }
 
     private void handleSubscriberLogin() {
-        if (!welcomeUserField.getText().isEmpty() && !welcomePassField.getText().isEmpty()) {
-            showTerminal(welcomeUserField.getText());
+        String username = welcomeUserField.getText().trim();
+        String password = welcomePassField.getText().trim();
+
+        if (username.isEmpty() || password.isEmpty() || username.length() > 20 || password.length() > 20) {
+            welcomeErrorLabel.setText("Invalid username or password.");
+            welcomeErrorLabel.setVisible(true);
+            return;
+        }
+
+        LoginData loginData = new LoginData(username, password);
+        ConnectToServer_GUI.clientController.sendSubscriberLoginRequest(loginData);
+    }
+
+    private void handleForgotCodeClick() {
+        toggleForm(null); 
+        highlightButton(null); 
+        
+        forgotCodeView.setVisible(true);
+        forgotCodeView.toFront();
+        
+        if (loggedInUser != null) {
+            forgotPhoneField.setVisible(false);
+            forgotEmailField.setVisible(false);
+            btnSubmitForgot.setVisible(false);
+            System.out.println("SYSO: Fetching today's reservations for subscriber: " + loggedInUser.getUsername());
+        } else {
+            forgotPhoneField.setVisible(true);
+            forgotEmailField.setVisible(true);
+            btnSubmitForgot.setVisible(true);
         }
     }
 
@@ -264,34 +337,45 @@ public class Terminal_GUI {
 
     private void loadScreen(String fxml) {
         try {
+        	instance = null;
             Parent root = FXMLLoader.load(getClass().getResource(fxml));
             ((Stage) backBtn.getScene().getWindow()).setScene(new Scene(root));
         } catch (IOException e) { e.printStackTrace(); }
     }
 
-	public void onCancellationResponse(int i) {
-	       // WAITLIST_CANCELED_FAILED - 0
-	       /// WAITLIST_CANCELED - 1
-	       // RESERVATION_CANCEL_FAILED - 2
-	       // RESERVATION_CANCELED - 3
-		if (i==3) {
-	        cancelStatusLabel.setText("Your Reservation is canceled");
-	        cancelStatusLabel.setStyle("-fx-text-fill: #27ae60;");
-	        cancelCodeField.clear(); 
-	    }
-		else if (i==1) {
-	        cancelStatusLabel.setText("Your Waitlist is canceled");
-	        cancelStatusLabel.setStyle("-fx-text-fill: #27ae60;");
-	        cancelCodeField.clear(); 
-	    } 
-		else if (i==0){
-	        cancelStatusLabel.setText("The waitlist is no longer exist in the system, or wrong code");
-	        cancelStatusLabel.setStyle("-fx-text-fill: #e74c3c;");
-	    }
-		else {
-			cancelStatusLabel.setText("The reservation is no longer exist in the system, or wrong code");
-	        cancelStatusLabel.setStyle("-fx-text-fill: #e74c3c;");
-	    }
-		cancelStatusLabel.setVisible(true);
+    public void onCancellationResponse(int i) {
+        if (i==3) {
+            cancelStatusLabel.setText("Your Reservation is canceled");
+            cancelStatusLabel.setStyle("-fx-text-fill: #27ae60;");
+            cancelCodeField.clear(); 
+        }
+        else if (i==1) {
+            cancelStatusLabel.setText("Your Waitlist is canceled");
+            cancelStatusLabel.setStyle("-fx-text-fill: #27ae60;");
+            cancelCodeField.clear(); 
+        } 
+        else if (i==0){
+            cancelStatusLabel.setText("The waitlist is no longer exist in the system, or wrong code");
+            cancelStatusLabel.setStyle("-fx-text-fill: #e74c3c;");
+        }
+        else {
+            cancelStatusLabel.setText("The reservation is no longer exist in the system, or wrong code");
+            cancelStatusLabel.setStyle("-fx-text-fill: #e74c3c;");
+        }
+        cancelStatusLabel.setVisible(true);
+    }
+    public void handleMessageIfLoggedIn(Subscribed_Customer msg) {
+        javafx.application.Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                if(msg != null) {
+                    loggedInUser = msg;
+                    showTerminal(loggedInUser.getFirstName());
+                } else {
+                    welcomeErrorLabel.setText("Invalid username or password.");
+                    welcomeErrorLabel.setVisible(true);
+                }
+            }
+        });
 	}
 }

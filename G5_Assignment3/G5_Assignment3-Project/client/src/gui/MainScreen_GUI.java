@@ -201,8 +201,8 @@ public class MainScreen_GUI {
         String password = subPasswordField.getText();
 
         // 1. Basic Validation
-        if (username.isEmpty() || password.isEmpty()) {
-            subErrorLabel.setText("Please enter username and password.");
+        if (username.isEmpty() || password.isEmpty() ||username.length()>=20 || password.length()>=20) {
+            subErrorLabel.setText("Please enter valid username and password.");
             subErrorLabel.setVisible(true);
             return;
         }
