@@ -3,6 +3,7 @@ package Data;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,10 +14,26 @@ public class User_Repository {
 	
     private DB_Controller db = DB_Controller.getInstance();
     private static User_Repository userRepositoryInstance = new User_Repository();
-    
+    private static int userCodeGenerator = 100;  //added this to create unique user code for each
+
     private User_Repository() {}
 
     public static User_Repository getInstance() { return userRepositoryInstance; }
+    
+    //added this to create unique user code for each
+    public synchronized int getNextUserCode() { return userCodeGenerator++; }
+
+    public void init() { /* Same logic using Pool and MAX(ConfirmationCode) */ 
+        PooledConnection pConn = null;
+        try {
+            pConn = db.getConnection();
+            String query = "SELECT MAX(subscriberCode) FROM Users";
+            try (Statement stmt = pConn.getConnection().createStatement(); ResultSet rs = stmt.executeQuery(query)) {
+                if (rs.next()) userCodeGenerator = Math.max(100, rs.getInt(1) + 1);
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        finally { if (pConn != null) db.releaseConnection(pConn); }
+    }
 
 	public Subscribed_Customer getByUsername(String username, String password) { /* Patterned pool fetch... */ 
         PooledConnection pConn = null;

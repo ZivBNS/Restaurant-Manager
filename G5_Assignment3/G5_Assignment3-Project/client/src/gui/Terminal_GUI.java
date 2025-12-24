@@ -13,6 +13,8 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import java.io.IOException;
 import java.time.LocalDateTime;
+
+import controllers.Client_Controller;
 import entities.Reservation;
 
 /**
@@ -126,7 +128,25 @@ public class Terminal_GUI {
         btnSubmitCancel.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                handleStatus(cancelCodeField, cancelStatusLabel, "Cancellation processed.");
+                String codeText = cancelCodeField.getText().trim();
+                if (codeText.isEmpty()) {
+                    cancelStatusLabel.setText("Please enter confirmation code!");
+                    cancelStatusLabel.setVisible(true);
+                    return;
+                }
+                if (!codeText.matches("\\d+")) {
+                    cancelStatusLabel.setText("Error: Code must contain numbers only!");
+                    cancelStatusLabel.setStyle("-fx-text-fill: #e74c3c;");
+                    cancelStatusLabel.setVisible(true);
+                    return;
+                }
+                try {
+                    int code = Integer.parseInt(codeText);            
+                    ConnectToServer_GUI.clientController.sendCancelReservationOrWaitlistRequestFromTerminal(code);
+                } catch (NumberFormatException e) {
+                    cancelStatusLabel.setText("ERROR - try again");
+                    cancelStatusLabel.setVisible(true);
+                }
             }
         });
 
@@ -248,4 +268,30 @@ public class Terminal_GUI {
             ((Stage) backBtn.getScene().getWindow()).setScene(new Scene(root));
         } catch (IOException e) { e.printStackTrace(); }
     }
+
+	public void onCancellationResponse(int i) {
+	       // WAITLIST_CANCELED_FAILED - 0
+	       /// WAITLIST_CANCELED - 1
+	       // RESERVATION_CANCEL_FAILED - 2
+	       // RESERVATION_CANCELED - 3
+		if (i==3) {
+	        cancelStatusLabel.setText("Your Reservation is canceled");
+	        cancelStatusLabel.setStyle("-fx-text-fill: #27ae60;");
+	        cancelCodeField.clear(); 
+	    }
+		else if (i==1) {
+	        cancelStatusLabel.setText("Your Waitlist is canceled");
+	        cancelStatusLabel.setStyle("-fx-text-fill: #27ae60;");
+	        cancelCodeField.clear(); 
+	    } 
+		else if (i==0){
+	        cancelStatusLabel.setText("The waitlist is no longer exist in the system, or wrong code");
+	        cancelStatusLabel.setStyle("-fx-text-fill: #e74c3c;");
+	    }
+		else {
+			cancelStatusLabel.setText("The reservation is no longer exist in the system, or wrong code");
+	        cancelStatusLabel.setStyle("-fx-text-fill: #e74c3c;");
+	    }
+		cancelStatusLabel.setVisible(true);
+	}
 }

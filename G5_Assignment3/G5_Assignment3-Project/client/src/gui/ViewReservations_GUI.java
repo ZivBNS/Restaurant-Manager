@@ -352,7 +352,7 @@ public class ViewReservations_GUI {
 			@Override
 			public void accept(ButtonType r) {
 				if (r == ButtonType.OK) {
-					Message msg = new Message(MessageType.CANCEL_RESERVATION, selected.getId());
+					Message msg = new Message(MessageType.CANCEL_RESERVATION , selected.getId());
 					ConnectToServer_GUI.clientController.sendComplexObject(msg);
 				}
 			}

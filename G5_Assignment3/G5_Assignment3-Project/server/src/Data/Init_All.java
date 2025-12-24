@@ -10,7 +10,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import entities.Restaurant_Table;
 
@@ -32,6 +34,7 @@ public class Init_All {
     		createTables(con, stmt);
     		initTables(con, stmt);
     		initOpeningHours(con, stmt);
+    		initUsers(con,stmt);
     		initReservations(con, stmt);
     		initWaitlists(con, stmt);
     	}
@@ -99,125 +102,180 @@ public class Init_All {
 			}
     }
 
+    private static void initUsers(Connection con, Statement stmt) {
+        String[] firstNames = {"Oshri", "Dor", "Daniel", "Ziv", "John", "Jennifer", "Michael", "Linda", "William", "Elizabeth", "David", "Barbara", "Richard", "Susan", "Joseph", "Jessica", "Thomas", "Sarah", "Charles", "Karen"};
+        String[] lastNames = {"Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin"};
+
+        int subscriberCode = 100;
+        char usernameChar = 'a';
+
+        try {
+            for (int i = 0; i < 20; i++) {
+                String firstName = firstNames[i];
+                String lastName = lastNames[i];
+                String phone = "050" + (1000000 + i); // מייצר מספר טלפון ייחודי
+                String email = firstName.toLowerCase() + i + "@bistro.com";
+                String username = String.valueOf(usernameChar++); // a, b, c...
+                String password = "1";
+                
+                // יצירת השאילתה
+                String sql = String.format(
+                    "INSERT INTO Users (FirstName, LastName, Phone, Email, Username, Password, subscriberCode, Identity) " +
+                    "VALUES ('%s', '%s', '%s', '%s', '%s', '%s', %d, 'Subscriber')",
+                    firstName, lastName, phone, email, username, password, subscriberCode++
+                );
+
+                stmt.executeUpdate(sql);
+            }
+            System.out.println("Successfully initialized 20 Subscribers (Users 'a' through 't').");
+
+        } catch (SQLException e) {
+            System.err.println("Error initializing users: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
     
     
     
+    private static void initReservations(Connection con, Statement stmt) {
+        
+    	int lastCode = 100000;
+        List<Integer> userIds = new ArrayList<>();
+        Map<Integer, String[]> userData = new HashMap<>(); // לשמירת טלפון ואימייל לפי ID
+
+        // 1. שליפת ה-IDs והנתונים של המשתמשים הקיימים
+        try (ResultSet rs = stmt.executeQuery("SELECT ID, Phone, Email FROM Users WHERE Identity = 'Subscriber'")) {
+            while (rs.next()) {
+                int id = rs.getInt("ID");
+                userIds.add(id);
+                userData.put(id, new String[]{rs.getString("Phone"), rs.getString("Email")});
+            }
+        } catch (SQLException e) {
+            System.out.println("Could not fetch users for reservations linking.");
+        }
+
+        int userIndex = 0;
+     // --- חלק חדש: יצירת 30 הזמנות עבר (לפני 1, 2, 3 ימים) ---
+        for (int daysAgo = 1; daysAgo <= 3; daysAgo++) {
+            LocalDate pastDate = LocalDate.now().minusDays(daysAgo);
+            for (int i = 0; i < 10; i++) {
+                int currentUserId = userIds.get(userIndex % userIds.size());
+                userIndex++;
+                
+                LocalDateTime start = pastTimeForHistory(pastDate, i);
+                LocalDateTime end = start.plusHours(2);
+
+                String sql = String.format(
+                    "INSERT INTO Reservations (UserID, Phone, Email, ReservationStartTime, ReservationEndTime, NumberOfDiners, TableID, Status, ConfirmationCode) " +
+                    "VALUES (%d, '%s', '%s', '%s', '%s', 4, %d, 'Completed', %d)",
+                    currentUserId, userData.get(currentUserId)[0], userData.get(currentUserId)[1],
+                    Timestamp.valueOf(start), Timestamp.valueOf(end), (i % 10) + 1, lastCode++
+                );
+                try { stmt.executeUpdate(sql); } catch (SQLException e) { e.printStackTrace(); }
+            }
+        }
+        for (int dayOffset = 1; dayOffset <= 30; dayOffset++) {
+            LocalDate date = LocalDate.now().plusDays(dayOffset);
+            DayOfWeek day = date.getDayOfWeek();
+
+            String[] hours = {};
+            int reservationsPerSlot = 0;
+
+            if (day == DayOfWeek.SUNDAY || day == DayOfWeek.TUESDAY || day == DayOfWeek.THURSDAY) {
+                hours = new String[]{"08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:30"};
+                reservationsPerSlot = 8;
+            } else if (day == DayOfWeek.MONDAY || day == DayOfWeek.WEDNESDAY) {
+                hours = new String[]{"09:00", "11:00", "13:00", "15:00", "19:00", "20:00"};
+                reservationsPerSlot = 2;
+            } else if (day == DayOfWeek.FRIDAY) {
+                hours = new String[]{"09:00", "11:00", "12:00"};
+                reservationsPerSlot = 2;
+            }
+
+            for (String hour : hours) {
+                LocalTime startTime = LocalTime.parse(hour);
+                LocalDateTime resStart = LocalDateTime.of(date, startTime);
+                LocalDateTime resEnd = resStart.plusHours(2);
+
+                for (int j = 0; j < reservationsPerSlot; j++) {
+                    int tableId;
+                    int numDiners;
+
+                    if (j < 4) { tableId = j + 1; numDiners = 2; } 
+                    else if (j < 8) { tableId = j + 1; numDiners = 4; } 
+                    else { tableId = (j % 2) + 9; numDiners = 8; }
+
+                    String userIdVal = "NULL";
+                    String phone = "0501112233";
+                    String email = "guest@mail.com";
+
+                    if (j % 2 == 0 && !userIds.isEmpty()) {
+                        int currentUserId = userIds.get(userIndex % userIds.size());
+                        userIdVal = String.valueOf(currentUserId);
+                        phone = userData.get(currentUserId)[0];
+                        email = userData.get(currentUserId)[1];
+                        userIndex++;
+                    }
+
+                    String sql = String.format(
+                        "INSERT INTO Reservations (UserID, Phone, Email, ReservationStartTime, ReservationEndTime, NumberOfDiners, TableID, Status, ConfirmationCode) " +
+                        "VALUES (%s, '%s', '%s', '%s', '%s', %d, %d, 'Pending', %d)",
+                        userIdVal, phone, email, Timestamp.valueOf(resStart), Timestamp.valueOf(resEnd), numDiners, tableId, lastCode++
+                    );
+
+                    try {
+                        stmt.executeUpdate(sql);
+                    } catch (SQLException e) {
+                        System.out.println("failed to insert reservation: " + sql);
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+        System.out.println("Finished inserting 30 days. Half of reservations are linked to subscribers.");
+    }
     
-    private static void initReservations(Connection con,Statement stmt) {
-    	int lastCode=100000;    	
-    	for (int dayOffset = 1; dayOffset <= 30; dayOffset++) {
-    	    LocalDate date = LocalDate.now().plusDays(dayOffset);
-    	    DayOfWeek day = date.getDayOfWeek();
-    	    
-    	    String[] hours = {};
-    	    int reservationsPerSlot = 0;
-    	    
-    	    // הגדרת חוקי הימים והשעות
-    	    if (day == DayOfWeek.SUNDAY || day == DayOfWeek.TUESDAY || day == DayOfWeek.THURSDAY) {
-    	        hours = new String[]{"08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:30"};
-    	        reservationsPerSlot = 8; 
-    	    } else if (day == DayOfWeek.MONDAY || day == DayOfWeek.WEDNESDAY) {
-    	        hours = new String[]{"09:00", "11:00", "13:00", "15:00", "19:00", "20:00"};
-    	        reservationsPerSlot = 2;
-    	    } else if (day == DayOfWeek.FRIDAY) {
-    	        hours = new String[]{"09:00", "11:00", "12:00"};
-    	        reservationsPerSlot = 2;
-    	    }
-
-    	    for (String hour : hours) {
-    	        LocalTime startTime = LocalTime.parse(hour);
-    	        LocalDateTime resStart = LocalDateTime.of(date, startTime);
-    	        LocalDateTime resEnd = resStart.plusHours(2);
-
-    	        for (int j = 0; j < reservationsPerSlot; j++) {
-    	            int tableId;
-    	            int numDiners;
-
-    	            // חלוקת שולחנות (4 של 2, 4 של 4, 2 של 8)
-    	            if (j < 4) { 
-    	                tableId = j + 1; // שולחנות 1-4 (גודל 2)
-    	                numDiners = 2; 
-    	            } else if (j < 8) { 
-    	                tableId = j + 1; // שולחנות 5-8 (גודל 4)
-    	                numDiners = 4; 
-    	            } else { 
-    	                tableId = (j % 2) + 9; // שולחנות 9-10 (גודל 8)
-    	                numDiners = 8; 
-    	            }
-
-    	            // יצירת השאילתה עם הקוד הרץ
-    	            String sql = String.format(
-    	                "INSERT INTO Reservations (Phone, Email, ReservationStartTime, ReservationEndTime, NumberOfDiners, TableID, Status, ConfirmationCode) " +
-    	                "VALUES ('0501112233', 'customer@mail.com', '%s', '%s', %d, %d, 'Pending', %d)",
-    	                Timestamp.valueOf(resStart), Timestamp.valueOf(resEnd), numDiners, tableId, lastCode++
-    	            );
-    	            
-    	            try {
-						stmt.executeUpdate(sql);
-					} catch (SQLException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-						System.out.println("failed to insert reservetion: "+sql);
-					}
-    	        }
-    	    }
-    	}
-    	System.out.println("Finished inserting 30 days of reservations starting from code: 100000");
+    private static LocalDateTime pastTimeForHistory(LocalDate date, int index) {
+        int hour = 10 + (index % 10); // מפזר את 10 ההזמנות על פני היום
+        return LocalDateTime.of(date, LocalTime.of(hour, 0));
     }
     
     	//creates 10 waitlists with status COMPLITED, also the revesvation linked to it.
-	private static void initWaitlists(Connection con, Statement stmt) {
+    private static void initWaitlists(Connection con, Statement stmt) {
+        // שליפת הזמנות שהושלמו מהימים האחרונים (כדי לקשר לווייטליסט)
+        String selectSql = "SELECT ID, ReservationStartTime FROM Reservations WHERE Status = 'Completed' AND DATE(ReservationStartTime) < CURDATE()";
+        
+        try (ResultSet rs = stmt.executeQuery(selectSql)) {
+            List<Integer> resIds = new ArrayList<>();
+            List<LocalDateTime> startTimes = new ArrayList<>();
+            
+            while (rs.next()) {
+                resIds.add(rs.getInt("ID"));
+                startTimes.add(rs.getTimestamp("ReservationStartTime").toLocalDateTime());
+            }
 
-		int pastConfirmationCode = 1000; // קודים מתחת ל-100,000
-		LocalDateTime now = LocalDateTime.now();
+            for (int i = 0; i < resIds.size(); i++) {
+                int resId = resIds.get(i);
+                LocalDateTime actualArrival = startTimes.get(i);
+                
+                // הגרלת זמן המתנה ממוצע של 10 דקות (בין 5 ל-15 דקות)
+                int waitMinutes = 5 + (int)(Math.random() * 11); 
+                LocalDateTime creationTime = actualArrival.minusMinutes(waitMinutes);
+                
+                // בווייטליסט שלנו, TableFreedTime הוא הרגע שבו הלקוח באמת קיבל שולחן (actualArrival)
+                String insertWait = String.format(
+                    "INSERT INTO Waitlist (ReservationID, Status, creationTime, TableFreedTime) " +
+                    "VALUES (%d, 'COMPLETED', '%s', '%s')",
+                    resId, Timestamp.valueOf(creationTime), Timestamp.valueOf(actualArrival)
+                );
+                
+                stmt.executeUpdate(insertWait);
+            }
+            System.out.println("Successfully initialized Waitlist for " + resIds.size() + " past reservations.");
 
-		try {
-		    for (int i = 1; i <= 10; i++) {
-		        // 2. יצירת זמן רנדומלי בשבוע האחרון (בין לפני שבוע לאתמול)
-		        int daysBack = (int) (Math.random() * 7) + 1; // 1 עד 7 ימים אחורה
-		        int randomHour = 8 + (int) (Math.random() * 12); // שעות 8:00 עד 20:00
-		        LocalDateTime pastTime = now.minusDays(daysBack).withHour(randomHour).withMinute(0);
-		        
-		        // 3. הכנסת הזמנה לטבלת Reservations
-		        // סטטוס 'Completed' כי אלו הזמנות מהעבר
-		        String insertRes = String.format(
-		            "INSERT INTO Reservations (Phone, Email, ReservationStartTime, ReservationEndTime, NumberOfDiners, TableID, Status, ConfirmationCode) " +
-		            "VALUES ('0509998877', 'past_customer@test.com', '%s', '%s', 4, %d, 'Completed', %d)",
-		            Timestamp.valueOf(pastTime), 
-		            Timestamp.valueOf(pastTime.plusHours(2)), 
-		            (i % 10) + 1, // חלוקה בין השולחנות 1-10
-		            pastConfirmationCode++
-		        );
-		        
-		        // הרצת השאילתה וקבלת ה-ID שנוצר אוטומטית (כדי להשתמש בו בווייטליסט)
-		        stmt.executeUpdate(insertRes, Statement.RETURN_GENERATED_KEYS);
-		        ResultSet rs = stmt.getGeneratedKeys();
-		        
-		        if (rs.next()) {
-		            int newResID = rs.getInt(1);
-		            
-		            // 4. הכנסת רשומה תואמת לטבלת Waitlist
-		            // זמן יצירה: שעה לפני ההזמנה, זמן התפנות: זמן תחילת ההזמנה
-		            int timeOffset = 7;
-		            LocalDateTime creationTime = pastTime.minusMinutes(timeOffset%29);
-		            timeOffset+=7;
-		            LocalDateTime tableFreedTime = pastTime;
-
-		            String insertWait = String.format(
-		                "INSERT INTO Waitlist (ReservationID, Status, creationTime, TableFreedTime) " +"VALUES (%d, 'COMPLETED', '%s', '%s')",
-		                newResID, 
-		                Timestamp.valueOf(creationTime), 
-		                Timestamp.valueOf(tableFreedTime)
-		            );
-		            
-		            stmt.executeUpdate(insertWait);
-		        }
-		    }
-		    System.out.println("Successfully inserted 10 past Reservations and 10 COMPLETED Waitlist entries.");
-
-		} catch (SQLException e) {
-		    System.err.println("Error populating past data: " + e.getMessage());
-		    e.printStackTrace();
-		}
-	}
+        } catch (SQLException e) {
+            System.err.println("Error initializing waitlists: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 }

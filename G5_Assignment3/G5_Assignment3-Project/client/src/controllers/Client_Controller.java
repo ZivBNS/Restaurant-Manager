@@ -201,8 +201,25 @@ public class Client_Controller implements ChatIF {
                 } else if (ManageOrders_GUI.instance != null) {
                     ManageOrders_GUI.instance.refreshAdminData();
                 }
+                else if (Terminal_GUI.instance != null) {
+                    Terminal_GUI.instance.onCancellationResponse(3);
+                }
             }
         });
+        
+        responseHandlers.put(MessageType.RESERVATION_CANCEL_FAILED, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                if (ViewReservations_GUI.instance != null) {
+                    refreshUserReservations();
+                } else if (ManageOrders_GUI.instance != null) {
+                    ManageOrders_GUI.instance.refreshAdminData();
+                }
+                else if (Terminal_GUI.instance != null) {
+                    Terminal_GUI.instance.onCancellationResponse(2);
+                }
+            }
+        });        
 
         // -----------------------------------------------------------
         // General Data (Opening Hours)
@@ -281,6 +298,29 @@ public class Client_Controller implements ChatIF {
                 }
             }
         });
+        
+        
+        //**********************************try********************************//
+       // WAITLIST_CANCELED_FAILED - 0
+       /// WAITLIST_CANCELED - 1
+       // RESERVATION_CANCEL_FAILED - 2
+       // RESERVATION_CANCELED - 3
+        responseHandlers.put(MessageType.WAITLIST_CANCELED_FAILED, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+            	if (Terminal_GUI.instance != null)        
+            		Terminal_GUI.instance.onCancellationResponse(0);
+        	}
+        });
+        
+        responseHandlers.put(MessageType.WAITLIST_CANCELED, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+            	if (Terminal_GUI.instance != null)        
+            		Terminal_GUI.instance.onCancellationResponse(1);
+        	}
+        });
+        //**********************************try********************************//
     }
 
     /**
@@ -456,5 +496,10 @@ public class Client_Controller implements ChatIF {
         if (ConnectToServer_GUI.clientController != null) {
             try { sendComplexObject(message); } catch (Exception e) { e.printStackTrace(); }
         }
+    }
+    
+    public void sendCancelReservationOrWaitlistRequestFromTerminal(int code) {
+        Message msg = new Message(MessageType.CANCEL_WAITLIST_AND_RESERVATION_BY_CODE, code);
+        sendComplexObject(msg); 
     }
 }

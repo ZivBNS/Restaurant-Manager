@@ -67,7 +67,7 @@
                         <VBox alignment="CENTER" spacing="5.0">
                            <children>
                               <Label text="I regreted" textFill="#7f8c8d"><font><Font name="Segoe UI Bold" size="12.0" /></font></Label>
-                              <Button fx:id="btnCancelRes" minHeight="100.0" minWidth="160.0" style="-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand;" text="Cancel Res / Waitlist" textFill="#c0392b" wrapText="true"><font><Font name="Segoe UI Bold" size="16.0" /></font><effect><DropShadow color="#0000001a" radius="5" /></effect></Button>
+                              <Button fx:id="btnCancelRes" minHeight="100.0" minWidth="160.0" style="-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand;" text="Cancel Reservation or Waitlist" textFill="#c0392b" wrapText="true"><font><Font name="Segoe UI Bold" size="16.0" /></font><effect><DropShadow color="#0000001a" radius="5" /></effect></Button>
                            </children>
                         </VBox>
                      </children>
@@ -121,7 +121,7 @@
 
                         <VBox fx:id="cancelForm" alignment="CENTER" spacing="15.0" visible="false">
                            <children>
-                              <Label text="Enter Code to Cancel Reservation" textFill="#2c3e50"><font><Font name="Segoe UI Bold" size="16.0" /></font></Label>
+                              <Label text="Enter Code to Cancel" textFill="#2c3e50"><font><Font name="Segoe UI Bold" size="16.0" /></font></Label>
                               <TextField fx:id="cancelCodeField" maxWidth="250.0" promptText="e.g. 12345" />
                               <Button fx:id="btnSubmitCancel" style="-fx-background-color: #c0392b; -fx-text-fill: white; -fx-cursor: hand;" text="Confirm Cancellation" />
                               <Label fx:id="cancelStatusLabel" textAlignment="CENTER" wrapText="true" />

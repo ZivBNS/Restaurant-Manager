@@ -241,7 +241,7 @@ public class Reservation_Repository {
      * @param newStatus The new status enum value.
      * @return true if the update was successful.
      */
-    public boolean updateStatus(int reservationId, ReservationStatus newStatus) {
+    public boolean updateStatusByID(int reservationId, ReservationStatus newStatus) {
         String sql = "UPDATE reservations SET Status = ? WHERE ID = ?";
         PooledConnection pConn = null;
         try {
@@ -254,6 +254,46 @@ public class Reservation_Repository {
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        } finally {
+            if (pConn != null) db.releaseConnection(pConn);
+        }
+    }
+
+    public boolean updateStatusByConfirmationCode(int confCode, ReservationStatus newStatus) {
+    	String sql = "UPDATE Reservations SET Status = '" + newStatus.toString() + "' WHERE ConfirmationCode = " + confCode;
+    	PooledConnection pConn = null;
+        try {
+        	pConn = db.getConnection();
+            pConn.getConnection().setAutoCommit(true);
+            Statement stmt = pConn.getConnection().createStatement();
+                int x=stmt.executeUpdate(sql);                
+                if (x==0) return false;
+                return true;
+            
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (pConn != null) db.releaseConnection(pConn);
+        }
+    }
+    
+    public String getStatusByConfirmationCode(int confCode) {
+        String sql = "SELECT Status FROM Reservations WHERE ConfirmationCode = " + confCode;
+        PooledConnection pConn = null;        
+        try {
+            pConn = db.getConnection();
+            Statement stmt = pConn.getConnection().createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+            
+            if (rs.next()) {
+                String status = rs.getString("Status");
+                System.out.println("Found status: " + status + " for code: " + confCode);
+                return status;
+            } else return null;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
         } finally {
             if (pConn != null) db.releaseConnection(pConn);
         }

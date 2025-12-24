@@ -13,7 +13,9 @@ public enum MessageType {
     
     // --- Reservations and Waitlist ---
     CREATE_RESERVATION,     // Client requests creation of a new Reservation
+    CANCEL_RESERVATION_BY_CODE,     // Client requests to cancel a Reservation
     CANCEL_RESERVATION,     // Client requests to cancel a Reservation
+    
     JOIN_WAITLIST,          // Client requests to join the waitlist
     GET_RESERVATIONS_LIST,  // Client requests list of active bookings
     GET_RESERVATIONS_BY_USER,
@@ -60,7 +62,10 @@ public enum MessageType {
     WAITLIST_JOINED_SUCCESS,
     WAITLIST_JOINED_FAILED,
     WAITLIST_TABLE_READY,
-    WAITLIST_CANCEL_REQUEST,
+    CANCEL_WAITLIST,
+    CANCEL_WAITLIST_AND_RESERVATION_BY_CODE,
+    WAITLIST_CANCELED,
+    WAITLIST_CANCELED_FAILED,    
     
     // ---check in and out messages ---
     RESERVATION_CHECK_IN,

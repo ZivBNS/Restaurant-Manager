@@ -9,11 +9,13 @@ import java.time.LocalDate;
 
 import Data.Reservation_Repository;
 import Data.Table_Repository;
+import Data.Waitlist_Repository;
 import entities.Opening_Hours;
 import entities.Reservation;
 import entities.ReservationStatus;
 import entities.Restaurant;
 import entities.Subscribed_Customer;
+import entities.Waitlist;
 
 /**
  * Controller responsible for handling all reservation-related logic on the server side.
@@ -22,6 +24,7 @@ public class Reservation_Controller {
 
     private static final Reservation_Repository reservationRepository = Reservation_Repository.getInstance();
     private static final Table_Repository tableRepository = Table_Repository.getInstance();
+    private static final Waitlist_Repository WaitlistRepository = Waitlist_Repository.getInstance();
 
     public static Message handleMessage(Message msg) {
         switch (msg.getType()) {
@@ -29,6 +32,7 @@ public class Reservation_Controller {
             case UPDATE_RESERVATION_REQUEST: return updateReservation(msg);
             case GET_RESERVATIONS_BY_USER: return getReservationsByUser(msg);
             case CANCEL_RESERVATION: return cancelReservation(msg);
+            case CANCEL_RESERVATION_BY_CODE: return cancelReservationByCode(msg);
             case GET_ALL_PENDING_RESERVATIONS: return fetchAllPending(msg);
             case ADMIN_UPDATE_RESERVATION: return processAdminUpdate(msg);
             case CHECK_IN_REQUEST: return handleCheckIn(msg);
@@ -197,8 +201,21 @@ public class Reservation_Controller {
 
     private static Message cancelReservation(Message msg) {
         int reservationId = (int) msg.getContent();
-        boolean success = reservationRepository.updateStatus(reservationId, ReservationStatus.CANCELED);
+        boolean success = reservationRepository.updateStatusByID(reservationId, ReservationStatus.CANCELED);
         return new Message(success ? MessageType.RESERVATION_CANCELED : MessageType.RESERVATION_CANCEL_FAILED, reservationId);
+    }
+    private static Message cancelReservationByCode(Message msg) {
+        int ConfirmationCode = (int) msg.getContent();
+        Message succeed = new Message(MessageType.RESERVATION_CANCELED, ConfirmationCode);
+        Message notSucceed = new Message(MessageType.RESERVATION_CANCEL_FAILED, ConfirmationCode);
+        
+        Reservation r= reservationRepository.getByConfirmationCode(ConfirmationCode);
+        if (r==null || r.getStatus().equals("Completed") || r.getStatus().equals("Canceled")) return notSucceed;
+        //boolean WasInWaitlist= WaitlistRepository.cancelByReservationId(int r.getId());
+        boolean canceled = reservationRepository.updateStatusByConfirmationCode(ConfirmationCode, ReservationStatus.CANCELED);
+        
+        if (canceled) return succeed;
+        return notSucceed;
     }
 
     private static Message fetchAllPending(Message msg) {

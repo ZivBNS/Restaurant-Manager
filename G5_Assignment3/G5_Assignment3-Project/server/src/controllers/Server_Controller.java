@@ -41,6 +41,7 @@ public class Server_Controller extends AbstractServer {
         Command resCmd = new ReservationCommand();
         commands.put(MessageType.CREATE_RESERVATION, resCmd);
         commands.put(MessageType.CANCEL_RESERVATION, resCmd);
+        commands.put(MessageType.CANCEL_RESERVATION_BY_CODE, resCmd);
         commands.put(MessageType.GET_RESERVATIONS_BY_USER, resCmd);
         commands.put(MessageType.UPDATE_RESERVATION_REQUEST, resCmd);
         commands.put(MessageType.GET_ALL_PENDING_RESERVATIONS, resCmd);
@@ -60,6 +61,12 @@ public class Server_Controller extends AbstractServer {
         commands.put(MessageType.ADD_USER_REQUEST, userCmd);
         commands.put(MessageType.EDIT_USER_REQUEST, userCmd);
         commands.put(MessageType.DELETE_USER_REQUEST, userCmd);
+        
+        // --- waitlists ---
+        Command WaitlistCmd = new WaitlistCommand();
+        commands.put(MessageType.CANCEL_WAITLIST_AND_RESERVATION_BY_CODE, WaitlistCmd);
+        commands.put(MessageType.CANCEL_WAITLIST, WaitlistCmd);
+        
         
         // --- General ---
         commands.put(MessageType.GET_OPENING_HOURS, new OpeningHoursCommand());
