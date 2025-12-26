@@ -6,7 +6,7 @@ public class Bill {
     private double totalAmount=0.0;
     private double discountRate=0.0;    
     private String status="";
-    private String billDetails="";
+    private String billDetails;
     private Reservation reservation;
     private int id;
     private int reservationId;
@@ -27,6 +27,7 @@ public class Bill {
         this.reservationId = reservationId;
         this.totalAmount = totalAmount;
         this.status = status;
+        this.billDetails=billDetails;
     }
     
 	public int getId() { return id; }

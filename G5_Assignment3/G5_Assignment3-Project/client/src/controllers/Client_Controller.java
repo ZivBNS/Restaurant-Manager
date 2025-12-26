@@ -176,22 +176,39 @@ public class Client_Controller implements ChatIF {
             }
         });
         
-        responseHandlers.put(MessageType.RETURN_LATEST_RESERVATION_BY_PHONE, new ResponseHandler() {
-            @Override
-            public void handle(Message msg) {
-                Reservation r = (Reservation) msg.getContent();
-                if (BillPayment_GUI.instance != null) {
-                    BillPayment_GUI.instance.displayReservation(r);
-                }
+        responseHandlers.put(MessageType.RETURN_LATEST_RESERVATION_BY_PHONE, msg -> {
+
+            Reservation r = (Reservation) msg.getContent();
+
+            if (r != null) {
+                sendComplexObject(new Message(
+                    MessageType.GET_BILL_BY_RESERVATION_ID,
+                    r.getId()
+                ));
+            } else if (BillPayment_GUI.instance != null) {
+                Platform.runLater(() -> BillPayment_GUI.instance.showNoReservationFound());
             }
         });
+        
         
         responseHandlers.put(MessageType.RETURN_BILL_BY_RESERVATION_ID, new ResponseHandler() {
             @Override
             public void handle(Message msg) {
+            	
+            	System.out.println("CLIENT: received bill = " + msg.getContent());
                 Bill bill = (Bill) msg.getContent();
+
                 if (BillPayment_GUI.instance != null) {
-                    BillPayment_GUI.instance.displayBill(bill);
+                    Platform.runLater(() -> BillPayment_GUI.instance.displayBill(bill));
+                }
+            }
+        });
+        
+        responseHandlers.put(MessageType.BILL_PAYMENT_SUCCESS, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                if (BillPayment_GUI.instance != null) {
+                    Platform.runLater(() -> BillPayment_GUI.instance.onPaymentSuccess());
                 }
             }
         });

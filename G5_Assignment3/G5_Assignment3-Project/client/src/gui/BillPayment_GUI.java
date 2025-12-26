@@ -6,6 +6,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
@@ -18,14 +19,17 @@ import javafx.event.ActionEvent;
 public class BillPayment_GUI {
 
     public static BillPayment_GUI instance;
+
     private Reservation currentReservation;
+    private int currentBillId = -1;
+    private double expectedAmount = 0;
 
     @FXML private TextField paymentField;
-    @FXML private Label lblDate;
-    @FXML private Label lblTime;
-    @FXML private Label lblGuests;
-    @FXML private Label lblTable;
-    @FXML private Label lblBill;
+    @FXML private Button btnPay;
+    @FXML private Label lblReservationId;
+    @FXML private Label lblTotalAmount;
+    @FXML private Label lblBillDetails;
+
 
     @FXML
     public void initialize() {
@@ -37,47 +41,7 @@ public class BillPayment_GUI {
                 new Message(MessageType.GET_LATEST_RESERVATION_BY_PHONE, phone)
         );
     }
-
-    public void displayReservation(Reservation r) {
-
-        currentReservation = r;
-
-        if (r == null) {
-            lblDate.setText("No upcoming reservation");
-            lblTime.setText("-");
-            lblGuests.setText("-");
-            lblTable.setText("-");
-            return;
-        }
-
-        lblDate.setText(r.getOrderStartTime().toLocalDate().toString());
-        lblTime.setText(r.getOrderStartTime().toLocalTime().toString());
-        lblGuests.setText(String.valueOf(r.getNumberOfDiners()));
-        lblTable.setText(r.getTableId() == null ? "-" : String.valueOf(r.getTableId()));
-    }
-
-    @FXML
-    private void onPay(ActionEvent event) {
-
-        if (currentReservation == null) {
-            showAlert("Error", "No reservation found to pay.");
-            return;
-        }
-
-        ConnectToServer_GUI.clientController.sendComplexObject(
-            new Message(MessageType.GET_BILL_BY_RESERVATION_ID, currentReservation.getId())
-        );
-        
-        double amount = Double.parseDouble(paymentField.getText());
-
-        if (amount != expectedAmount) {
-            showAlert("Error", "Incorrect amount.");
-            return;
-        }
-    }
     
-    private double expectedAmount;
-
     public void displayBill(Bill bill) {
 
         if (bill == null) {
@@ -85,10 +49,29 @@ public class BillPayment_GUI {
             return;
         }
 
-        expectedAmount = bill.getTotalAmount();
-        showAlert("Bill", "Total amount: " + expectedAmount + "₪");
+        currentBillId = bill.getId();
+        expectedAmount = bill.calculateFinalAmount();
+
+        lblReservationId.setText(String.valueOf(bill.getReservationId()));
+        lblTotalAmount.setText("₪" + expectedAmount);
+        lblBillDetails.setText(bill.getBillDetails());
+
+        btnPay.setDisable("PAID".equalsIgnoreCase(bill.getStatus()));
     }
 
+
+    @FXML
+    private void onPay(ActionEvent event) {
+
+        if (currentBillId == -1) {
+            showAlert("Error", "No bill loaded.");
+            return;
+        }
+
+        ConnectToServer_GUI.clientController.sendComplexObject(
+            new Message(MessageType.BILL_PAYMENT_REQUEST, currentBillId)
+        );
+    }
 
     @FXML
     private void onBackClicked(ActionEvent event) {
@@ -108,7 +91,17 @@ public class BillPayment_GUI {
         a.setContentText(msg);
         a.showAndWait();
     }
+    
+    public void onPaymentSuccess() {
+        showAlert("Success", "Payment completed successfully!");
+        btnPay.setDisable(true);
+    }
+
+    public void showNoReservationFound() {
+        showAlert("No Reservation Found", "No reservation found by phone.");
+    }
 }
+
 
 
 

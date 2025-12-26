@@ -1,13 +1,17 @@
 package controllers;
 
 import Data.Bill_Repository;
+import Data.Reservation_Repository;
 import messages.Message;
 import messages.MessageType;
 import entities.Bill;
+import entities.Reservation;
 
 public class Payment_Controller {
 
     private static final Bill_Repository billRepo = Bill_Repository.getInstance();
+    private static Reservation_Repository reservationRepo = Reservation_Repository.getInstance();
+
 
     /**
      * Main entry point for payment-related messages.
@@ -31,8 +35,10 @@ public class Payment_Controller {
                 if (reservationId == null || reservationId <= 0) {
                     return new Message(MessageType.ERROR_RESPONSE, "Invalid reservation id");
                 }
-
+                
+                System.out.println("SERVER: fetching bill for reservationId = " + reservationId);
                 Bill bill = billRepo.getBillByReservationId(reservationId);
+                System.out.println("SERVER: bill found = " + bill);
                 return new Message(MessageType.RETURN_BILL_BY_RESERVATION_ID, bill);
             }
 
@@ -41,18 +47,20 @@ public class Payment_Controller {
             // Content: Integer billId
             // Response: BILL_PAYMENT_SUCCESS / BILL_PAYMENT_FAILED
             // -----------------------------------------------------------
-            case BILL_PAYMENT_REQUEST: {
-                Integer billId = (Integer) msg.getContent();
+            case BILL_PAYMENT_REQUEST:
 
-                if (billId == null || billId <= 0) {
-                    return new Message(MessageType.BILL_PAYMENT_FAILED, "Invalid bill id");
+                int billId = (int) msg.getContent();
+
+                billRepo.markBillAsPaid(billId);
+
+                int reservationId = billRepo.getReservationIdByBillId(billId);
+
+                if (reservationId != -1) {
+                	reservationRepo.markReservationAsCompleted(reservationId);
                 }
 
-                boolean ok = billRepo.markBillAsPaid(billId); // implement if you want
-                return ok
-                    ? new Message(MessageType.BILL_PAYMENT_SUCCESS, null)
-                    : new Message(MessageType.BILL_PAYMENT_FAILED, "Failed to mark bill as paid");
-            }
+                return new Message(MessageType.BILL_PAYMENT_SUCCESS, null);
+
 
             default:
                 return new Message(MessageType.ERROR_RESPONSE, "Unknown payment command: " + msg.getType());

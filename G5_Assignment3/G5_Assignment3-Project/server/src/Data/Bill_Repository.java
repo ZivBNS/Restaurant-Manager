@@ -1,16 +1,16 @@
 package Data;
 
+import entities.Bill;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-
-import entities.Bill;
-import entities.Reservation;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 public class Bill_Repository {
 
     private static Bill_Repository instance;
-    private final DB_Controller db = DB_Controller.getInstance();
 
     private Bill_Repository() {}
 
@@ -20,63 +20,98 @@ public class Bill_Repository {
         return instance;
     }
 
-    /**
-     * Returns latest bill for a given id – according to the closest reservation in time
-     */
-	public Bill getBillByReservationId(Integer reservationId) {
-		String sql =
-			    "SELECT b.TotalAmount, b.BillDetails, b.Status, r.ID AS ReservationID " +
-			    "FROM bills b " +
-			    "JOIN reservations r ON b.ReservationID = r.ID " +
-			    "WHERE r.ID = ? " +
-			    "  AND b.Status IN ('OPEN', 'UNPAID', 'PAID') " +
-			    "  AND r.Status = 'ACTIVE' " +
-			    "ORDER BY ABS(TIMESTAMPDIFF(MINUTE, r.ReservationStartTime, NOW())) " +
-			    "LIMIT 1";
-		
-		PooledConnection pConn = null;
-		try {
-            pConn = db.getConnection();
-            Connection conn = pConn.getConnection();
+    public Bill getBillByReservationId(int reservationId) {
 
+        Bill bill = null;
+        String query =
+            "SELECT id, reservationId, billDetails, totalAmount, status " +
+            "FROM bills WHERE reservationId = " + reservationId +
+            " ORDER BY id DESC LIMIT 1";
+
+        PooledConnection pConn = null;
+        Statement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            pConn = DB_Controller.getInstance().getConnection();
+            stmt = pConn.getConnection().createStatement();
+            rs = stmt.executeQuery(query);
+
+            if (rs.next()) {
+                bill = new Bill(
+                        rs.getInt("id"),
+                        rs.getInt("reservationId"),
+                        rs.getString("billDetails"),
+                        rs.getDouble("totalAmount"),
+                        rs.getString("status")
+                );
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try { if (rs != null) rs.close(); } catch (Exception ignored) {}
+            try { if (stmt != null) stmt.close(); } catch (Exception ignored) {}
+            DB_Controller.getInstance().releaseConnection(pConn);
+        }
+
+        return bill;
+    }
+
+    public boolean markBillAsPaid(int billId) {
+
+        String query =
+            "UPDATE bills SET status = 'PAID' WHERE id = " + billId;
+
+        PooledConnection pConn = null;
+        Statement stmt = null;
+
+        try {
+            pConn = DB_Controller.getInstance().getConnection();
+            stmt = pConn.getConnection().createStatement();
+            int rows = stmt.executeUpdate(query);
+            return rows > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+
+        } finally {
+            try { if (stmt != null) stmt.close(); } catch (Exception ignored) {}
+            DB_Controller.getInstance().releaseConnection(pConn);
+        }
+    }
+    
+    public int getReservationIdByBillId(int billId) {
+
+        String sql = "SELECT reservationId FROM bills WHERE id = ?";
+
+        PooledConnection pConn = null;
+
+        try {
+            pConn = DB_Controller.getInstance().getConnection();
+            Connection conn = pConn.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, String.valueOf(reservationId));
+            ps.setInt(1, billId);
 
             ResultSet rs = ps.executeQuery();
 
-            if (rs.next()) {
-
-                double totalAmount = rs.getDouble("TotalAmount");
-                String billDetails = rs.getString("BillDetails");
-                int reservationID = rs.getInt("ReservationID");
-                String status = rs.getString("Status");
-                int id = rs.getInt("ID");
-
-                // ⬅ כאן אנחנו משתמשים בקונסטרקטור הקיים של Bill(Reservation,...)
-                Reservation reservation =
-                        Reservation_Repository.getInstance().getReservationById(reservationID);
-
-                if (reservation == null) return null;
-
-                return new Bill(id,reservationID,billDetails,totalAmount,status);
-            }
+            if (rs.next())
+                return rs.getInt("reservationId");
 
         } catch (Exception e) {
-            System.out.println("getLatestBillByPhone ERROR: " + e.getMessage());
+            System.out.println("getReservationIdByBillId ERROR: " + e.getMessage());
         } finally {
             if (pConn != null)
-                db.releaseConnection(pConn);
+            	DB_Controller.getInstance().releaseConnection(pConn);
         }
-		
- 
-		return null;
-	}
 
-	public boolean markBillAsPaid(Integer billId) {
-		// TODO Auto-generated method stub
-		return false;
-	}
+        return -1;
+    }
+
 }
+
+
 
 
 

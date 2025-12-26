@@ -306,7 +306,7 @@ public class Reservation_Repository {
     		    "SELECT ID, Phone, ReservationStartTime, NumberOfDiners, TableID, Status " +
     		    "FROM reservations " +
     		    "WHERE Phone = ? " +
-    		    "AND ReservationStartTime >= NOW() " +
+    		    "AND status = 'ACTIVE'"+
     		    "ORDER BY ReservationStartTime ASC " +
     		    "LIMIT 1";
 
@@ -341,51 +341,25 @@ public class Reservation_Repository {
         return null;
     }
     
-    public Reservation getReservationById(int reservationId) {
+    public void markReservationAsCompleted(int reservationId) {
 
-        String sql = "SELECT * FROM reservations WHERE ID = ? LIMIT 1";
+        String sql = "UPDATE reservations SET Status = 'COMPLETED' WHERE ID = ?";
+
         PooledConnection pConn = null;
 
         try {
             pConn = db.getConnection();
             Connection conn = pConn.getConnection();
-
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, reservationId);
-
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-
-                return new Reservation(
-                    rs.getInt("ID"),
-                    (Integer) rs.getObject("UserID"),
-                    (Integer) rs.getObject("TableID"),
-                    rs.getString("Phone"),
-                    rs.getString("Email"),
-                    rs.getTimestamp("ReservationStartTime").toLocalDateTime(),
-                    rs.getTimestamp("ReservationEndTime") == null ? null :
-                        rs.getTimestamp("ReservationEndTime").toLocalDateTime(),
-                    rs.getTimestamp("ActualArrivalTime") == null ? null :
-                        rs.getTimestamp("ActualArrivalTime").toLocalDateTime(),
-                    rs.getTimestamp("ActualDepartureTime") == null ? null :
-                        rs.getTimestamp("ActualDepartureTime").toLocalDateTime(),
-                    rs.getInt("NumberOfDiners"),
-                    rs.getInt("ConfirmationCode"),
-                    rs.getString("Status"),
-                    rs.getTimestamp("CreationTime").toLocalDateTime()
-                );
-            }
+            ps.executeUpdate();
 
         } catch (Exception e) {
-            System.out.println("getReservationById ERROR: " + e.getMessage());
+            System.out.println("markReservationAsCompleted ERROR: " + e.getMessage());
         } finally {
             if (pConn != null)
                 db.releaseConnection(pConn);
         }
-
-        return null;
     }
-
 
 }

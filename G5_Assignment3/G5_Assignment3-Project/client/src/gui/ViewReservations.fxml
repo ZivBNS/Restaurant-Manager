@@ -3,74 +3,110 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.text.Text?>
+<?import javafx.scene.effect.DropShadow?>
 
-<BorderPane fx:id="viewReservationsRoot" prefHeight="600.0"
-	prefWidth="600.0" style="-fx-background-color: #f4f7f6;"
-	xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-	fx:controller="gui.ViewReservations_GUI">
+<AnchorPane prefHeight="600.0" prefWidth="600.0"
+            xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="gui.ViewReservations_GUI"
+            style="-fx-background-color: #1e1e2f;">
 
-	<top>
-		<VBox alignment="CENTER" spacing="10">
-			<padding>
-				<Insets top="20" bottom="20" />
-			</padding>
-			<Label text="My Reservations"
-				style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" />
-			<Separator maxWidth="300" />
-		</VBox>
-	</top>
+    <children>
 
-	<center>
-		<VBox spacing="15">
-			<padding>
-				<Insets left="30" right="30" />
-			</padding>
-			<TableView fx:id="reservationsTable" VBox.vgrow="ALWAYS" style="-fx-background-radius: 10;">
-				<columns>
-					<TableColumn fx:id="colCode" text="Conf. Code"
-						prefWidth="100" />
-					<TableColumn fx:id="colDate" text="Date"
-						prefWidth="120" />
-					<TableColumn fx:id="colTime" text="Time"
-						prefWidth="100" />
-					<TableColumn fx:id="colGuests" text="Guests"
-						prefWidth="80" />
-				</columns>
-			</TableView>
-		</VBox>
-	</center>
+        <!-- Header -->
+        <VBox alignment="CENTER" spacing="6"
+              AnchorPane.leftAnchor="0"
+              AnchorPane.rightAnchor="0"
+              AnchorPane.topAnchor="35">
 
-	<bottom>
-		<VBox spacing="20"
-			style="-fx-background-color: white; -fx-background-radius: 20 20 0 0; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, -5);">
-			<padding>
-				<Insets top="25" bottom="25" left="40" right="40" />
-			</padding>
+            <Label text="Bistro Service"
+                   style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #ffffff;"/>
 
-			<HBox spacing="20" alignment="CENTER">
-				<VBox spacing="5">
-					<Label text="Date" style="-fx-font-weight: bold;" />
-					<DatePicker fx:id="editDatePicker" prefWidth="150" editable="false"/>
-				</VBox>
-				<VBox spacing="5">
-					<Label text="Time" style="-fx-font-weight: bold;" />
-					<ComboBox fx:id="editTimeCombo" prefWidth="120" />
-				</VBox>
-				<VBox spacing="5">
-					<Label text="Guests" style="-fx-font-weight: bold;" />
-					<TextField fx:id="editGuestsField" prefWidth="80" />
-				</VBox>
-			</HBox>
+            <Label text="My Reservations"
+                   style="-fx-font-size: 14px; -fx-text-fill: #b0b3c6;"/>
+        </VBox>
 
-			<HBox spacing="15" alignment="CENTER">
-				<Button text="Update Reservation" onAction="#onUpdateClicked"
-					style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20;" />
-				<Button text="Cancel (Delete)" onAction="#onDeleteClicked"
-					style="-fx-background-color: #c0392b; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20;" />
-				<Button text="Back" onAction="#onBackClicked"
-					style="-fx-background-color: #7f8c8d; -fx-text-fill: white; -fx-padding: 10 20;" />
-			</HBox>
-		</VBox>
-	</bottom>
-</BorderPane>
+        <!-- Main Card -->
+        <VBox spacing="20" alignment="CENTER"
+              AnchorPane.leftAnchor="40"
+              AnchorPane.rightAnchor="40"
+              AnchorPane.topAnchor="140"
+              style="-fx-background-color: #26283b; -fx-background-radius: 22; -fx-padding: 35;">
+
+            <effect>
+                <DropShadow color="rgba(0,0,0,0.45)"
+                            radius="25"
+                            offsetX="0"
+                            offsetY="8"/>
+            </effect>
+
+            <!-- Table -->
+            <TableView fx:id="reservationsTable" prefHeight="220"
+                       style="
+                           -fx-background-color: #2f324a;
+                           -fx-background-radius: 12;
+                           -fx-border-radius: 12;
+                           -fx-border-color: #3c3f58;
+                           -fx-table-cell-border-color: transparent;
+                           -fx-text-fill: #ffffff;
+                       ">
+                <columns>
+                    <TableColumn fx:id="colCode" text="Conf. Code" prefWidth="120"/>
+                    <TableColumn fx:id="colDate" text="Date" prefWidth="140"/>
+                    <TableColumn fx:id="colTime" text="Time" prefWidth="100"/>
+                    <TableColumn fx:id="colGuests" text="Guests" prefWidth="80"/>
+                </columns>
+            </TableView>
+
+            <Separator opacity="0.3"/>
+
+            <!-- Edit Area -->
+            <HBox spacing="15" alignment="CENTER">
+                <VBox spacing="4">
+                    <Label text="Date" style="-fx-text-fill: #b0b3c6;"/>
+                    <DatePicker fx:id="editDatePicker" prefWidth="140"
+                                style="-fx-background-radius: 10; -fx-background-color: #2f324a; -fx-text-fill: white;"/>
+                </VBox>
+
+                <VBox spacing="4">
+                    <Label text="Time" style="-fx-text-fill: #b0b3c6;"/>
+                    <ComboBox fx:id="editTimeCombo" prefWidth="110"
+                              style="-fx-background-radius: 10; -fx-background-color: #2f324a; -fx-text-fill: white;"/>
+                </VBox>
+
+                <VBox spacing="4">
+                    <Label text="Guests" style="-fx-text-fill: #b0b3c6;"/>
+                    <TextField fx:id="editGuestsField" prefWidth="80"
+                               style="-fx-background-radius: 10; -fx-background-color: #2f324a; -fx-text-fill: white;"/>
+                </VBox>
+            </HBox>
+
+            <!-- Buttons -->
+            <HBox spacing="12" alignment="CENTER">
+                <Button text="Update"
+                        onAction="#onUpdateClicked"
+                        prefWidth="110"
+                        style="-fx-background-color: #2ecc71; -fx-text-fill: #1e1e2f; -fx-font-weight: bold; -fx-background-radius: 12;"/>
+
+                <Button text="Delete"
+                        onAction="#onDeleteClicked"
+                        prefWidth="110"
+                        style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 12;"/>
+
+                <Button text="Back"
+                        onAction="#onBackClicked"
+                        prefWidth="110"
+                        style="-fx-background-color: transparent; -fx-text-fill: #b0b3c6; -fx-font-weight: bold;"/>
+            </HBox>
+        </VBox>
+
+        <!-- Footer -->
+        <Label text="Bistro Management System v1.0"
+               AnchorPane.bottomAnchor="20"
+               AnchorPane.leftAnchor="0"
+               AnchorPane.rightAnchor="0"
+               alignment="CENTER"
+               style="-fx-font-size: 10px; -fx-text-fill: #7f85a3;"/>
+    </children>
+</AnchorPane>
+
