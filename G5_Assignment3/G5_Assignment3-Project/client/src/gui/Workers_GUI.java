@@ -15,7 +15,7 @@ public class Workers_GUI {
 
     @FXML private BorderPane managerRoot;
     @FXML private Button btnLogout;
-    @FXML private Button btnManageDiners;
+    @FXML private Button btnManageOpeningHours;
     @FXML private Button btnManageOrders;
     @FXML private Button btnManageTables;
     @FXML private Button btnManageUsers;
@@ -36,11 +36,25 @@ public class Workers_GUI {
 
         // --- Event Handlers ---
 
-        btnManageDiners.setOnAction(new EventHandler<ActionEvent>() {
+        btnManageOpeningHours.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                System.out.println("Go to: Manage Customers Screen");
-                // TODO: loadScreen("CustomerManagement.fxml");
+                System.out.println("Go to: Opening & Special Hours Management Screen");
+                try {
+                    // Load the FXML for the Opening Hours management panel
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/ManageHours.fxml"));
+                    Parent root = loader.load();
+
+                    // Retrieve the current stage from the button and switch scenes
+                    Stage stage = (Stage) btnManageOpeningHours.getScene().getWindow();
+                    stage.setScene(new Scene(root));
+                    stage.setTitle("Employee Dashboard - Opening Hours Management");
+                    stage.show();
+                    
+                } catch (IOException e) {
+                    System.err.println("Navigation Error: Failed to load ManageHours.fxml");
+                    e.printStackTrace();
+                }
             }
         });
 

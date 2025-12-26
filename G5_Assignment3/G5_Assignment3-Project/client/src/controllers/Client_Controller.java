@@ -1,8 +1,10 @@
 package controllers;
 
 import java.io.*;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,7 +76,6 @@ public class Client_Controller implements ChatIF {
                 else if (MainScreen_GUI.instance != null) {
                     MainScreen_GUI.instance.onSubLoginSuccess(sub);
                 }
-
             }
         });
 
@@ -86,7 +87,6 @@ public class Client_Controller implements ChatIF {
                 else if (MainScreen_GUI.instance != null) {
                     MainScreen_GUI.instance.onGuestLoginFailure(msg);
                 }
-
             }
         });
 
@@ -176,34 +176,25 @@ public class Client_Controller implements ChatIF {
             }
         });
         
-        responseHandlers.put(
-        	    MessageType.RETURN_LATEST_RESERVATION_BY_PHONE,
-        	    msg -> {
-        	        Reservation r = (Reservation) msg.getContent();
-        	        if (BillPayment_GUI.instance != null) {
-        	            BillPayment_GUI.instance.displayReservation(r);
-        	        }
-        	    }
-        	);
-        
         responseHandlers.put(MessageType.RETURN_LATEST_RESERVATION_BY_PHONE, new ResponseHandler() {
             @Override
             public void handle(Message msg) {
-
                 Reservation r = (Reservation) msg.getContent();
-
                 if (BillPayment_GUI.instance != null) {
                     BillPayment_GUI.instance.displayReservation(r);
                 }
             }
         });
         
-        responseHandlers.put(MessageType.RETURN_BILL_BY_RESERVATION_ID, msg -> {
-            Bill bill = (Bill) msg.getContent();
-            BillPayment_GUI.instance.displayBill(bill);
+        responseHandlers.put(MessageType.RETURN_BILL_BY_RESERVATION_ID, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                Bill bill = (Bill) msg.getContent();
+                if (BillPayment_GUI.instance != null) {
+                    BillPayment_GUI.instance.displayBill(bill);
+                }
+            }
         });
-
-
 
         // -----------------------------------------------------------
         // Updates, Cancellations & Admin Actions
@@ -265,6 +256,13 @@ public class Client_Controller implements ChatIF {
             public void handle(Message msg) {
                 Opening_Hours oh = (Opening_Hours) msg.getContent();
                 Restaurant.getInstance().setOpeningHours(oh);
+                
+                // Refresh management screen if open
+                if (ManageHours_GUI.instance != null) {
+                    ManageHours_GUI.instance.refreshUI(oh);
+                }
+
+                // Refresh reservation screen if open
                 if (AddReservation_GUI.instance != null) {
                     LocalDate currentDate = AddReservation_GUI.instance.getDatePicker().getValue();
                     if (currentDate != null) {
@@ -276,7 +274,6 @@ public class Client_Controller implements ChatIF {
 
         // -----------------------------------------------------------
         // User Management
-        // Reused handler for multiple message types to avoid code duplication
         // -----------------------------------------------------------
 
         ResponseHandler userHandler = new ResponseHandler() {
@@ -315,7 +312,6 @@ public class Client_Controller implements ChatIF {
             @Override
             public void handle(Message msg) {
                 final String error = (String) msg.getContent();
-                // Alert must be shown on JavaFX thread (handled by display wrapper)
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Table Operation Failed");
                 alert.setHeaderText(null);
@@ -328,28 +324,12 @@ public class Client_Controller implements ChatIF {
             @Override
             public void handle(Message msg) {
                 if (ManageTables_GUI.instance != null) {
-                    // Refresh table list
                     sendComplexObject(new Message(MessageType.GET_ALL_TABLES, null));
                 }
             }
         });
         
-        responseHandlers.put(MessageType.RETURN_LATEST_RESERVATION_BY_PHONE, new ResponseHandler() {
-            @Override
-            public void handle(Message msg) {
-                Reservation r = (Reservation) msg.getContent();
-                if (BillPayment_GUI.instance != null) {
-                    BillPayment_GUI.instance.displayReservation(r);
-                }
-            }
-        });
-        
-        
-        //**********************************try********************************//
-       // WAITLIST_CANCELED_FAILED - 0
-       /// WAITLIST_CANCELED - 1
-       // RESERVATION_CANCEL_FAILED - 2
-       // RESERVATION_CANCELED - 3
+        // --- Waitlist Handlers ---
         responseHandlers.put(MessageType.WAITLIST_CANCELED_FAILED, new ResponseHandler() {
             @Override
             public void handle(Message msg) {
@@ -365,12 +345,10 @@ public class Client_Controller implements ChatIF {
             		Terminal_GUI.instance.onCancellationResponse(1);
         	}
         });
-        //**********************************try********************************//
     }
 
     /**
      * Helper method to refresh reservations for the currently logged-in user.
-     * Used after updates or cancellations.
      */
     private void refreshUserReservations() {
         Object user;
@@ -382,12 +360,6 @@ public class Client_Controller implements ChatIF {
         sendGetReservationsRequest(user);
     }
 
-    /**
-     * Handles messages received from the server. Deserializes the byte array and
-     * routes the response to the appropriate handler using the map.
-     * All UI updates are executed on the JavaFX Application Thread.
-     * * @param message The serialized message (byte array) received from the server.
-     */
     @Override
     public void display(Object message) {
         if (message instanceof byte[]) {
@@ -395,9 +367,8 @@ public class Client_Controller implements ChatIF {
             
             if (obj instanceof Message) {
                 final Message receivedMsg = (Message) obj;
-                MessageType type = receivedMsg.getType();
+                final MessageType type = receivedMsg.getType();
 
-                // Check if a handler is registered for this message type
                 if (responseHandlers.containsKey(type)) {
                     Platform.runLater(new Runnable() {
                         @Override
@@ -418,9 +389,57 @@ public class Client_Controller implements ChatIF {
         }
     }
 
-    
     // ----------------------------------------------------------------------
-    // Request Sending Methods 
+    // Request Sending Methods (Opening Hours)
+    // ----------------------------------------------------------------------
+
+    /**
+     * Sends a request to update the closing time of a regular operating day.
+     * @param day The day of the week.
+     * @param openTime The original opening time (Primary Key).
+     * @param newCloseTime The new closing time.
+     */
+    public void sendUpdateRegularHoursRequest(DayOfWeek day, LocalTime openTime, LocalTime newCloseTime) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("day", day);
+        data.put("openTime", openTime);
+        data.put("newCloseTime", newCloseTime);
+        sendComplexObject(new Message(MessageType.UPDATE_REGULAR_HOURS, data));
+    }
+
+    /**
+     * Sends a request to add a special hour exception for a specific date.
+     * @param date The date for the exception.
+     * @param open The opening time (null if closed).
+     * @param close The closing time.
+     * @param desc Description/Reason for the exception.
+     */
+    public void sendAddSpecialHourRequest(LocalDate date, LocalTime open, LocalTime close, String desc) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("date", date);
+        data.put("openTime", open);
+        data.put("closeTime", close);
+        data.put("description", desc);
+        sendComplexObject(new Message(MessageType.ADD_SPECIAL_HOUR, data));
+    }
+
+    /**
+     * Sends a request to logically delete (deactivate) a regular hours slot.
+     * @param day The day of the week.
+     * @param openTime The opening time slot.
+     */
+    public void sendUpdateRegularHoursRequest(DayOfWeek day, LocalTime openTime, LocalTime newCloseTime, boolean isActive) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("day", day);
+        data.put("openTime", openTime);
+        data.put("newCloseTime", newCloseTime);
+        data.put("isActive", isActive); // Add the boolean flag
+        
+        sendComplexObject(new Message(MessageType.UPDATE_REGULAR_HOURS, data));
+    }
+
+    // ----------------------------------------------------------------------
+    // Existing Request Methods 
     // ----------------------------------------------------------------------
 
     public void setManageUsersGUI(ManageUsers_GUI manageUsers_GUI) {
@@ -431,52 +450,38 @@ public class Client_Controller implements ChatIF {
         try {
             Message message;
             if (identifier instanceof Subscribed_Customer) {
-                System.out.println("Client_Controller: Requesting reservations for Subscriber: "
-                        + ((Subscribed_Customer) identifier).getSubscriberCode());
                 message = new Message(MessageType.GET_RESERVATIONS_BY_USER, identifier);
-            } else if (identifier instanceof String) {
-                System.out.println("Client_Controller: Requesting reservations for Casual Customer: " + identifier);
-                message = new Message(MessageType.GET_RESERVATIONS_BY_USER, (String) identifier);
             } else {
-                System.err.println("Client_Controller: Unknown identifier type!");
-                return;
+                message = new Message(MessageType.GET_RESERVATIONS_BY_USER, (String) identifier);
             }
             sendComplexObject(message);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        } catch (Exception ex) { ex.printStackTrace(); }
     }
-    
+    /**
+     * Sends a batch update request for the weekly schedule.
+     * @param batchData Map of Day to [Open, Close, IsActive]
+     */
+    public void sendBatchUpdateHours(Map<DayOfWeek, Object[]> batchData) {
+        sendComplexObject(new Message(MessageType.UPDATE_REGULAR_HOURS, batchData));
+    }
     public void sendUpdateReservationRequest(Reservation reservationToUpdate) {
-        try {
-            Message msg = new Message(MessageType.UPDATE_RESERVATION_REQUEST, reservationToUpdate);
-            sendComplexObject(msg);
-            System.out.println("Update request sent for reservation ID: " + reservationToUpdate.getId());
-        } catch (Exception e) { e.printStackTrace(); }
+        sendComplexObject(new Message(MessageType.UPDATE_RESERVATION_REQUEST, reservationToUpdate));
     }
 
     public void sendNewReservationRequest(Reservation newRes) {
-        try {
-            Message msg = new Message(MessageType.CREATE_RESERVATION, newRes);
-            sendComplexObject(msg);
-            System.out.println("Client_Controller: Reservation request sent for: " + 
-                (newRes.getUserId() != null ? "Subscriber " + newRes.getUserId() : "Casual Customer"));
-        } catch (Exception e) { e.printStackTrace(); }
+        sendComplexObject(new Message(MessageType.CREATE_RESERVATION, newRes));
     }
 
     public void sendGetOpeningHoursRequest() {
-        try {
-            Message msg = new Message(MessageType.GET_OPENING_HOURS, null);
-            sendComplexObject(msg);
-        } catch (Exception e) { e.printStackTrace(); }
+        sendComplexObject(new Message(MessageType.GET_OPENING_HOURS, null));
+    }
+
+    public void sendDeleteSpecialHourRequest(LocalDate date) {
+        sendComplexObject(new Message(MessageType.DELETE_SPECIAL_HOUR, date));
     }
     
     public void sendGetAllPendingReservationsRequest() {
-        try {
-            System.out.println("Client_Controller: Requesting all pending reservations for management.");
-            Message message = new Message(MessageType.GET_ALL_PENDING_RESERVATIONS, null);
-            sendComplexObject(message);
-        } catch (Exception e) { e.printStackTrace(); }
+        sendComplexObject(new Message(MessageType.GET_ALL_PENDING_RESERVATIONS, null));
     }
 
     public void sendComplexObject(Object obj) {
@@ -487,64 +492,35 @@ public class Client_Controller implements ChatIF {
     }
 
     public void logout() {
-        try {
-            Message msg = new Message(MessageType.LOGOUT_REQUEST, null);
-            sendComplexObject(msg);
-            System.out.println("Client_Controller: Logout request sent to server.");
-            client.quit();
-        } catch (Exception e) { e.printStackTrace(); }
+        sendComplexObject(new Message(MessageType.LOGOUT_REQUEST, null));
+        client.quit();
     }
     
     public void sendSubscriberLoginRequest(LoginData loginData) {
-        System.out.println("Subscriber Login Attempt: " + loginData.getUsername());
-        Message loginMessage = new Message(MessageType.LOGIN_REQUEST_SUB, loginData);
-        if (ConnectToServer_GUI.clientController != null) {
-            try { sendComplexObject(loginMessage); } catch (Exception e) { e.printStackTrace(); }
-        }
+        sendComplexObject(new Message(MessageType.LOGIN_REQUEST_SUB, loginData));
     }
     
     public void sendGuestLoginRequest(LoginData loginData) {
-        System.out.println("Guest Login Attempt: " + (loginData.getEmail() != null ? loginData.getEmail() : loginData.getPhoneNumber()));
-        Message loginMessage = new Message(MessageType.LOGIN_REQUEST_GUEST, loginData);
-        if (ConnectToServer_GUI.clientController != null) {
-            try { sendComplexObject(loginMessage); } catch (Exception e) { e.printStackTrace(); }
-        }
+        sendComplexObject(new Message(MessageType.LOGIN_REQUEST_GUEST, loginData));
     }
     
     public void sendGetAllUsersRequest() {
-        System.out.println("Get all users attempt");
-        Message message = new Message(MessageType.GET_ALL_USERS_REQUEST);
-        if (ConnectToServer_GUI.clientController != null) {
-            try { sendComplexObject(message); } catch (Exception e) { e.printStackTrace(); }
-        }
+        sendComplexObject(new Message(MessageType.GET_ALL_USERS_REQUEST));
     }
     
     public void sendAddUserRequest(UserRecord newUser) {
-        System.out.println("Add new user attempt");
-        Message message = new Message(MessageType.ADD_USER_REQUEST, newUser);
-        if (ConnectToServer_GUI.clientController != null) {
-            try { sendComplexObject(message); } catch (Exception e) { e.printStackTrace(); }
-        }
+        sendComplexObject(new Message(MessageType.ADD_USER_REQUEST, newUser));
     }
     
     public void sendEditUserRequest(UserRecord user) {
-        System.out.println("Add new user attempt");
-        Message message = new Message(MessageType.EDIT_USER_REQUEST, user);
-        if (ConnectToServer_GUI.clientController != null) {
-            try { sendComplexObject(message); } catch (Exception e) { e.printStackTrace(); }
-        }
+        sendComplexObject(new Message(MessageType.EDIT_USER_REQUEST, user));
     }
     
     public void sendRemoveUserRequest(UserRecord user) {
-        System.out.println("Add new user attempt");
-        Message message = new Message(MessageType.DELETE_USER_REQUEST, user);
-        if (ConnectToServer_GUI.clientController != null) {
-            try { sendComplexObject(message); } catch (Exception e) { e.printStackTrace(); }
-        }
+        sendComplexObject(new Message(MessageType.DELETE_USER_REQUEST, user));
     }
     
     public void sendCancelReservationOrWaitlistRequestFromTerminal(int code) {
-        Message msg = new Message(MessageType.CANCEL_WAITLIST_AND_RESERVATION_BY_CODE, code);
-        sendComplexObject(msg); 
+        sendComplexObject(new Message(MessageType.CANCEL_WAITLIST_AND_RESERVATION_BY_CODE, code)); 
     }
 }

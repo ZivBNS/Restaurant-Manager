@@ -1,6 +1,5 @@
 package entities;
 
-import java.time.LocalDateTime;
 
 public class Bill {
 	private final double UserDiscountRate=0.15;

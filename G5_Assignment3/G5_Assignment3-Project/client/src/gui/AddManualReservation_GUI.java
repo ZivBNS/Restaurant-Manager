@@ -19,31 +19,39 @@ import javafx.stage.Stage;
 import javafx.util.Callback;
 
 /**
- * Controller for the Manual Reservation Popup used by staff.
- * Includes local input validation, UI locking, and automated availability checks.
+ * Controller for the Manual Reservation Popup used by restaurant staff.
+ * Includes input validation, dynamic time slot calculation based on restaurant activity,
+ * and automatic date adjustment for post-midnight bookings.
  */
 public class AddManualReservation_GUI {
+    
+    /** Static instance to allow the Client_Controller to update the UI upon server response. */
     public static AddManualReservation_GUI instance; 
 
     @FXML private TextField mUserID, mPhone, mEmail, mGuests;
     @FXML private DatePicker mDatePicker;
     @FXML private ComboBox<String> mTimeCombo;
 
+    /**
+     * Initializes the controller, restricts the date picker range, 
+     * and sets up listeners for user input.
+     */
     @FXML
     public void initialize() {
         instance = this;
         
         mDatePicker.setValue(LocalDate.now());
-        
         restrictDatePickerRange();
         
-        // Request opening hours to ensure dynamic data is ready
+        // Ensure opening hours data is fetched from the server
         ConnectToServer_GUI.clientController.sendGetOpeningHoursRequest();
+        
+        // Initial load for today's hours
         loadManualDynamicHours(LocalDate.now(), null);
 
         /**
-         * Listener for date changes using Anonymous Inner Class.
-         * Refreshes available time slots whenever the staff changes the date.
+         * Listener for date changes. 
+         * Refreshes available time slots whenever a new date is picked.
          */
         mDatePicker.valueProperty().addListener(new ChangeListener<LocalDate>() {
             @Override
@@ -56,7 +64,7 @@ public class AddManualReservation_GUI {
     }
 
     /**
-     * Restricts the calendar range to between today and exactly one month in the future.
+     * Restricts the DatePicker to only allow dates from today up to one month in the future.
      */
     private void restrictDatePickerRange() {
         final LocalDate minDate = LocalDate.now();
@@ -71,7 +79,7 @@ public class AddManualReservation_GUI {
                         super.updateItem(item, empty);
                         if (item != null && (item.isBefore(minDate) || item.isAfter(maxDate))) {
                             setDisable(true);
-                            setStyle("-fx-background-color: #eeeeee;");
+                            setStyle("-fx-background-color: #eeeeee;"); // Gray out disabled cells
                         }
                     }
                 };
@@ -80,10 +88,10 @@ public class AddManualReservation_GUI {
     }
 
     /**
-     * Populates hours based on the restaurant's schedule (Regular and Exceptions).
-     * Synchronizes selection within Platform.runLater to avoid UI vanishing bugs.
-     * @param selectedDate The chosen date.
-     * @param timeToSelect Optional time string to auto-select (HH:mm).
+     * Populates the time ComboBox based on the restaurant's operational status.
+     * FIX: Now correctly checks the 'isActive' status from the database/entity.
+     * @param selectedDate The date selected by the staff member.
+     * @param timeToSelect Optional time string to pre-select.
      */
     public void loadManualDynamicHours(final LocalDate selectedDate, final String timeToSelect) {
         Platform.runLater(new Runnable() {
@@ -94,24 +102,34 @@ public class AddManualReservation_GUI {
                 if (oh == null) return;
 
                 LocalTime open = null, close = null;
-                // Check for special date exceptions first, then regular weekly schedule.
+                
+                // 1. Determine if the selected date is active and retrieve times
                 if (oh.getExceptionSchedule().containsKey(selectedDate)) {
                     TimeRange range = oh.getExceptionSchedule().get(selectedDate);
-                    if (range != null) { open = range.getOpenTime(); close = range.getCloseTime(); }
+                    // Only assign times if the exception day is active
+                    if (range != null && range.isActive()) { 
+                        open = range.getOpenTime(); 
+                        close = range.getCloseTime(); 
+                    }
                 } else {
                     DayOfWeek day = selectedDate.getDayOfWeek();
                     if (oh.getRegularSchedule().containsKey(day)) {
                         TimeRange range = oh.getRegularSchedule().get(day);
-                        if (range != null) { open = range.getOpenTime(); close = range.getCloseTime(); }
+                        // CRITICAL FIX: Only assign times if the regular day is active
+                        if (range != null && range.isActive()) { 
+                            open = range.getOpenTime(); 
+                            close = range.getCloseTime(); 
+                        }
                     }
                 }
 
+                // 2. Fill the ComboBox if the restaurant is active/open
                 if (open != null && close != null) {
                     LocalTime firstAvailable = open;
-                    LocalTime lastSlot = close.minusHours(2); // 2-hour dining window
+                    LocalTime lastSlot = close.minusHours(2); // 2-hour window required for dining
                     boolean isMidnightCrossing = !close.isAfter(open);
 
-                    // 1-hour buffer for same-day reservations.
+                    // Apply 1-hour buffer for same-day bookings
                     if (selectedDate.equals(LocalDate.now())) {
                         LocalTime buffer = roundToNext30Min(LocalTime.now().plusHours(1));
                         boolean skip = isMidnightCrossing ? (buffer.isAfter(open) || buffer.isBefore(close)) : buffer.isAfter(open);
@@ -134,11 +152,18 @@ public class AddManualReservation_GUI {
                     if (timeToSelect != null) {
                         mTimeCombo.setValue(timeToSelect);
                     }
+                    mTimeCombo.setPromptText("Select Time");
+                } else {
+                    // If isActive was 0, prompt "Closed Today" and prevent selection
+                    mTimeCombo.setPromptText("Closed Today");
                 }
             }
         });
     }
 
+    /**
+     * Rounds the current time up to the nearest 30-minute interval for booking buffers.
+     */
     private LocalTime roundToNext30Min(LocalTime time) {
         int min = time.getMinute();
         if (min == 0) return time.withSecond(0).withNano(0);
@@ -147,11 +172,8 @@ public class AddManualReservation_GUI {
     }
 
     /**
-     * Validates input locally and dynamically adjusts the reservation date based on 
-     * the restaurant's opening hours. If the selected time is before the opening time 
-     * of the selected business day, the system treats it as a post-midnight booking 
-     * and increments the calendar day.
-     * * @param event The action event triggered by the Save button.
+     * Validates input and calculates the finalized LocalDateTime, 
+     * adjusting for midnight-crossing shifts.
      */
     @FXML
     void onSave(ActionEvent event) {
@@ -159,10 +181,9 @@ public class AddManualReservation_GUI {
         String email = mEmail.getText().trim();
         String guestsStr = mGuests.getText().trim();
 
-        // 1. Validation: Basic fields check
         if ((phone.isEmpty() && email.isEmpty()) || guestsStr.isEmpty() || 
             mDatePicker.getValue() == null || mTimeCombo.getValue() == null) {
-            showErrorAlert("Validation Error", "Please fill in all mandatory fields.");
+            showErrorAlert("Validation Error", "Mandatory fields are missing.");
             return;
         }
 
@@ -171,24 +192,19 @@ public class AddManualReservation_GUI {
             diners = Integer.parseInt(guestsStr);
             if (diners < 1) throw new NumberFormatException();
         } catch (NumberFormatException e) {
-            showErrorAlert("Input Error", "Please enter a valid number of diners (minimum 1).");
+            showErrorAlert("Input Error", "Please enter a valid guest count.");
             return;
         }
 
         try {
             Integer userId = mUserID.getText().trim().isEmpty() ? null : Integer.parseInt(mUserID.getText());
-            
-            // --- START OF DYNAMIC DATE ADJUSTMENT LOGIC ---
-            
             LocalDate selectedDate = mDatePicker.getValue();
             LocalTime selectedTime = LocalTime.parse(mTimeCombo.getValue());
             
-            // Fetch opening hours from the Restaurant singleton
             Opening_Hours oh = Restaurant.getInstance().getOpeningHours();
             LocalTime openTime = null;
 
             if (oh != null) {
-                // Get the opening time for either an exception day or a regular day
                 if (oh.getExceptionSchedule().containsKey(selectedDate)) {
                     openTime = oh.getExceptionSchedule().get(selectedDate).getOpenTime();
                 } else {
@@ -196,32 +212,24 @@ public class AddManualReservation_GUI {
                 }
             }
 
-            /**
-             * Dynamic Midnight Crossing:
-             * If the selected time is chronologically BEFORE the opening time of the shift 
-             * (e.g., Selected 00:30 but Opening is 16:00), it means the reservation 
-             * belongs to the early morning of the FOLLOWING calendar day.
-             */
+            // Adjust calendar day if the selected time falls after midnight in the business shift
             if (openTime != null && selectedTime.isBefore(openTime)) {
                 selectedDate = selectedDate.plusDays(1);
             }
 
             LocalDateTime start = LocalDateTime.of(selectedDate, selectedTime);
-            
-            // --- END OF DYNAMIC DATE ADJUSTMENT LOGIC ---
-
-            // Create the reservation entity with a 2-hour duration
             Reservation newRes = new Reservation(userId, phone, email, start, start.plusHours(2), diners);
             
-            // Send the request to the server
             ConnectToServer_GUI.clientController.sendNewReservationRequest(newRes);
             
         } catch (NumberFormatException e) {
-            showErrorAlert("Input Error", "The 'User ID' field must contain numbers only.");
+            showErrorAlert("Input Error", "User ID must be numeric.");
         } catch (Exception e) {
-            showErrorAlert("System Error", "Failed to process input: " + e.getMessage());
+            showErrorAlert("System Error", "Failed to process reservation: " + e.getMessage());
         }
     }
+
+    /** Displays a general error alert. */
     private void showErrorAlert(String title, String content) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle(title);
@@ -230,6 +238,7 @@ public class AddManualReservation_GUI {
         alert.showAndWait();
     }
 
+    /** Notifies staff of a successful reservation and closes the popup. */
     public void showSuccessAlert(int code) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION, "Reservation Confirmed!\nCode: " + code, ButtonType.OK);
         alert.showAndWait();
@@ -237,27 +246,26 @@ public class AddManualReservation_GUI {
     }
 
     /**
-     * Notifies staff if the requested slot is full and automatically 
-     * updates the form with the suggested alternative.
+     * Handles full booking scenarios by showing a suggested alternative time.
      */
     public void showNoTableAlert(LocalDateTime suggested) {
         if (suggested != null) {
             String timeStr = suggested.format(DateTimeFormatter.ofPattern("HH:mm"));
-            String msg = "Requested slot is FULL. Nearest available: " 
+            String msg = "Slot FULL. Nearest available: " 
                          + suggested.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
-                         + "\n\nThe form has been updated to this suggestion.";
+                         + "\n\nUpdating form to suggestion...";
             
             Alert alert = new Alert(Alert.AlertType.WARNING, msg, ButtonType.OK);
             alert.showAndWait();
 
-            // Auto-update UI
             mDatePicker.setValue(suggested.toLocalDate());
             loadManualDynamicHours(suggested.toLocalDate(), timeStr);
         } else {
-            showErrorAlert("Fully Booked", "The restaurant is fully booked for this date.");
+            showErrorAlert("Fully Booked", "No availability for this date.");
         }
     }
 
+    /** Resets the instance and closes the window. */
     @FXML
     void onCancel(ActionEvent event) {
         instance = null;

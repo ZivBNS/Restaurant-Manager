@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.effect.DropShadow?>
+
+<AnchorPane prefHeight="700.0" prefWidth="1000.0"
+	style="-fx-background-color: #1e1e2f;"
+	xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="gui.ManageHours_GUI">
+	<children>
+		<VBox spacing="25.0" AnchorPane.bottomAnchor="20.0"
+			AnchorPane.leftAnchor="30.0" AnchorPane.rightAnchor="30.0"
+			AnchorPane.topAnchor="20.0">
+			<children>
+				<VBox spacing="5.0">
+					<children>
+						<Label text="Restaurant Hours Management" textFill="WHITE">
+							<font>
+								<Font name="Segoe UI Bold" size="32.0" />
+							</font>
+						</Label>
+						<Label
+							text="Configure regular weekly schedule and special date exceptions"
+							textFill="#b0b3c6">
+							<font>
+								<Font size="14.0" />
+							</font>
+						</Label>
+					</children>
+				</VBox>
+
+				<HBox spacing="30.0" VBox.vgrow="ALWAYS">
+					<children>
+						<VBox prefWidth="450.0" spacing="15.0"
+							style="-fx-background-color: #2c3e50; -fx-background-radius: 15; -fx-padding: 20;">
+							<children>
+								<Label text="Weekly Schedule (Sun - Sat)"
+									textFill="#3498db">
+									<font>
+										<Font name="System Bold" size="18.0" />
+									</font>
+								</Label>
+								<Separator opacity="0.2" />
+
+								<HBox spacing="10.0" alignment="CENTER_LEFT">
+									<children>
+										<Label prefWidth="90.0" text="Day" textFill="#7f8c8d" />
+										<Label prefWidth="80.0" text="Open" textFill="#7f8c8d" />
+										<Label prefWidth="80.0" text="Close" textFill="#7f8c8d" />
+										<Label text="Active" textFill="#7f8c8d" />
+									</children>
+								</HBox>
+
+								<ScrollPane fitToWidth="true"
+									style="-fx-background-color: transparent; -fx-background: transparent;"
+									vbarPolicy="NEVER">
+									<content>
+										<VBox fx:id="vboxRegularHours" spacing="10.0" />
+									</content>
+								</ScrollPane>
+
+								<Region VBox.vgrow="ALWAYS" />
+								<Button fx:id="btnSaveRegular" maxWidth="Infinity"
+									style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-background-radius: 8; -fx-cursor: hand;"
+									text="Update Weekly Schedule">
+									<font>
+										<Font name="System Bold" size="14.0" />
+									</font>
+								</Button>
+							</children>
+						</VBox>
+
+						<VBox spacing="20.0" HBox.hgrow="ALWAYS">
+							<children>
+								<VBox spacing="10.0" VBox.vgrow="ALWAYS"
+									style="-fx-background-color: #2c3e50; -fx-background-radius: 15; -fx-padding: 20;">
+									<children>
+										<Label text="Special Date Exceptions" textFill="#e67e22">
+											<font>
+												<Font name="System Bold" size="18.0" />
+											</font>
+										</Label>
+										<TableView fx:id="tableSpecialHours"
+											prefHeight="250.0" styleClass="dark-table"
+											VBox.vgrow="ALWAYS">
+											<columns>
+												<TableColumn fx:id="colDate" prefWidth="100.0"
+													text="Date" />
+												<TableColumn fx:id="colOpen" prefWidth="80.0"
+													text="Open" />
+												<TableColumn fx:id="colClose" prefWidth="80.0"
+													text="Close" />
+												<TableColumn fx:id="colDesc" prefWidth="150.0"
+													text="Description" />
+											</columns>
+										</TableView>
+										<Button fx:id="btnDeleteSpecial"
+											style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-background-radius: 8; -fx-cursor: hand;"
+											text="Delete Selected" />
+									</children>
+								</VBox>
+
+								<VBox spacing="15.0"
+									style="-fx-background-color: #2c3e50; -fx-background-radius: 15; -fx-padding: 20;">
+									<children>
+										<Label text="Add New Special Hour" textFill="#27ae60">
+											<font>
+												<Font name="System Bold" size="16.0" />
+											</font>
+										</Label>
+										<GridPane hgap="15.0" vgap="10.0">
+											<columnConstraints>
+												<ColumnConstraints prefWidth="120.0" />
+												<ColumnConstraints prefWidth="120.0" />
+												<ColumnConstraints hgrow="ALWAYS" />
+											</columnConstraints>
+											<children>
+												<VBox spacing="5.0">
+													<children>
+														<Label text="Date" textFill="#b0b3c6" />
+														<DatePicker fx:id="dpSpecialDate" />
+													</children>
+												</VBox>
+												<VBox spacing="5.0" GridPane.columnIndex="1">
+													<children>
+														<Label text="Open Time" textFill="#b0b3c6" />
+														<ComboBox fx:id="cbSpecialOpen" prefWidth="120.0"
+															promptText="HH:mm" style="-fx-background-color: #455e77;" />
+													</children>
+												</VBox>
+												<VBox spacing="5.0" GridPane.columnIndex="2">
+													<children>
+														<Label text="Close Time" textFill="#b0b3c6" />
+														<ComboBox fx:id="cbSpecialClose"
+															prefWidth="120.0" promptText="HH:mm"
+															style="-fx-background-color: #455e77;" />
+													</children>
+												</VBox>
+												<VBox spacing="5.0" GridPane.columnSpan="3"
+													GridPane.rowIndex="1">
+													<children>
+														<Label text="Reason / Description"
+															textFill="#b0b3c6" />
+														<TextField fx:id="txtSpecialDesc"
+															promptText="e.g. Holiday, Private Event..." />
+													</children>
+												</VBox>
+											</children>
+										</GridPane>
+										<Button fx:id="btnAddSpecial" maxWidth="Infinity"
+											style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-background-radius: 8; -fx-cursor: hand;"
+											text="Add Special Hour Exception">
+											<font>
+												<Font name="System Bold" size="14.0" />
+											</font>
+										</Button>
+									</children>
+								</VBox>
+							</children>
+						</VBox>
+					</children>
+				</HBox>
+
+				<HBox alignment="CENTER_LEFT">
+					<children>
+						<Button fx:id="btnBack"
+							style="-fx-background-color: transparent; -fx-text-fill: #e74c3c; -fx-underline: true; -fx-cursor: hand;"
+							text="&lt; Back to Dashboard" />
+					</children>
+				</HBox>
+			</children>
+		</VBox>
+	</children>
+</AnchorPane>

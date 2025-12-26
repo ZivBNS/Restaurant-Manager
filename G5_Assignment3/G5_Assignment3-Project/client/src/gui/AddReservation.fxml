@@ -4,59 +4,100 @@
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.effect.DropShadow?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.shape.Line?>
 
-<AnchorPane prefHeight="600.0" prefWidth="450.0" 
-            style="-fx-background-color: linear-gradient(to bottom right, #f8f9fa, #dfe6e9);" 
-            xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" 
-            fx:controller="gui.AddReservation_GUI">
+<AnchorPane prefHeight="750.0" prefWidth="550.0"
+	style="-fx-background-color: #0f172a;"
+	xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="gui.AddReservation_GUI">
 
-    <children>
-        <VBox alignment="CENTER" spacing="10" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="40">
-            <Label text="New Reservation" 
-                   style="-fx-font-size: 30px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" />
-            <Label text="Please fill in the details below" 
-                   style="-fx-font-size: 14px; -fx-text-fill: #7f8c8d;" />
-        </VBox>
+	<children>
+		<VBox alignment="CENTER" spacing="5" AnchorPane.leftAnchor="0"
+			AnchorPane.rightAnchor="0" AnchorPane.topAnchor="50">
+			<Label text="BOOK A TABLE" textFill="#38bdf8"
+				style="-fx-letter-spacing: 2px;">
+				<font>
+					<Font name="System Bold" size="12.0" />
+				</font>
+			</Label>
+			<Label text="New Reservation" textFill="WHITE">
+				<font>
+					<Font name="Segoe UI Semibold" size="36.0" />
+				</font>
+			</Label>
+			<Line endX="50.0" stroke="#38bdf8" strokeWidth="2.0" />
+		</VBox>
 
-        <VBox spacing="20" alignment="CENTER_LEFT" 
-              AnchorPane.leftAnchor="40" AnchorPane.rightAnchor="40" AnchorPane.topAnchor="140"
-              style="-fx-background-color: white; -fx-background-radius: 20; -fx-padding: 35;">
-            
-            <effect>
-                <DropShadow color="rgba(0,0,0,0.1)" radius="15" offsetX="0" offsetY="5" />
-            </effect>
+		<VBox spacing="25" alignment="TOP_CENTER"
+			AnchorPane.leftAnchor="40" AnchorPane.rightAnchor="40"
+			AnchorPane.topAnchor="170"
+			style="-fx-background-color: #1e293b; -fx-background-radius: 25; -fx-padding: 40;">
 
-            <VBox spacing="5">
-                <Label text="Number of Guests" style="-fx-font-weight: bold; -fx-text-fill: #34495e;" />
-                <TextField fx:id="guestsField" promptText="e.g. 4" 
-                           style="-fx-background-radius: 8; -fx-padding: 10;" />
-            </VBox>
+			<effect>
+				<DropShadow color="rgba(0,0,0,0.6)" radius="30"
+					offsetX="0" offsetY="15" />
+			</effect>
 
-            <VBox spacing="5">
-                <Label text="Select Date" style="-fx-font-weight: bold; -fx-text-fill: #34495e;" />
-                <DatePicker fx:id="datePicker" prefWidth="350.0" editable="false"
-                            style="-fx-background-radius: 8;" />
-            </VBox>
+			<VBox spacing="20">
+				<VBox spacing="8">
+					<Label text="How many guests?" textFill="#94a3b8"
+						style="-fx-font-weight: bold;" />
+					<Spinner fx:id="guestsSpinner" prefHeight="45.0"
+						prefWidth="420.0" editable="true"
+						style="-fx-background-color: #0f172a; 
+                -fx-control-inner-background: #1e293b; 
+                -fx-text-fill: white; 
+                -fx-background-radius: 10; 
+                -fx-border-radius: 10; 
+                -fx-border-color: #334155; 
+                -fx-font-size: 16px;" />
+				</VBox>
 
-            <VBox spacing="5">
-                <Label text="Select Time" style="-fx-font-weight: bold; -fx-text-fill: #34495e;" />
-                <ComboBox fx:id="timeCombo" prefWidth="350.0" promptText="Choose a slot..."
-                          style="-fx-background-radius: 8; -fx-padding: 5;" />
-            </VBox>
+				<VBox spacing="8">
+					<Label text="Pick a date" textFill="#94a3b8"
+						style="-fx-font-weight: bold;" />
+					<DatePicker fx:id="datePicker" prefHeight="45.0" prefWidth="420.0" editable="false"
+            style="-fx-control-inner-background: #1e293b; 
+                   -fx-background-radius: 10; 
+                   -fx-text-inner-color: #f1f5f9; 
+                   -fx-font-weight: bold;
+                   -fx-font-size: 15px;" />
+				</VBox>
 
-            <Region prefHeight="10" />
+				<VBox spacing="8">
+					<Label text="Available time slots" textFill="#94a3b8"
+						style="-fx-font-weight: bold;" />
+					<ComboBox fx:id="timeCombo" prefHeight="45.0" prefWidth="420.0" promptText="Select a slot"
+          styleClass="dark-combo"
+          style="-fx-background-color: #0f172a; 
+                 -fx-background-radius: 10; 
+                 -fx-border-radius: 10;
+                 -fx-border-color: #334155;
+                 -fx-font-size: 15px;" />
+				</VBox>
+			</VBox>
 
-            <HBox spacing="15" alignment="CENTER">
-                <Button text="Cancel" onAction="#onBackClicked" prefWidth="120"
-                        style="-fx-background-color: #ecf0f1; -fx-text-fill: #7f8c8d; -fx-font-weight: bold; -fx-background-radius: 10; -fx-padding: 12; -fx-cursor: hand;" />
-                
-                <Button text="Submit Order" onAction="#onSaveOrderClicked" prefWidth="180"
-                        style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-padding: 12; -fx-cursor: hand;" />
-            </HBox>
-        </VBox>
+			<Region prefHeight="10" />
 
-        <Label text="Reservations must be made at least 1 hour in advance" 
-               AnchorPane.bottomAnchor="30" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" 
-               alignment="CENTER" style="-fx-font-size: 11px; -fx-text-fill: #95a5a6; -fx-font-style: italic;" />
-    </children>
+			<VBox spacing="12" alignment="CENTER">
+				<Button text="Confirm Reservation"
+					onAction="#onSaveOrderClicked" prefHeight="50.0" prefWidth="420.0"
+					style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 12; -fx-cursor: hand;">
+					<effect>
+						<DropShadow color="rgba(16,185,129,0.4)" radius="10"
+							offsetY="4" />
+					</effect>
+				</Button>
+
+				<Button text="Go Back" onAction="#onBackClicked"
+					prefHeight="40.0" prefWidth="420.0"
+					style="-fx-background-color: transparent; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-cursor: hand;" />
+			</VBox>
+		</VBox>
+
+		<HBox alignment="CENTER" spacing="5" AnchorPane.bottomAnchor="40"
+			AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
+		</HBox>
+	</children>
 </AnchorPane>

@@ -6,116 +6,138 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
+/**
+ * Represents the operating hours of the restaurant.
+ * Includes regular weekly schedules and specific date exceptions.
+ * Each time slot now tracks its active status to sync correctly with the database.
+ */
 public class Opening_Hours {
 
-	// Map to store standard weekly operating hours.
-	// Key: DayOfWeek (e.g., MONDAY), Value: TimeRange object.
+	/** Map to store standard weekly operating hours including their active status. */
 	private Map<DayOfWeek, TimeRange> regularSchedule;
 
-	// Map to store exceptions (holidays, special events).
-	// Key: Specific Date (LocalDate), Value: TimeRange (or null if closed).
+	/** Map to store specific date exceptions (holidays, events). */
 	private Map<LocalDate, TimeRange> exceptionSchedule;
 
 	public Opening_Hours() {
-		// Initialize Maps to avoid NullPointerExceptions later
-		this.regularSchedule = new HashMap<>();
-		this.exceptionSchedule = new HashMap<>();
-
-		// Populate the standard schedule upon object creation
+		this.regularSchedule = new HashMap<DayOfWeek, TimeRange>();
+		this.exceptionSchedule = new HashMap<LocalDate, TimeRange>();
 		initializeDefaultSchedule();
 	}
 
-	// --- Inner Helper Class to Represent a Time Window ---
+	/**
+	 * Inner class representing a time window and its operational status.
+	 */
 	public static class TimeRange {
 		private LocalTime openTime;
 		private LocalTime closeTime;
-
-		public TimeRange(LocalTime openTime, LocalTime closeTime) {
+		private boolean isActive;
+		private String description;
+		
+		public TimeRange(LocalTime openTime, LocalTime closeTime, boolean isActive, String description) {
 			this.openTime = openTime;
 			this.closeTime = closeTime;
+			this.isActive = isActive;
+			this.description = description;
 		}
 
-		public LocalTime getOpenTime() {
-			return openTime;
-		}
-
-		public LocalTime getCloseTime() {
-			return closeTime;
-		}
-
+		public LocalTime getOpenTime() { return openTime; }
+		public LocalTime getCloseTime() { return closeTime; }
+		public boolean isActive() { return isActive; }
+		public String getDescription() { return description; } 
+		
 		@Override
 		public String toString() {
+			if (!isActive) return "Closed (Inactive)";
 			return openTime + " - " + closeTime;
 		}
 	}
 
-	// Method to add or update standard operating hours for a specific day.
-	public void setRegularHour(DayOfWeek day, LocalTime open, LocalTime close) {
-		regularSchedule.put(day, new TimeRange(open, close));
+	/**
+	 * Sets the operating hours for a specific day of the week.
+	 * @param day The day of the week.
+	 * @param open Opening time.
+	 * @param close Closing time.
+	 * @param active Whether the restaurant is active on this day.
+	 */
+	public void setRegularHour(DayOfWeek day, LocalTime open, LocalTime close, boolean active) {
+		regularSchedule.put(day, new TimeRange(open, close, active, null));
 	}
-
-	// Method to set specific hours for an exceptional date (e.g., holiday hours).
-	public void setException(LocalDate date, LocalTime open, LocalTime close) {
-		exceptionSchedule.put(date, new TimeRange(open, close));
+	
+	/**
+	 * Compatibility method for active days.
+	 */
+	public void setRegularHour(DayOfWeek day, LocalTime open, LocalTime close) {
+		setRegularHour(day, open, close, true);
 	}
 
 	/**
-	 * Core business logic to check if the restaurant is open at a specific moment
-	 * in time. This method prioritizes exception schedules over regular schedules.
-	 * * @param dateTime The specific date and time to check.
-	 * 
-	 * @return true if the restaurant is currently open, false otherwise.
+	 * Sets an exception for a specific date.
+	 */
+	public void setException(LocalDate date, LocalTime open, LocalTime close, String description) {
+		exceptionSchedule.put(date, new TimeRange(open, close, true, description));
+	}
+
+	/**
+	 * Core logic to determine if the restaurant is open at a given date and time.
+	 * Priorities: Exceptions first, then regular schedule if active.
+	 * @param dateTime The timestamp to check.
+	 * @return true if open, false otherwise.
 	 */
 	public boolean isOpen(LocalDateTime dateTime) {
 		LocalDate date = dateTime.toLocalDate();
 		LocalTime time = dateTime.toLocalTime();
 
-		// 1. Check for specific date exceptions (High Priority Check)
+		// 1. Check exceptions (Holidays/Events)
 		if (exceptionSchedule.containsKey(date)) {
-			TimeRange range = exceptionSchedule.get(date);
-			return isTimeInRange(time, range);
+			return isTimeInRange(time, exceptionSchedule.get(date));
 		}
 
-		// 2. If no exception, check the regular weekly schedule
+		// 2. Check regular schedule
 		DayOfWeek day = date.getDayOfWeek();
 		if (regularSchedule.containsKey(day)) {
 			TimeRange range = regularSchedule.get(day);
+			// Check if the day is marked as active in the system
+			if (!range.isActive()) {
+				return false;
+			}
 			return isTimeInRange(time, range);
 		}
 
-		// 3. If the day is not defined (e.g., Sunday if only weekdays are set), assume
-		// closed.
 		return false;
 	}
 
 	/**
-	 * Helper method to determine if a given time falls within a specific TimeRange.
+	 * Helper to check if a time falls within a range, considering midnight crossing.
 	 */
 	private boolean isTimeInRange(LocalTime time, TimeRange range) {
-		if (range == null)
-			return false;
-		// Checks if time is >= openTime AND < closeTime
-		return (time.isAfter(range.openTime) || time.equals(range.openTime)) && time.isBefore(range.closeTime);
+		if (range == null || !range.isActive()) return false;
+		
+		LocalTime open = range.openTime;
+		LocalTime close = range.closeTime;
+
+		// Standard case: 08:00 - 23:00
+		if (close.isAfter(open)) {
+			return (time.isAfter(open) || time.equals(open)) && time.isBefore(close);
+		} 
+		// Midnight crossing case: 20:00 - 03:00
+		else {
+			return (time.isAfter(open) || time.equals(open)) || time.isBefore(close);
+		}
 	}
 
 	/**
-	 * Initializes a default schedule (e.g., Mon-Thu open, Fri-Sat closed).
+	 * Sets default operating hours (09:00 - 23:00) for all days.
 	 */
 	private void initializeDefaultSchedule() {
 		LocalTime open = LocalTime.of(9, 0);
 		LocalTime close = LocalTime.of(23, 0);
-
 		for (DayOfWeek day : DayOfWeek.values()) {
-			// Assumes standard weekday operating hours
-			if (day != DayOfWeek.FRIDAY && day != DayOfWeek.SATURDAY) {
-				setRegularHour(day, open, close);
-			}
+			setRegularHour(day, open, close, true);
 		}
 	}
-
-	// --- Getters and Setters ---
-
 
 	public Map<DayOfWeek, TimeRange> getRegularSchedule() {
 		return regularSchedule;
@@ -125,42 +147,46 @@ public class Opening_Hours {
 		return exceptionSchedule;
 	}
 	
+	/**
+	 * Returns a string representation of the schedule.
+	 * Uses manual loops to avoid Lambda expressions.
+	 */
 	@Override
 	public String toString() {
-	    StringBuilder sb = new StringBuilder();
-	    sb.append("=== Restaurant Operating Hours ===\n");
+		StringBuilder sb = new StringBuilder();
+		sb.append("=== Restaurant Operating Hours ===\n");
 
-	    DayOfWeek[] weekOrder = {
-	        DayOfWeek.SUNDAY, DayOfWeek.MONDAY, DayOfWeek.TUESDAY, 
-	        DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY
-	    };
+		DayOfWeek[] weekOrder = {
+			DayOfWeek.SUNDAY, DayOfWeek.MONDAY, DayOfWeek.TUESDAY, 
+			DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY
+		};
 
-	    sb.append("--- Regular Weekly Schedule ---\n");
-	    for (DayOfWeek day : weekOrder) {
-	        sb.append(String.format("%-10s: ", day.toString()));
-	        if (regularSchedule.containsKey(day)) {
-	            sb.append(regularSchedule.get(day).toString());
-	        } else {
-	            sb.append("Closed");
-	        }
-	        sb.append("\n");
-	    }
+		sb.append("--- Weekly Schedule ---\n");
+		for (DayOfWeek day : weekOrder) {
+			sb.append(String.format("%-10s: ", day.toString()));
+			if (regularSchedule.containsKey(day)) {
+				sb.append(regularSchedule.get(day).toString());
+			} else {
+				sb.append("Not Set");
+			}
+			sb.append("\n");
+		}
 
-	    if (!exceptionSchedule.isEmpty()) {
-	        sb.append("\n--- Special Date Exceptions ---\n");
-	        exceptionSchedule.entrySet().stream()
-	            .sorted(Map.Entry.comparingByKey())
-	            .forEach(entry -> {
-	                sb.append(String.format("Date: %s | Hours: ", entry.getKey().toString()));
-	                if (entry.getValue() != null) {
-	                    sb.append(entry.getValue().toString());
-	                } else {
-	                    sb.append("Closed All Day");
-	                }
-	                sb.append("\n");
-	            });
-	    }
+		if (!exceptionSchedule.isEmpty()) {
+			sb.append("\n--- Special Exceptions ---\n");
+			// Using TreeMap to keep dates sorted without using Streams
+			Map<LocalDate, TimeRange> sortedExceptions = new TreeMap<LocalDate, TimeRange>(exceptionSchedule);
+			for (Map.Entry<LocalDate, TimeRange> entry : sortedExceptions.entrySet()) {
+				sb.append("Date: ").append(entry.getKey()).append(" | Hours: ");
+				if (entry.getValue() != null) {
+					sb.append(entry.getValue().toString());
+				} else {
+					sb.append("Closed");
+				}
+				sb.append("\n");
+			}
+		}
 
-	    return sb.toString();
+		return sb.toString();
 	}
 }

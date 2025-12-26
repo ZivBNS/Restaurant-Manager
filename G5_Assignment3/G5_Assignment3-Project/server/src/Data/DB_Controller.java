@@ -20,9 +20,9 @@ public class DB_Controller {
     /** Database connection details. */
     private final String DB_URL = "jdbc:mysql://localhost:3306/bistro?serverTimezone=Asia/Jerusalem&useSSL=false";
     private final String USER = "root";
-    //private final String PASS = "zaqwsxcde321";
+    private final String PASS = "zaqwsxcde321";
     //private final String PASS = "212009666";
-    private final String PASS = "8630547";
+    //private final String PASS = "8630547";
     private final int MAX_POOL_SIZE = 10;
 
     /** Thread-safe queue to store available pooled connections. */

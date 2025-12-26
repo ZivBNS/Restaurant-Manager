@@ -1,12 +1,16 @@
 package Data;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Map;
+import java.sql.Date;
+import java.sql.Time;
 
 import entities.Opening_Hours;
 import entities.Restaurant;
@@ -38,12 +42,18 @@ public class OpeningHours_Repository implements Repository_Interface<Opening_Hou
     public static OpeningHours_Repository getInstance() {
         return OpeningHoursInstance;
     }
+    /**
+     * Converts Java DayOfWeek (MONDAY) to DB format (Monday).
+     */
+    private String formatDayForDB(DayOfWeek day) {
+        String name = day.name().toLowerCase();
+        return name.substring(0, 1).toUpperCase() + name.substring(1);
+    }
     
     /**
-     * Initializes the restaurant's operating hours by fetching data from the database.
-     * It populates both the regular weekly schedule and special date exceptions.
-     * Once loaded, the data is stored in the Restaurant singleton for global access.
-     * Uses the connection pool to safely borrow and release connections.
+     * Initializes the restaurant's operating hours by fetching active data from the database.
+     * It populates both the regular weekly schedule (where IsActive = 1) and special date exceptions.
+     * Data is stored in the Restaurant singleton for global access.
      */
     @Override
     public void init() {
@@ -51,95 +61,268 @@ public class OpeningHours_Repository implements Repository_Interface<Opening_Hou
         PooledConnection pConn = null;
 
         try {
-            // Borrow a connection from the pool
             pConn = db.getConnection();
             Connection conn = pConn.getConnection();
 
-            // 1. Load standard weekly operating hours
-            String sqlRegular = "SELECT DayOfWeek, OpenTime, CloseTime FROM OpeningHours";
+            // Load all rows including the IsActive status
+            String sqlRegular = "SELECT DayOfWeek, OpenTime, CloseTime, IsActive FROM openinghours";
             try (Statement stmt = conn.createStatement();
                  ResultSet rs = stmt.executeQuery(sqlRegular)) {
                 
                 while (rs.next()) {
-                    // Convert DB string to DayOfWeek enum and SQL time to LocalTime
                     DayOfWeek day = DayOfWeek.valueOf(rs.getString("DayOfWeek").toUpperCase());
                     LocalTime open = rs.getTime("OpenTime").toLocalTime();
                     LocalTime close = rs.getTime("CloseTime").toLocalTime();
-                    oh.setRegularHour(day, open, close);
+                    boolean active = rs.getBoolean("IsActive");
+                    
+                    // Populate the entity with the status from the DB
+                    oh.setRegularHour(day, open, close, active);
                 }
             }
 
-            // 2. Load special date exceptions (e.g., Holidays or adjusted days)
-            String sqlSpecial = "SELECT Date, OpenTime, CloseTime FROM SpecialHours";
-            try (Statement stmt = conn.createStatement();
-                 ResultSet rs = stmt.executeQuery(sqlSpecial)) {
-                
+            // Load special date exceptions
+            String sqlSpecial = "SELECT Date, OpenTime, CloseTime, Description FROM specialhours";
+            try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sqlSpecial)) {
                 while (rs.next()) {
                     LocalDate date = rs.getDate("Date").toLocalDate();
-                    
-                    // If OpenTime is NULL, the restaurant is considered closed for that day
+                    String desc = rs.getString("Description");
                     if (rs.getTime("OpenTime") != null) {
-                        LocalTime open = rs.getTime("OpenTime").toLocalTime();
-                        LocalTime close = rs.getTime("CloseTime").toLocalTime();
-                        oh.setException(date, open, close);
+                        oh.setException(date, rs.getTime("OpenTime").toLocalTime(), 
+                                        rs.getTime("CloseTime").toLocalTime(), desc);
                     } else {
-                        // Set as closed by passing null values to the entity
-                        oh.setException(date, null, null); 
+                        oh.setException(date, null, null, desc); 
                     }
                 }
             }
 
-            // 3. Update the Restaurant singleton with the newly loaded hours
             Restaurant.getInstance().setOpeningHours(oh);
-            System.out.println("OpeningHours_Repository: Successfully loaded hours into Restaurant instance.");
-
+            System.out.println("OpeningHours_Repository: Restaurant Instance Sync Complete.");
+            
         } catch (SQLException e) {
-            System.err.println("Database Error: Failed to load opening hours: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("Database Error: " + e.getMessage());
         } finally {
-            // Always return the connection to the pool
-            if (pConn != null) {
-                db.releaseConnection(pConn);
-            }
+            if (pConn != null) db.releaseConnection(pConn);
         }
     }
-    
     /**
-     * Persists a new Opening_Hours object to the database.
-     * @param objToSet The Opening_Hours object to save.
-     * @return true if successful, false otherwise.
+     * Performs a batch update for all 7 days of the week.
+     * @param batchData Map containing DayOfWeek and an array [LocalTime open, LocalTime close, Boolean active].
+     * @return true if the batch was committed successfully.
+     */
+    public boolean updateAllDays(Map<DayOfWeek, Object[]> batchData) {
+        String sql = "UPDATE openinghours SET OpenTime = ?, CloseTime = ?, IsActive = ? WHERE DayOfWeek = ?";
+        PooledConnection pConn = null;
+        try {
+            pConn = db.getConnection();
+            Connection conn = pConn.getConnection();
+            conn.setAutoCommit(false); // Start transaction
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                for (Map.Entry<DayOfWeek, Object[]> entry : batchData.entrySet()) {
+                    ps.setTime(1, Time.valueOf((LocalTime) entry.getValue()[0]));
+                    ps.setTime(2, Time.valueOf((LocalTime) entry.getValue()[1]));
+                    ps.setInt(3, (Boolean) entry.getValue()[2] ? 1 : 0);
+                    ps.setString(4, formatDayForDB(entry.getKey()));
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+                conn.commit(); // Commit all changes at once
+                return true;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (pConn != null) db.releaseConnection(pConn);
+        }
+    }
+    /**
+     * Adds a new special hour exception to the database.
+     * @param date The date for the exception.
+     * @param open The opening time (null if closed).
+     * @param close The closing time.
+     * @param description A reason for the special hours.
+     * @return true if the record was inserted successfully, false otherwise.
+     */
+    public boolean addSpecialHour(LocalDate date, LocalTime open, LocalTime close, String description) {
+        String sql = "INSERT INTO specialhours (Date, OpenTime, CloseTime, Description) VALUES (?, ?, ?, ?)";
+        PooledConnection pConn = null;
+
+        try {
+            pConn = db.getConnection();
+            try (PreparedStatement ps = pConn.getConnection().prepareStatement(sql)) {
+                ps.setDate(1, Date.valueOf(date));
+                ps.setTime(2, open != null ? Time.valueOf(open) : null);
+                ps.setTime(3, close != null ? Time.valueOf(close) : null);
+                ps.setString(4, description);
+                return ps.executeUpdate() > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (pConn != null) db.releaseConnection(pConn);
+        }
+    }
+    public boolean deleteSpecialHour(LocalDate date) {
+        String sql = "DELETE FROM specialhours WHERE Date = ?";
+        PooledConnection pConn = null;
+
+        try {
+            pConn = db.getConnection();
+            try (PreparedStatement ps = pConn.getConnection().prepareStatement(sql)) {
+                ps.setDate(1, Date.valueOf(date));
+                return ps.executeUpdate() > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (pConn != null) db.releaseConnection(pConn);
+        }
+    }
+    /**
+     * Persists the current state of Opening_Hours into the database.
+     * Note: This implementation is usually handled via specific add/update methods 
+     * due to the composite nature of the hours table.
+     * @param objToSet The entity to save.
+     * @return false as individual updates are preferred for this entity.
      */
     @Override
     public boolean set(Opening_Hours objToSet) {
-        // Implementation for adding new hours to DB can be added here
         return false;
+    }
+    /**
+     * Unified Update Method: Updates OpenTime, CloseTime AND IsActive status.
+     */
+    public boolean updateDayFull(DayOfWeek day, LocalTime open, LocalTime close, boolean isActive) {
+        String sql = "UPDATE openinghours SET OpenTime=?, CloseTime=?, IsActive=? WHERE DayOfWeek=?";
+        PooledConnection pConn = null;
+
+        try {
+            pConn = db.getConnection();
+            try (PreparedStatement ps = pConn.getConnection().prepareStatement(sql)) {
+                ps.setTime(1, Time.valueOf(open));
+                ps.setTime(2, Time.valueOf(close));
+                ps.setInt(3, isActive ? 1 : 0); // המרה ל-TinyInt
+                ps.setString(4, formatDayForDB(day)); // "Sunday"
+                
+                return ps.executeUpdate() > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (pConn != null) db.releaseConnection(pConn);
+        }
     }
 
     /**
-     * Updates existing opening hour records in the database.
-     * @param objToUpdate The Opening_Hours object with updated data.
-     * @return true if successful, false otherwise.
+     * Updates a regular opening hour record in the database.
+     * @param day The day of the week to update.
+     * @param openTime The original open time (primary key).
+     * @param newCloseTime The new closing time to set.
+     * @return true if updated successfully, false otherwise.
+     */
+    public boolean updateRegularHours(DayOfWeek day, LocalTime newOpenTime, LocalTime newCloseTime) {
+        // Changed SQL: Identify by DayOfWeek only, and update both times.
+        String sql = "UPDATE openinghours SET OpenTime = ?, CloseTime = ? WHERE DayOfWeek = ?";
+        PooledConnection pConn = null;
+
+        try {
+            pConn = db.getConnection();
+            try (PreparedStatement ps = pConn.getConnection().prepareStatement(sql)) {
+                ps.setTime(1, Time.valueOf(newOpenTime));
+                ps.setTime(2, Time.valueOf(newCloseTime));
+                ps.setString(3, formatDayForDB(day));
+                
+                int rowsAffected = ps.executeUpdate();
+                System.out.println("Update Regular Hours: " + rowsAffected + " rows updated for " + day);
+                return rowsAffected > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (pConn != null) db.releaseConnection(pConn);
+        }
+    }
+
+    /**
+     * Placeholder update for the Repository interface.
+     * @param objToUpdate The object to update.
+     * @return false.
      */
     @Override
     public boolean update(Opening_Hours objToUpdate) {
-        // Implementation for updating hours in DB can be added here
         return false;
     }
 
     /**
-     * Deletes a specific hours record based on a unique identifier.
-     * @param id The identifier of the record to delete.
-     * @return true if successful, false otherwise.
+     * Deactivates a regular hour record by setting IsActive to 0.
+     * Since the table uses a composite key, this method targets the day ordinal as a fallback.
+     * It is recommended to use deactivateByDayAndSlot instead.
+     * @param id The ordinal of the DayOfWeek (1 for Sunday, etc).
+     * @return true if deactivated, false otherwise.
      */
     @Override
     public boolean deleteById(int id) {
-        return false;
+        if (id < 1 || id > 7) return false;
+        DayOfWeek day = DayOfWeek.of(id == 7 ? 7 : id); // Mapping logic
+        
+        String sql = "UPDATE openinghours SET IsActive = 0 WHERE DayOfWeek = ?";
+        PooledConnection pConn = null;
+
+        try {
+            pConn = db.getConnection();
+            try (PreparedStatement ps = pConn.getConnection().prepareStatement(sql)) {
+                ps.setString(1, day.toString());
+                boolean success = ps.executeUpdate() > 0;
+                if(success) init(); // Refresh cache
+                return success;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (pConn != null) db.releaseConnection(pConn);
+        }
     }
 
     /**
-     * Retrieves an Opening_Hours record by its unique database ID.
-     * @param id The unique ID of the record.
-     * @return The Opening_Hours object if found, null otherwise.
+     * Sets a specific regular hour slot to inactive.
+     * @param day The day of the week.
+     * @param openTime The specific opening time slot.
+     * @return true if successful.
+     */
+    public boolean deactivateByDayAndSlot(DayOfWeek day, LocalTime openTime) {
+        // Updated to rely primarily on DayOfWeek formatting
+        String sql = "UPDATE openinghours SET IsActive = 0 WHERE DayOfWeek = ?";
+        PooledConnection pConn = null;
+
+        try {
+            pConn = db.getConnection();
+            try (PreparedStatement ps = pConn.getConnection().prepareStatement(sql)) {
+                ps.setString(1, formatDayForDB(day));
+                return ps.executeUpdate() > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (pConn != null) db.releaseConnection(pConn);
+        }
+    }
+
+    /**
+     * Retrieves the opening hours data.
+     * @param id The ID (not used for this specific entity).
+     * @return null.
      */
     @Override
     public Opening_Hours getById(int id) {

@@ -15,7 +15,6 @@ import entities.Reservation;
 import entities.ReservationStatus;
 import entities.Restaurant;
 import entities.Subscribed_Customer;
-import entities.Waitlist;
 
 /**
  * Controller responsible for handling all reservation-related logic on the server side.
