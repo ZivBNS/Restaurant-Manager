@@ -11,6 +11,7 @@ import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import messages.Message;
 import messages.MessageType;
+import entities.Bill;
 import entities.Reservation;
 import javafx.event.ActionEvent;
 
@@ -24,6 +25,7 @@ public class BillPayment_GUI {
     @FXML private Label lblTime;
     @FXML private Label lblGuests;
     @FXML private Label lblTable;
+    @FXML private Label lblBill;
 
     @FXML
     public void initialize() {
@@ -62,46 +64,51 @@ public class BillPayment_GUI {
             return;
         }
 
-        String amountText = paymentField.getText().trim();
+        ConnectToServer_GUI.clientController.sendComplexObject(
+            new Message(MessageType.GET_BILL_BY_RESERVATION_ID, currentReservation.getId())
+        );
+        
+        double amount = Double.parseDouble(paymentField.getText());
 
-        if (amountText.isEmpty()) {
-            showAlert("Error", "Please enter payment amount.");
+        if (amount != expectedAmount) {
+            showAlert("Error", "Incorrect amount.");
+            return;
+        }
+    }
+    
+    private double expectedAmount;
+
+    public void displayBill(Bill bill) {
+
+        if (bill == null) {
+            showAlert("Error", "No bill found.");
             return;
         }
 
-        try {
-            double amount = Double.parseDouble(amountText);
-
-            if (amount <= 0) {
-                showAlert("Error", "Invalid amount.");
-                return;
-            }
-
-            showAlert("Success", "Payment of " + amount + "₪ was completed.");
-            paymentField.clear();
-
-        } catch (NumberFormatException e) {
-            showAlert("Error", "Amount must be a number.");
-        }
+        expectedAmount = bill.getTotalAmount();
+        showAlert("Bill", "Total amount: " + expectedAmount + "₪");
     }
+
 
     @FXML
     private void onBackClicked(ActionEvent event) {
         try {
-            Parent previousScreen = FXMLLoader.load(getClass().getResource("/gui/CasualCustomer.fxml"));
+            Parent root = FXMLLoader.load(getClass().getResource("/gui/CasualCustomer.fxml"));
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(previousScreen));
+            stage.setScene(new Scene(root));
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+    private void showAlert(String title, String msg) {
+        Alert a = new Alert(Alert.AlertType.INFORMATION);
+        a.setTitle(title);
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        a.showAndWait();
     }
 }
+
+
 

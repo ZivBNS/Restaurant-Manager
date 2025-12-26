@@ -1,5 +1,7 @@
 package entities;
 
+import java.time.LocalDateTime;
+
 public class Bill {
 	private final double UserDiscountRate=0.15;
     private double totalAmount=0.0;
@@ -7,7 +9,9 @@ public class Bill {
     private String status="";
     private String billDetails="";
     private Reservation reservation;
-
+    private int id;
+    private int reservationId;
+    
     public Bill(Reservation reservation,double totalAmount, String billDetails) {
     	this(reservation);
     	this.totalAmount = totalAmount;
@@ -18,8 +22,18 @@ public class Bill {
         this.reservation = reservation;
         if(reservation.getUserId()!=null) discountRate=UserDiscountRate;    
     }    
+    
+    public Bill(int id, int reservationId, String billDetails, double totalAmount, String status) {
+        this.id = id;
+        this.reservationId = reservationId;
+        this.totalAmount = totalAmount;
+        this.status = status;
+    }
+    
+	public int getId() { return id; }
+    public int getReservationId() { return reservationId; }
 
-    //discount cal
+	//discount cal
     public double calculateFinalAmount() {
             return this.totalAmount*(1-discountRate);
     }

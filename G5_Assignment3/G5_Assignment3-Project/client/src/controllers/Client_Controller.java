@@ -185,6 +185,25 @@ public class Client_Controller implements ChatIF {
         	        }
         	    }
         	);
+        
+        responseHandlers.put(MessageType.RETURN_LATEST_RESERVATION_BY_PHONE, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+
+                Reservation r = (Reservation) msg.getContent();
+
+                if (BillPayment_GUI.instance != null) {
+                    BillPayment_GUI.instance.displayReservation(r);
+                }
+            }
+        });
+        
+        responseHandlers.put(MessageType.RETURN_BILL_BY_RESERVATION_ID, msg -> {
+            Bill bill = (Bill) msg.getContent();
+            BillPayment_GUI.instance.displayBill(bill);
+        });
+
+
 
         // -----------------------------------------------------------
         // Updates, Cancellations & Admin Actions

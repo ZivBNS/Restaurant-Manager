@@ -63,6 +63,12 @@ public class Server_Controller extends AbstractServer {
         commands.put(MessageType.EDIT_USER_REQUEST, userCmd);
         commands.put(MessageType.DELETE_USER_REQUEST, userCmd);
         
+        // --- Users ---
+        Command payCmd = new PaymentCommand();
+        commands.put(MessageType.GET_LATEST_BILL_BY_PHONE, payCmd);
+        commands.put(MessageType.GET_BILL_BY_RESERVATION_ID, payCmd);
+        commands.put(MessageType.BILL_PAYMENT_REQUEST, payCmd);
+
         // --- waitlists ---
         Command WaitlistCmd = new WaitlistCommand();
         commands.put(MessageType.CANCEL_WAITLIST_AND_RESERVATION_BY_CODE, WaitlistCmd);
