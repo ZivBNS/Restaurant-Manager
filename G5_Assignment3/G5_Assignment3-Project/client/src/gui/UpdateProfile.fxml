@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.effect.DropShadow?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane prefHeight="650.0" prefWidth="500.0"
+            style="-fx-background-color: #1e1e2f;"
+            xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="gui.UpdateProfile_GUI">
+
+    <children>
+
+        <VBox alignment="CENTER" spacing="8"
+              AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="30">
+
+            <Label text="Update Profile"
+                   style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+
+            <Label text="Manage your personal details"
+                   style="-fx-font-size: 14px; -fx-text-fill: #b0b3c6;"/>
+        </VBox>
+
+        <VBox spacing="16" alignment="CENTER"
+              AnchorPane.leftAnchor="40" AnchorPane.rightAnchor="40" AnchorPane.topAnchor="120"
+              style="-fx-background-color: #26283b; -fx-background-radius: 22; -fx-padding: 35;">
+
+            <effect>
+                <DropShadow color="rgba(0,0,0,0.45)" radius="25" offsetY="8"/>
+            </effect>
+
+            <TextField fx:id="txtFirstName" promptText="First Name"
+                       style="-fx-background-radius: 10; -fx-background-color: #2f324a; -fx-text-fill: white;"/>
+
+            <TextField fx:id="txtLastName" promptText="Last Name"
+                       style="-fx-background-radius: 10; -fx-background-color: #2f324a; -fx-text-fill: white;"/>
+
+            <TextField fx:id="txtPhone" promptText="Phone Number"
+                       style="-fx-background-radius: 10; -fx-background-color: #2f324a; -fx-text-fill: white;"/>
+
+            <TextField fx:id="txtEmail" promptText="Email Address"
+                       style="-fx-background-radius: 10; -fx-background-color: #2f324a; -fx-text-fill: white;"/>
+
+            <TextField fx:id="txtUsername" promptText="Username"
+                       style="-fx-background-radius: 10; -fx-background-color: #2f324a; -fx-text-fill: white;"/>
+
+            <PasswordField fx:id="txtPassword" promptText="Password"
+                           style="-fx-background-radius: 10; -fx-background-color: #2f324a; -fx-text-fill: white;"/>
+
+            <Label fx:id="lblError" visible="false"
+                   style="-fx-text-fill: #e74c3c;"/>
+
+            <Button fx:id="btnSave"
+                    text="Save Changes"
+                    onAction="#onSaveClicked"
+                    prefWidth="260"
+                    style="-fx-background-color: #2ecc71; -fx-text-fill: #1e1e2f;
+                           -fx-font-weight: bold; -fx-background-radius: 14;"/>
+
+            <Button text="Back"
+                    onAction="#onBackClicked"
+                    prefWidth="260"
+                    style="-fx-background-color: transparent; -fx-text-fill: #e74c3c;
+                           -fx-font-weight: bold;"/>
+        </VBox>
+
+        <Label text="Bistro Member Services"
+               AnchorPane.bottomAnchor="20"
+               AnchorPane.leftAnchor="0"
+               AnchorPane.rightAnchor="0"
+               alignment="CENTER"
+               style="-fx-font-size: 11px; -fx-text-fill: #7f85a3;" />
+    </children>
+</AnchorPane>

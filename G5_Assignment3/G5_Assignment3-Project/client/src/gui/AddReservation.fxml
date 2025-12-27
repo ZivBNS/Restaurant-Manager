@@ -8,14 +8,14 @@
 <?import javafx.scene.shape.Line?>
 
 <AnchorPane prefHeight="750.0" prefWidth="550.0"
-	style="-fx-background-color: #0f172a;"
+	style="-fx-background-color: #1e1e2f;"
 	xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
 	fx:controller="gui.AddReservation_GUI">
 
 	<children>
 		<VBox alignment="CENTER" spacing="5" AnchorPane.leftAnchor="0"
 			AnchorPane.rightAnchor="0" AnchorPane.topAnchor="50">
-			<Label text="BOOK A TABLE" textFill="#38bdf8"
+			<Label text="BOOK A TABLE" textFill="WHITE"
 				style="-fx-letter-spacing: 2px;">
 				<font>
 					<Font name="System Bold" size="12.0" />
@@ -26,13 +26,13 @@
 					<Font name="Segoe UI Semibold" size="36.0" />
 				</font>
 			</Label>
-			<Line endX="50.0" stroke="#38bdf8" strokeWidth="2.0" />
+			<Line endX="50.0" stroke="WHITE" strokeWidth="2.0" />
 		</VBox>
 
 		<VBox spacing="25" alignment="TOP_CENTER"
 			AnchorPane.leftAnchor="40" AnchorPane.rightAnchor="40"
 			AnchorPane.topAnchor="170"
-			style="-fx-background-color: #1e293b; -fx-background-radius: 25; -fx-padding: 40;">
+			style="-fx-background-color: #26283b; -fx-background-radius: 25; -fx-padding: 40;">
 
 			<effect>
 				<DropShadow color="rgba(0,0,0,0.6)" radius="30"
@@ -83,7 +83,7 @@
 			<VBox spacing="12" alignment="CENTER">
 				<Button text="Confirm Reservation"
 					onAction="#onSaveOrderClicked" prefHeight="50.0" prefWidth="420.0"
-					style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 12; -fx-cursor: hand;">
+					style="-fx-background-color: #2ecc71; -fx-text-fill: #1e1e2f; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 12; -fx-cursor: hand;">
 					<effect>
 						<DropShadow color="rgba(16,185,129,0.4)" radius="10"
 							offsetY="4" />
@@ -92,7 +92,7 @@
 
 				<Button text="Go Back" onAction="#onBackClicked"
 					prefHeight="40.0" prefWidth="420.0"
-					style="-fx-background-color: transparent; -fx-text-fill: #94a3b8; -fx-font-weight: bold; -fx-cursor: hand;" />
+					style="-fx-background-color: transparent; -fx-text-fill: #e74c3c; -fx-font-weight: bold; -fx-cursor: hand;" />
 			</VBox>
 		</VBox>
 

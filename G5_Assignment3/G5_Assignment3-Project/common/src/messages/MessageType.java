@@ -57,6 +57,7 @@ public enum MessageType {
     RETURN_USER_DETAILS,
     UPDATE_USER_DETAILS_REQUEST,
     UPDATE_USER_DETAILS_SUCCESS,
+    UPDATE_USER_PROFILE, 
     
     // --- restaurant waitlist management ---
     WAITLIST_JOINED_SUCCESS,
@@ -117,6 +118,6 @@ public enum MessageType {
     ERROR_RESPONSE,         // Server sends an error message (Content=String)
     SUCCESS_RESPONSE,        // Server confirms successful operation
     
-    TEXT_MESSAGE, 
+    TEXT_MESSAGE,
     
 }

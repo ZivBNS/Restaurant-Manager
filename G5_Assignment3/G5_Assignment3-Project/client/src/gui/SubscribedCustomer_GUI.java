@@ -16,6 +16,8 @@ import javafx.stage.Stage;
 public class SubscribedCustomer_GUI {
 
     @FXML private Label welcomeLabel;
+    private Subscribed_Customer currentUser;
+
 
     /**
      * Called automatically when the FXML is loaded.
@@ -30,23 +32,44 @@ public class SubscribedCustomer_GUI {
 
     @FXML
     void onNewReservation(ActionEvent event) {
-        loadScreen(event, "/gui/AddReservation.fxml", "Create Reservation");
+    	AddReservation_GUI.previousScreen = "/gui/SubscribedCustomer.fxml";
+        loadScreen(event, "/gui/AddReservation.fxml", "New Reservation");
     }
 
     @FXML
     void onManageReservations(ActionEvent event) {
-        // Points to the consolidated screen we built earlier
-        loadScreen(event, "/gui/ViewReservations.fxml", "Manage My Reservations");
+    	ViewReservations_GUI.previousScreen = "/gui/SubscribedCustomer.fxml";
+        loadScreen(event, "/gui/ViewReservations.fxml", "My Reservations");
+    }
+    
+    @FXML 
+    void onUpdateProfile(ActionEvent event) {
+    	loadScreen(event, "/gui/UpdateProfile.fxml", "Personal Details");
     }
 
-    @FXML
+   /* @FXML
     void onUpdateProfile(ActionEvent event) {
-        loadScreen(event, "/gui/UpdateProfile.fxml", "Personal Details");
-    }
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/UpdateProfile.fxml"));
+            Parent root = loader.load();
+
+            UpdateProfile_GUI controller = loader.getController();
+            controller.setUser(currentUser);   // pass the logged-in subscriber
+
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Personal Details");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }*/
+
 
     @FXML
     void onPayBill(ActionEvent event) {
-        loadScreen(event, "/gui/BillPayment.fxml", "Order Payment");
+    	BillPayment_GUI.previousScreen = "/gui/SubscribedCustomer.fxml";
+        loadScreen(event, "/gui/BillPayment.fxml", "Bistro - Bill Payment");
     }
 
     @FXML

@@ -1,141 +1,115 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.Separator?>
-<?import javafx.scene.effect.DropShadow?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.TilePane?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
+<?import javafx.scene.effect.DropShadow?>
 
-<BorderPane fx:id="managerRoot" maxHeight="-Infinity"
-	maxWidth="-Infinity" minHeight="600.0" minWidth="900.0"
-	style="-fx-background-color: #ecf0f1;"
-	xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-	fx:controller="gui.Workers_GUI">
+<BorderPane fx:id="managerRoot"
+            minHeight="600" minWidth="900"
+            style="-fx-background-color: #1e1e2f;"
+            xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="gui.Workers_GUI">
 
-	<top>
-		<VBox alignment="CENTER">
-			<padding>
-				<Insets bottom="20.0" top="30.0" />
-			</padding>
-			<Label text="Employee Panel" textFill="#2c3e50">
-				<font>
-					<Font name="Segoe UI Light" size="48.0" />
-				</font>
-			</Label>
-			<Separator maxWidth="300.0" />
-		</VBox>
-	</top>
+    <top>
+        <VBox alignment="CENTER" spacing="6">
+            <padding>
+                <Insets top="35" bottom="20"/>
+            </padding>
+            <Label text="Employee Panel"
+                   style="-fx-text-fill: white; -fx-font-size: 36px; -fx-font-weight: bold;"/>
+            <Label text="Bistro Management Dashboard"
+                   style="-fx-text-fill: #b0b3c6; -fx-font-size: 13px;"/>
+                   
+            <Separator maxWidth="280" opacity="0.3"/>
+        </VBox>
+    </top>
 
-	<center>
-		<TilePane alignment="CENTER" hgap="30.0" prefColumns="3"
-			prefTileHeight="150.0" prefTileWidth="250.0" vgap="30.0"
-			BorderPane.alignment="CENTER">
-			<padding>
-				<Insets bottom="40.0" left="40.0" right="40.0" top="10.0" />
-			</padding>
+    <center>
+        <TilePane alignment="CENTER" hgap="30" vgap="30"
+                  prefColumns="3" prefTileHeight="150" prefTileWidth="250">
+            <padding>
+                <Insets top="20" left="40" right="40" bottom="40"/>
+            </padding>
 
-			<Button fx:id="btnManageOpeningHours"
-				maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
-				mnemonicParsing="false"
-				style="-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand;"
-				text="Manage Opening Hours" textFill="#34495e">
-				<font>
-					<Font name="Segoe UI Bold" size="18.0" />
-				</font>
-				<effect>
-					<DropShadow color="#0000001a" height="10.0" radius="4.5"
-						width="10.0" />
-				</effect>
-			</Button>
+            <!-- Button Template -->
+            <Button fx:id="btnManageOpeningHours"
+                    text="Manage Opening Hours"
+                    style="-fx-background-color: #2f324a; -fx-text-fill: #b0b3c6;
+                           -fx-font-size: 16px; -fx-font-weight: bold;
+                           -fx-background-radius: 18; -fx-cursor: hand;"
+                           maxWidth="Infinity"
+                           maxHeight="Infinity"
+                           >
+                <effect><DropShadow color="rgba(0,0,0,0.4)" radius="12"/></effect>
+            </Button>
 
-			<Button fx:id="btnManageTables"
-				maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
-				mnemonicParsing="false"
-				style="-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand;"
-				text="Manage Tables" textFill="#34495e">
-				<font>
-					<Font name="Segoe UI Bold" size="18.0" />
-				</font>
-				<effect>
-					<DropShadow color="#0000001a" height="10.0" radius="4.5"
-						width="10.0" />
-				</effect>
-			</Button>
+            <Button fx:id="btnManageTables" text="Manage Tables"
+                    style="-fx-background-color: #2f324a; -fx-text-fill: #b0b3c6;
+                           -fx-font-size: 16px; -fx-font-weight: bold;
+                           -fx-background-radius: 18; -fx-cursor: hand;"
+                    maxWidth="Infinity"
+                    maxHeight="Infinity"
+                           >
+                <effect><DropShadow color="rgba(0,0,0,0.4)" radius="12"/></effect>
+            </Button>
 
-			<Button fx:id="btnManageUsers"
-				maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
-				mnemonicParsing="false"
-				style="-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand;"
-				text="Manage Users" textFill="#34495e">
-				<font>
-					<Font name="Segoe UI Bold" size="18.0" />
-				</font>
-				<effect>
-					<DropShadow color="#0000001a" height="10.0" radius="4.5"
-						width="10.0" />
-				</effect>
-			</Button>
+            <Button fx:id="btnManageUsers" text="Manage Users"
+                    style="-fx-background-color: #2f324a; -fx-text-fill: #b0b3c6;
+                           -fx-font-size: 16px; -fx-font-weight: bold;
+                           -fx-background-radius: 18; -fx-cursor: hand;"
+                    maxWidth="Infinity"
+                    maxHeight="Infinity"
+                           >
+                <effect><DropShadow color="rgba(0,0,0,0.4)" radius="12"/></effect>
+            </Button>
 
-			<Button fx:id="btnReports" maxHeight="1.7976931348623157E308"
-				maxWidth="1.7976931348623157E308" mnemonicParsing="false"
-				style="-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand;"
-				text="View Reports" textFill="#e67e22">
-				<font>
-					<Font name="Segoe UI Bold" size="18.0" />
-				</font>
-				<effect>
-					<DropShadow color="#0000001a" height="10.0" radius="4.5"
-						width="10.0" />
-				</effect>
-				<graphic>
-				</graphic>
-			</Button>
+            <Button fx:id="btnReports" text="View Reports"
+                    style="-fx-background-color: #3a2f1f; -fx-text-fill: #f5c27a;
+                           -fx-font-size: 16px; -fx-font-weight: bold;
+                           -fx-background-radius: 18; -fx-cursor: hand;"
+                    maxWidth="Infinity"
+                    maxHeight="Infinity"
+                           >
+                <effect><DropShadow color="rgba(0,0,0,0.4)" radius="12"/></effect>
+            </Button>
 
-			<Button fx:id="btnManageOrders"
-				maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
-				mnemonicParsing="false"
-				style="-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand;"
-				text="Manage Orders" textFill="#34495e">
-				<font>
-					<Font name="Segoe UI Bold" size="18.0" />
-				</font>
-				<effect>
-					<DropShadow color="#0000001a" height="10.0" radius="4.5"
-						width="10.0" />
-				</effect>
-			</Button>
+            <Button fx:id="btnManageOrders" text="Manage Orders"
+                    style="-fx-background-color: #2f324a; -fx-text-fill: #b0b3c6;
+                           -fx-font-size: 16px; -fx-font-weight: bold;
+                           -fx-background-radius: 18; -fx-cursor: hand;"
+                    maxWidth="Infinity"
+                    maxHeight="Infinity"
+                           >
+                <effect><DropShadow color="rgba(0,0,0,0.4)" radius="12"/></effect>
+            </Button>
 
-			<Button fx:id="btnManageWaitlist"
-				maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
-				mnemonicParsing="false"
-				style="-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand;"
-				text="Manage Waitlist" textFill="#34495e">
-				<font>
-					<Font name="Segoe UI Bold" size="18.0" />
-				</font>
-				<effect>
-					<DropShadow color="#0000001a" height="10.0" radius="4.5"
-						width="10.0" />
-				</effect>
-			</Button>
+            <Button fx:id="btnManageWaitlist" text="Manage Waitlist"
+                    style="-fx-background-color: #2f324a; -fx-text-fill: #b0b3c6;
+                           -fx-font-size: 16px; -fx-font-weight: bold;
+                           -fx-background-radius: 18; -fx-cursor: hand;"
+                    maxWidth="Infinity"
+                    maxHeight="Infinity"
+                           >
+                <effect><DropShadow color="rgba(0,0,0,0.4)" radius="12"/></effect>
+            </Button>
 
-		</TilePane>
-	</center>
+        </TilePane>
+    </center>
 
-	<bottom>
-		<HBox alignment="CENTER_LEFT">
-			<padding>
-				<Insets bottom="20" left="20" right="20" top="20" />
-			</padding>
-			<Button fx:id="btnLogout"
-				style="-fx-background-color: transparent; -fx-text-fill: #c0392b; -fx-underline: true; -fx-cursor: hand;"
-				text="&lt; Log Out" />
-		</HBox>
-	</bottom>
+    <bottom>
+        <HBox alignment="CENTER_LEFT">
+            <padding><Insets left="20" bottom="20"/></padding>
+            <Button fx:id="btnLogout"
+                    text="⟵ Log Out"
+                    style="-fx-background-color: transparent;
+                           -fx-text-fill: #e74c3c;
+                           -fx-font-size: 13px;
+                           -fx-font-weight: bold;
+                           -fx-cursor: hand;"/>
+        </HBox>
+    </bottom>
 
 </BorderPane>

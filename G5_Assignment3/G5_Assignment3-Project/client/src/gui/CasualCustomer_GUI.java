@@ -20,7 +20,8 @@ public class CasualCustomer_GUI {
      */
     @FXML
     private void openNewOrder(ActionEvent event) {
-        loadScreen(event, "/gui/AddReservation.fxml", "Bistro - New Reservation");
+    	AddReservation_GUI.previousScreen = "/gui/CasualCustomer.fxml";
+        loadScreen(event, "/gui/AddReservation.fxml", "New Reservation");
     }
 
     /**
@@ -30,7 +31,8 @@ public class CasualCustomer_GUI {
      */
     @FXML
     private void onViewReservations(ActionEvent event) {
-        loadScreen(event, "/gui/ViewReservations.fxml", "Bistro - My Reservations");
+    	ViewReservations_GUI.previousScreen = "/gui/CasualCustomer.fxml";
+        loadScreen(event, "/gui/ViewReservations.fxml", "My Reservations");
     }
 
     /**
@@ -39,6 +41,7 @@ public class CasualCustomer_GUI {
      */
     @FXML
     private void onBillPaymentClicked(ActionEvent event) {
+        BillPayment_GUI.previousScreen = "/gui/CasualCustomer.fxml";
         loadScreen(event, "/gui/BillPayment.fxml", "Bistro - Bill Payment");
     }
 

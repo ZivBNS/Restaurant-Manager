@@ -19,6 +19,7 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -34,6 +35,8 @@ import messages.MessageType;
  */
 public class ViewReservations_GUI {
 	public static ViewReservations_GUI instance;
+	public static String previousScreen;
+
 
 	@FXML private TableView<Reservation> reservationsTable;
 	@FXML private TableColumn<Reservation, Integer> colCode;
@@ -360,13 +363,22 @@ public class ViewReservations_GUI {
 	}
 
 	@FXML
-	void onBackClicked(ActionEvent event) {
-		try {
-			Parent root = FXMLLoader.load(getClass().getResource("/gui/CasualCustomer.fxml"));
-			Stage stage = (Stage) reservationsTable.getScene().getWindow();
-			stage.setScene(new Scene(root));
-		} catch (Exception e) { e.printStackTrace(); }
+	private void onBackClicked(ActionEvent event) {
+	    instance = null;
+	    try {
+	        String screen = previousScreen != null
+	                ? previousScreen
+	                : "/gui/CasualCustomer.fxml";
+
+	        Parent root = FXMLLoader.load(getClass().getResource(screen));
+	        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+	        stage.setScene(new Scene(root));
+	        stage.setTitle("Bistro");
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
 	}
+
 
 	public void updateTable(List<Reservation> list) {
 		masterData.setAll(list);

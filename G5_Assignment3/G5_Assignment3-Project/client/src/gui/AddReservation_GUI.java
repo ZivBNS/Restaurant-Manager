@@ -32,6 +32,8 @@ public class AddReservation_GUI {
 
     /** Static instance to allow the Client_Controller to access the active screen. */
     public static AddReservation_GUI instance;
+    public static String previousScreen;
+
 
     @FXML private DatePicker datePicker;
     @FXML private ComboBox<String> timeCombo;
@@ -241,12 +243,19 @@ public class AddReservation_GUI {
     private void onBackClicked() {
         instance = null;
         try {
-            Parent root = FXMLLoader.load(getClass().getResource("/gui/CasualCustomer.fxml"));
+            String screen = previousScreen != null
+                    ? previousScreen
+                    : "/gui/CasualCustomer.fxml";
+
+            Parent root = FXMLLoader.load(getClass().getResource(screen));
             Stage stage = (Stage) timeCombo.getScene().getWindow();
             stage.setScene(new Scene(root));
-            stage.setTitle("Casual Customer Menu");
-        } catch (Exception e) { e.printStackTrace(); }
+            stage.setTitle("Bistro");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
+
 
     /**
      * Finalizes the order and sends the reservation request to the server.

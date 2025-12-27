@@ -20,9 +20,10 @@ public class BillPayment_GUI {
 
     public static BillPayment_GUI instance;
 
-    private Reservation currentReservation;
     private int currentBillId = -1;
     private double expectedAmount = 0;
+    public static String previousScreen;
+
 
     @FXML private TextField paymentField;
     @FXML private Button btnPay;
@@ -76,9 +77,16 @@ public class BillPayment_GUI {
     @FXML
     private void onBackClicked(ActionEvent event) {
         try {
-            Parent root = FXMLLoader.load(getClass().getResource("/gui/CasualCustomer.fxml"));
+            String screen = previousScreen != null
+                    ? previousScreen
+                    : "/gui/CasualCustomer.fxml";
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(screen));
+            Parent root = loader.load();
+
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
+            stage.show();
         } catch (Exception e) {
             e.printStackTrace();
         }

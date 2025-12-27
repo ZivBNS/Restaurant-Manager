@@ -5,59 +5,63 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.effect.DropShadow?>
-<?import javafx.scene.shape.Circle?>
 
-<VBox fx:id="connectPane" alignment="CENTER" spacing="30.0" 
-      style="-fx-background-color: #0f172a;" 
-      xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" 
-      fx:controller="gui.ConnectToServer_GUI" prefHeight="600.0" prefWidth="500.0">
-      
-   <children>
-      <VBox alignment="CENTER" spacing="10">
-         <children>
-            <Label text="BISTRO SYSTEM" textFill="#38bdf8" style="-fx-letter-spacing: 3px;">
-               <font>
-                  <Font name="System Bold" size="14.0" />
-               </font>
-            </Label>
-            <Label text="Client Connection" textFill="WHITE">
-               <font>
-                  <Font name="Segoe UI Semibold" size="28.0" />
-               </font>
-            </Label>
-         </children>
-      </VBox>
-      
-      <VBox spacing="20.0" alignment="CENTER" 
-            style="-fx-background-color: #1e293b; -fx-background-radius: 20; -fx-padding: 40;">
-         <effect>
-            <DropShadow color="rgba(0,0,0,0.5)" radius="25" offsetX="0" offsetY="10" />
-         </effect>
-         <children>
-            <VBox spacing="8.0">
-               <children>
-                  <Label text="Server IP Address" textFill="#94a3b8" style="-fx-font-weight: bold;" />
-                  <TextField fx:id="ipField" promptText="e.g. localhost" text="localhost" 
-                             style="-fx-background-color: #0f172a; -fx-text-fill: white; -fx-background-radius: 8; -fx-border-color: #334155; -fx-border-radius: 8; -fx-padding: 12;" />
-               </children>
+<VBox fx:id="connectPane" alignment="CENTER" spacing="30"
+      style="-fx-background-color: #1e1e2f;"
+      xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="gui.ConnectToServer_GUI"
+      prefHeight="600" prefWidth="500">
+
+    <children>
+        <VBox alignment="CENTER" spacing="8">
+            <Label text="BISTRO SYSTEM"
+                   style="-fx-text-fill: #b0b3c6; -fx-letter-spacing: 2px;"/>
+
+            <Label text="Client Connection"
+                   style="-fx-text-fill: white; -fx-font-size: 28px; -fx-font-weight: bold;"/>
+        </VBox>
+
+        <VBox spacing="20" alignment="CENTER"
+              style="-fx-background-color: #26283b; -fx-background-radius: 22; -fx-padding: 40;">
+            <effect>
+                <DropShadow color="rgba(0,0,0,0.45)" radius="25" offsetY="8"/>
+            </effect>
+
+            <VBox spacing="8">
+                <Label text="Server IP Address"
+                       style="-fx-text-fill: #b0b3c6; -fx-font-weight: bold;"/>
+                <TextField fx:id="ipField" promptText="e.g. localhost" text="localhost"
+                           style="-fx-background-color: #2f324a; -fx-text-fill: white;
+                                  -fx-background-radius: 12; -fx-padding: 12;"/>
             </VBox>
-            
-            <VBox spacing="8.0">
-               <children>
-                  <Label text="Network Port" textFill="#94a3b8" style="-fx-font-weight: bold;" />
-                  <TextField fx:id="portField" promptText="5555" text="5555" 
-                             style="-fx-background-color: #0f172a; -fx-text-fill: white; -fx-background-radius: 8; -fx-border-color: #334155; -fx-border-radius: 8; -fx-padding: 12;" />
-               </children>
+
+            <VBox spacing="8">
+                <Label text="Network Port"
+                       style="-fx-text-fill: #b0b3c6; -fx-font-weight: bold;"/>
+                <TextField fx:id="portField" promptText="5555" text="5555"
+                           style="-fx-background-color: #2f324a; -fx-text-fill: white;
+                                  -fx-background-radius: 12; -fx-padding: 12;"/>
             </VBox>
-            
-            <Region prefHeight="10.0" />
-            
-            <Button fx:id="connectBtn" maxWidth="Infinity" mnemonicParsing="false" onAction="#onConnectClicked" 
-                    text="ESTABLISH CONNECTION" prefHeight="45.0"
-                    style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-cursor: hand;" />
-            
-            <Label fx:id="errorLabel" textFill="#f87171" wrapText="true" alignment="CENTER" />
-         </children>
-      </VBox>
-   </children>
+
+            <Region prefHeight="10"/>
+
+            <Button fx:id="connectBtn"
+                    maxWidth="Infinity"
+                    mnemonicParsing="false"
+                    onAction="#onConnectClicked"
+                    text="ESTABLISH CONNECTION"
+                    prefHeight="45"
+                    style="-fx-background-color: #2ecc71;
+                           -fx-text-fill: #1e1e2f;
+                           -fx-font-weight: bold;
+                           -fx-background-radius: 14;
+                           -fx-cursor: hand;"/>
+
+            <Label fx:id="errorLabel"
+                   style="-fx-text-fill: #e74c3c;"
+                   wrapText="true"
+                   alignment="CENTER"/>
+        </VBox>
+    </children>
 </VBox>

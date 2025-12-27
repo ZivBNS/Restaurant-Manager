@@ -43,7 +43,7 @@ public class Server_GUI extends Application {
 
         // --- Header Section (Reduced padding) ---
         Label titleLabel = new Label("SERVER CONTROL PANEL");
-        titleLabel.setTextFill(Color.web("#38bdf8"));
+        titleLabel.setTextFill(Color.web("WHITE"));
         titleLabel.setFont(Font.font("Segoe UI", FontWeight.BOLD, 20));
         
         VBox header = new VBox(titleLabel);
@@ -53,7 +53,8 @@ public class Server_GUI extends Application {
         // --- Connection Bar (Changed to HBox for compactness) ---
         HBox connectionBar = new HBox(15);
         connectionBar.setAlignment(Pos.CENTER_LEFT);
-        connectionBar.setStyle("-fx-background-color: #1e293b; -fx-background-radius: 12; -fx-padding: 15;");
+        connectionBar.setStyle("-fx-background-color: #26283b; -fx-background-radius: 18; -fx-padding: 18;");
+
         connectionBar.setEffect(new DropShadow(10, Color.rgb(0, 0, 0, 0.3)));
 
         Label portLabel = new Label("Port:");
@@ -63,38 +64,38 @@ public class Server_GUI extends Application {
         portField = new TextField("5555");
         portField.setPrefWidth(80);
         portField.setPrefHeight(35);
-        portField.setStyle("-fx-background-color: #0f172a; -fx-text-fill: white; -fx-background-radius: 5; -fx-border-color: #334155; -fx-border-radius: 5;");
+        portField.setStyle("-fx-background-color: #2f324a; -fx-text-fill: white; -fx-background-radius: 10;");
 
         connectBtn = new Button("START SERVER");
         connectBtn.setPrefHeight(35);
         HBox.setHgrow(connectBtn, Priority.ALWAYS);
         connectBtn.setMaxWidth(Double.MAX_VALUE);
-        connectBtn.setStyle("-fx-background-color: #10b981; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand;");
+        connectBtn.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: #1e1e2f; -fx-font-weight: bold; -fx-background-radius: 14; -fx-cursor: hand;");
         
         exitBtn = new Button("SHUTDOWN");
         exitBtn.setPrefHeight(35);
         exitBtn.setDisable(true);
         exitBtn.setMinWidth(120);
-        exitBtn.setStyle("-fx-background-color: #e11d48; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand;");
+        exitBtn.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 14; -fx-cursor: hand;");
 
         // Add all to the horizontal bar
         connectionBar.getChildren().addAll(portLabel, portField, connectBtn, exitBtn);
 
         // --- Log Section (Expanded) ---
         Label logLabel = new Label("LIVE SERVER LOG");
-        logLabel.setTextFill(Color.web("#94a3b8"));
+        logLabel.setTextFill(Color.web("#b0b3c6"));
         logLabel.setFont(Font.font("Segoe UI", FontWeight.BOLD, 12));
         logLabel.setPadding(new Insets(10, 0, 5, 5));
 
         logArea = new TextArea();
         logArea.setEditable(false);
         // Using Priority.ALWAYS and increasing initial prefHeight
-        logArea.setStyle("-fx-control-inner-background: #0f172a; -fx-text-fill: #10b981; -fx-font-family: 'Consolas'; -fx-font-size: 13px; -fx-background-radius: 8; -fx-border-color: #334155; -fx-border-radius: 8;");
+        logArea.setStyle("-fx-control-inner-background: #2f324a; -fx-text-fill: #2ecc71; -fx-font-family: 'Consolas'; -fx-font-size: 13px; -fx-background-radius: 14;");
         VBox.setVgrow(logArea, Priority.ALWAYS);
 
         // --- Main Layout Assembly ---
         VBox root = new VBox(5);
-        root.setStyle("-fx-background-color: #0f172a;");
+        root.setStyle("-fx-background-color: #1e1e2f;");
         root.setPadding(new Insets(20));
         root.setAlignment(Pos.TOP_CENTER);
         root.getChildren().addAll(header, connectionBar, logLabel, logArea);
