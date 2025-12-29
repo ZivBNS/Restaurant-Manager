@@ -26,7 +26,9 @@ public class Reservation_Controller {
     private static final Waitlist_Repository WaitlistRepository = Waitlist_Repository.getInstance();
 
     public static Message handleMessage(Message msg) {
+    	
         switch (msg.getType()) {
+        	case CREATE_INSTANT_RESERVATION: return createInstantReservation(msg);
             case CREATE_RESERVATION: return createReservation(msg);
             case UPDATE_RESERVATION_REQUEST: return updateReservation(msg);
             case GET_RESERVATIONS_BY_USER: return getReservationsByUser(msg);
@@ -46,6 +48,13 @@ public class Reservation_Controller {
         return new Message(
                 MessageType.RETURN_LATEST_RESERVATION_BY_PHONE,r);
 	}
+	private static Message createInstantReservation(Message msg) {
+		Message tryToCreateReservation = createReservation(msg);
+		if (tryToCreateReservation.getType().equals(MessageType.RESERVATION_FAILED_NO_TABLE))
+			return new Message(MessageType.INSTANT_RESERVATION_SUCCESS,tryToCreateReservation.getContent());
+		return new Message(MessageType.INSTANT_RESERVATION_FAILED);
+	}
+
 
 	private static Message createReservation(Message msg) {
         try {

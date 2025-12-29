@@ -34,6 +34,12 @@ public enum MessageType {
     RETURN_ALL_PENDING_RESERVATIONS,
     ADMIN_UPDATE_RESERVATION,
     ADMIN_UPDATE_SUCCESS,
+    
+    //for instant reservaionts
+    CREATE_INSTANT_RESERVATION,
+    INSTANT_RESERVATION_FAILED,
+    INSTANT_RESERVATION_SUCCESS,
+
     //***********************************added by oshri***//
     // --- Register new user account ---
     REGISTER_USER_REQUEST,
@@ -118,6 +124,6 @@ public enum MessageType {
     ERROR_RESPONSE,         // Server sends an error message (Content=String)
     SUCCESS_RESPONSE,        // Server confirms successful operation
     
-    TEXT_MESSAGE,
+    TEXT_MESSAGE,  
     
 }

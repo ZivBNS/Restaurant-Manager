@@ -1,13 +1,16 @@
 package gui;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -19,14 +22,11 @@ import entities.LoginData;
 import entities.Reservation;
 import entities.Subscribed_Customer;
 
-/**
- * Controller for the Restaurant Terminal (Self-Service Kiosk).
- * Handles check-ins, instant bookings, bill payments, and cancellations.
- */
 public class Terminal_GUI {
 
     public static Terminal_GUI instance;
     private Subscribed_Customer loggedInUser = null; 
+    private VBox waitlistProposalBox;
 
     @FXML private BorderPane terminalRoot;
     @FXML private AnchorPane welcomeView;
@@ -53,10 +53,6 @@ public class Terminal_GUI {
     @FXML private Button btnSubmitForgot, btnCloseForgot;
     @FXML private ListView<String> lvReservations;
 
-    /**
-     * Initializes the terminal controller. 
-     * Sets up event handlers and UI defaults.
-     */
     @FXML
     public void initialize() {
         instance = this;
@@ -210,7 +206,7 @@ public class Terminal_GUI {
         });
         hlForgotCode.setVisible(false);
     }
-//*************************************************************//
+
     private void handleInstantBookingSubmit() {
         int diners = instDinersSpinner.getValue();
 
@@ -265,6 +261,12 @@ public class Terminal_GUI {
         if (formToShow != null) formToShow.setVisible(true);
         billDetailsBox.setVisible(false);
         if (forgotCodeView != null) forgotCodeView.setVisible(false);
+        
+        if (waitlistProposalBox != null) {
+            waitlistProposalBox.setVisible(false);
+            waitlistProposalBox.setManaged(false);
+        }
+        instStatusLabel.setText("");
     }
 
     private void showTerminal(String name) {
@@ -377,5 +379,52 @@ public class Terminal_GUI {
                 }
             }
         });
+	}
+    
+	public void onInstantReservationFailedResponse() {
+        Platform.runLater(() -> {
+            instStatusLabel.setText(""); 
+
+            if (waitlistProposalBox == null) {
+                waitlistProposalBox = new VBox(10);
+                waitlistProposalBox.setAlignment(Pos.CENTER);
+                waitlistProposalBox.setStyle("-fx-background-color: #fff3cd; -fx-padding: 10; -fx-background-radius: 5; -fx-border-color: #ffeeba; -fx-border-width: 1;");
+
+                Label msg = new Label("No tables available at the moment.\nWould you like to join the Waitlist?");
+                msg.setWrapText(true);
+                msg.setTextAlignment(TextAlignment.CENTER);
+                msg.setStyle("-fx-text-fill: #856404; -fx-font-weight: bold; -fx-font-size: 13px;");
+
+                HBox buttonsBox = new HBox(15);
+                buttonsBox.setAlignment(Pos.CENTER);
+
+                Button btnJoin = new Button("Join Waitlist");
+                btnJoin.setStyle("-fx-background-color: #28a745; -fx-text-fill: white; -fx-cursor: hand; -fx-font-weight: bold;");
+                btnJoin.setOnAction(e -> {
+                    System.out.println("Entered Waitlist");
+                    waitlistProposalBox.setVisible(false);
+                    waitlistProposalBox.setManaged(false);
+                });
+
+                Button btnBack = new Button("Return");
+                btnBack.setStyle("-fx-background-color: #6c757d; -fx-text-fill: white; -fx-cursor: hand;");
+                btnBack.setOnAction(e -> {
+                    waitlistProposalBox.setVisible(false);
+                    waitlistProposalBox.setManaged(false);
+                });
+
+                buttonsBox.getChildren().addAll(btnJoin, btnBack);
+                waitlistProposalBox.getChildren().addAll(msg, buttonsBox);
+
+                instantForm.getChildren().add(waitlistProposalBox);
+            }
+
+            waitlistProposalBox.setVisible(true);
+            waitlistProposalBox.setManaged(true);
+        });
+	}
+	
+	public void onInstantReservationSuccessResponse(int confirmationCodeMsg) {
+		
 	}
 }

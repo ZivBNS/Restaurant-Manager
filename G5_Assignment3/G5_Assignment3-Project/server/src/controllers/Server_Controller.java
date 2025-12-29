@@ -39,6 +39,8 @@ public class Server_Controller extends AbstractServer {
 
 		// --- Reservations ---
 		Command resCmd = new ReservationCommand();
+		commands.put(MessageType.CREATE_INSTANT_RESERVATION, resCmd);
+	
 		commands.put(MessageType.CREATE_RESERVATION, resCmd);
 		commands.put(MessageType.CANCEL_RESERVATION, resCmd);
 		commands.put(MessageType.CANCEL_RESERVATION_BY_CODE, resCmd);

@@ -128,7 +128,31 @@ public class Client_Controller implements ChatIF {
         // -----------------------------------------------------------
         // Reservation Actions
         // -----------------------------------------------------------
+        
+        //instant reservation from terminal
+        
+        responseHandlers.put(MessageType.INSTANT_RESERVATION_FAILED , new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                if (AddReservation_GUI.instance != null)
+                	Terminal_GUI.instance.onInstantReservationFailedResponse();
+                }
+        });
+        
+        responseHandlers.put(MessageType.INSTANT_RESERVATION_SUCCESS, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                javafx.application.Platform.runLater(() -> {
+                    if (Terminal_GUI.instance != null) {
+                        int code = (int) msg.getContent();
+                        Terminal_GUI.instance.onInstantReservationSuccessResponse(code);
+                    }
+                });
+            }
+        });
+        
 
+        
         responseHandlers.put(MessageType.RESERVATION_CONFIRMED, new ResponseHandler() {
             @Override
             public void handle(Message msg) {
@@ -487,6 +511,10 @@ public class Client_Controller implements ChatIF {
 
     public void sendNewReservationRequest(Reservation newRes) {
         sendComplexObject(new Message(MessageType.CREATE_RESERVATION, newRes));
+    }
+    
+    public void sendNewInstantReservationRequest(Reservation newRes) {
+        sendComplexObject(new Message(MessageType.CREATE_INSTANT_RESERVATION, newRes));
     }
 
     public void sendGetOpeningHoursRequest() {
