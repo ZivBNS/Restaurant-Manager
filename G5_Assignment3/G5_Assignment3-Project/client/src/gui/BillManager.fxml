@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="gui.BillManager_GUI">
+
+    <top>
+        <VBox spacing="8">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
+
+            <Label text="Bill Manager" style="-fx-font-size:18; -fx-font-weight:bold;"/>
+
+            <GridPane hgap="8" vgap="8">
+                <Label text="Reservation ID:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <TextField fx:id="reservationIDField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                <Label text="Total Amount:" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+                <TextField fx:id="totalAmountField" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+
+                <Label text="Bill Details:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <TextField fx:id="billDetailsField" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                <Label text="Discount %:" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+                <TextField fx:id="discountField" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+            </GridPane>
+
+            <HBox spacing="10">
+                <Button text="Add" onAction="#addBill"/>
+                <Button text="Delete" onAction="#deleteBill"/>
+                <Button text="Mark Paid" onAction="#markPaid"/>
+            </HBox>
+        </VBox>
+    </top>
+
+    <center>
+        <TableView fx:id="table">
+            <columns>
+                <TableColumn fx:id="resIdCol" text="Reservation ID" prefWidth="120"/>
+                <TableColumn fx:id="amountCol" text="Total Amount" prefWidth="100"/>
+                <TableColumn fx:id="detailsCol" text="Bill Details" prefWidth="150"/>
+                <TableColumn fx:id="discountCol" text="Discount %" prefWidth="90"/>
+                <TableColumn fx:id="statusCol" text="Status" prefWidth="80"/>
+            </columns>
+        </TableView>
+    </center>
+
+</BorderPane>
+
+
+
+
+
+
+
+
+

@@ -23,6 +23,10 @@
                <font> <Font name="System Bold" size="13.0" /> </font>
                <HBox.margin> <Insets right="10.0" /> </HBox.margin>
             </Button>
+            <Button onAction="#onCreateBillClicked" style="-fx-background-color: #27ae60;" text="Create Bill" textFill="WHITE">
+               <font> <Font name="System Bold" size="13.0" /> </font>
+               <HBox.margin> <Insets right="10.0" /> </HBox.margin>
+            </Button>
             <Button onAction="#refreshAdminData" style="-fx-background-color: #3498db;" text="Refresh" textFill="WHITE">
                <HBox.margin> <Insets right="20.0" /> </HBox.margin>
             </Button>

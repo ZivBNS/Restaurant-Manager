@@ -227,6 +227,21 @@ public class ManageOrders_GUI {
             refreshAdminData();
         } catch (Exception e) { e.printStackTrace(); }
     }
+    
+    @FXML
+    void onCreateBillClicked(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/BillManager.fxml"));
+            Parent root = loader.load();
+            Stage popupStage = new Stage();
+            popupStage.setTitle("Bill Manager");
+            popupStage.initModality(Modality.WINDOW_MODAL);
+            popupStage.initOwner(adminTable.getScene().getWindow());
+            popupStage.setScene(new Scene(root));
+            popupStage.showAndWait();
+            refreshAdminData();
+        } catch (Exception e) { e.printStackTrace(); }
+    }
 
     @FXML
     void onDeleteClicked(ActionEvent event) {

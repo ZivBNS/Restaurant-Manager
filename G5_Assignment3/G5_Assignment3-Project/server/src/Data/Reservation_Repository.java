@@ -362,4 +362,41 @@ public class Reservation_Repository {
         }
     }
 
+public Reservation getById(int id) {
+    String sql = "SELECT * FROM reservations WHERE ID = ?";
+    PooledConnection pConn = null;
+    
+    try {
+        pConn = db.getConnection();
+        java.sql.Connection conn = pConn.getConnection();
+        java.sql.PreparedStatement ps = conn.prepareStatement(sql);
+        ps.setInt(1, id);
+        
+        java.sql.ResultSet rs = ps.executeQuery();
+        
+        if (rs.next()) {
+          
+            return new Reservation(
+                rs.getInt("ID"),
+                (Integer) rs.getObject("UserID"), 
+                (Integer) rs.getObject("TableID"),
+                rs.getString("Phone"),
+                rs.getString("Email"),
+                rs.getTimestamp("ReservationStartTime").toLocalDateTime(),
+                rs.getTimestamp("ReservationEndTime") != null ? rs.getTimestamp("ReservationEndTime").toLocalDateTime() : null,
+                rs.getTimestamp("ActualArrivalTime") != null ? rs.getTimestamp("ActualArrivalTime").toLocalDateTime() : null, 
+                rs.getTimestamp("ActualDepartureTime") != null ? rs.getTimestamp("ActualDepartureTime").toLocalDateTime() : null,
+                rs.getInt("NumberOfDiners"),
+                rs.getInt("ConfirmationCode"),
+                rs.getString("Status"),
+                rs.getTimestamp("creationTime").toLocalDateTime()
+            );
+        }
+    } catch (Exception e) {
+        System.out.println("Error in getById: " + e.getMessage());
+    } finally {
+        if (pConn != null) db.releaseConnection(pConn);
+    }
+    return null; // לא נמצא
+}
 }

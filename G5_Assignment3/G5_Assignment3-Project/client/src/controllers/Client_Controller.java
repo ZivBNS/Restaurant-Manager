@@ -50,7 +50,8 @@ public class Client_Controller implements ChatIF {
      * Sets up the mapping between MessageTypes and their specific handling logic.
      * This uses Anonymous Inner Classes to avoid Lambda expressions.
      */
-    private void initializeHandlers() {
+    @SuppressWarnings("unchecked")
+	private void initializeHandlers() {
         responseHandlers = new HashMap<>();
 
         // -----------------------------------------------------------
@@ -234,6 +235,12 @@ public class Client_Controller implements ChatIF {
                 if (BillPayment_GUI.instance != null) {
                     Platform.runLater(() -> BillPayment_GUI.instance.onPaymentSuccess());
                 }
+            }
+        });
+        
+        responseHandlers.put(MessageType.RETURN_ALL_BILLS, msg -> {
+            if (BillManager_GUI.instance != null) {
+                BillManager_GUI.instance.updateBillsTable((List<Bill>) msg.getContent());
             }
         });
 

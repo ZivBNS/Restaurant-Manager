@@ -91,6 +91,10 @@ public enum MessageType {
     RETURN_BILL_BY_RESERVATION_ID,
     BILL_PAYMENT_REQUEST, 
     GET_LATEST_BILL_BY_PHONE,
+    GET_ALL_BILLS,
+    RETURN_ALL_BILLS,
+    CREATE_BILL,
+    DELETE_BILL,
 
     
     //--- Opening hours ---
