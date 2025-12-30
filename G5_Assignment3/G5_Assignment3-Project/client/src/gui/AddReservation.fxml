@@ -1,103 +1,80 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.control.*?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.effect.DropShadow?>
-<?import javafx.scene.text.Font?>
-<?import javafx.scene.shape.Line?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
 
-<AnchorPane prefHeight="750.0" prefWidth="550.0"
-	style="-fx-background-color: #1e1e2f;"
-	xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-	fx:controller="gui.AddReservation_GUI">
+<BorderPane prefHeight="750.0" prefWidth="550.0" stylesheets="/Theme/application.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.AddReservation_GUI">
 
-	<children>
-		<VBox alignment="CENTER" spacing="5" AnchorPane.leftAnchor="0"
-			AnchorPane.rightAnchor="0" AnchorPane.topAnchor="50">
-			<Label text="BOOK A TABLE" textFill="WHITE"
-				style="-fx-letter-spacing: 2px;">
-				<font>
-					<Font name="System Bold" size="12.0" />
-				</font>
-			</Label>
-			<Label text="New Reservation" textFill="WHITE">
-				<font>
-					<Font name="Segoe UI Semibold" size="36.0" />
-				</font>
-			</Label>
-			<Line endX="50.0" stroke="WHITE" strokeWidth="2.0" />
-		</VBox>
+    <top>
+        <VBox alignment="CENTER" spacing="10">
+            <padding>
+                <Insets bottom="20" top="40" />
+            </padding>
+            <children>
+                <Label styleClass="header-title" text="New Reservation" />
+                <Label styleClass="card-label" text="Book a Table" />
+                <Separator maxWidth="300" opacity="0.35" />
+            </children>
+        </VBox>
+    </top>
 
-		<VBox spacing="25" alignment="TOP_CENTER"
-			AnchorPane.leftAnchor="40" AnchorPane.rightAnchor="40"
-			AnchorPane.topAnchor="170"
-			style="-fx-background-color: #26283b; -fx-background-radius: 25; -fx-padding: 40;">
+    <center>
+        <VBox alignment="CENTER">
+            <padding>
+                <Insets bottom="20" left="20" right="20" top="10" />
+            </padding>
+            <children>
+                <VBox maxWidth="450" spacing="25" styleClass="card">
+                    <padding>
+                        <Insets bottom="40" left="40" right="40" top="40" />
+                    </padding>
+                    <children>
 
-			<effect>
-				<DropShadow color="rgba(0,0,0,0.6)" radius="30"
-					offsetX="0" offsetY="15" />
-			</effect>
+                        <VBox spacing="8">
+                            <children>
+                                <Label styleClass="card-label" text="How many guests?" />
+                                <Spinner fx:id="guestsSpinner" editable="true" maxWidth="Infinity" prefHeight="35.0" />
+                            </children>
+                        </VBox>
 
-			<VBox spacing="20">
-				<VBox spacing="8">
-					<Label text="How many guests?" textFill="#94a3b8"
-						style="-fx-font-weight: bold;" />
-					<Spinner fx:id="guestsSpinner" prefHeight="45.0"
-						prefWidth="420.0" editable="true"
-						style="-fx-background-color: #0f172a; 
-                -fx-control-inner-background: #1e293b; 
-                -fx-text-fill: white; 
-                -fx-background-radius: 10; 
-                -fx-border-radius: 10; 
-                -fx-border-color: #334155; 
-                -fx-font-size: 16px;" />
-				</VBox>
+                        <VBox spacing="8">
+                            <children>
+                                <Label styleClass="card-label" text="Pick a date" />
+                                <DatePicker fx:id="datePicker" editable="false" maxWidth="Infinity" prefHeight="35.0" />
+                            </children>
+                        </VBox>
 
-				<VBox spacing="8">
-					<Label text="Pick a date" textFill="#94a3b8"
-						style="-fx-font-weight: bold;" />
-					<DatePicker fx:id="datePicker" prefHeight="45.0" prefWidth="420.0" editable="false"
-            style="-fx-control-inner-background: #1e293b; 
-                   -fx-background-radius: 10; 
-                   -fx-text-inner-color: #f1f5f9; 
-                   -fx-font-weight: bold;
-                   -fx-font-size: 15px;" />
-				</VBox>
+                        <VBox spacing="8">
+                            <children>
+                                <Label styleClass="card-label" text="Available time slots" />
+                                <ComboBox fx:id="timeCombo" maxWidth="Infinity" prefHeight="35.0" promptText="Select a slot" />
+                            </children>
+                        </VBox>
 
-				<VBox spacing="8">
-					<Label text="Available time slots" textFill="#94a3b8"
-						style="-fx-font-weight: bold;" />
-					<ComboBox fx:id="timeCombo" prefHeight="45.0" prefWidth="420.0" promptText="Select a slot"
-          styleClass="dark-combo"
-          style="-fx-background-color: #0f172a; 
-                 -fx-background-radius: 10; 
-                 -fx-border-radius: 10;
-                 -fx-border-color: #334155;
-                 -fx-font-size: 15px;" />
-				</VBox>
-			</VBox>
+                        <Separator opacity="0.3">
+                            <VBox.margin>
+                                <Insets bottom="10" top="10" />
+                            </VBox.margin>
+                        </Separator>
 
-			<Region prefHeight="10" />
+                        <VBox alignment="CENTER" spacing="15">
+                            <children>
+                                <Button maxWidth="Infinity" onAction="#onSaveOrderClicked" prefHeight="45.0" styleClass="button, btn-primary" text="Confirm Reservation" />
+                                <Button maxWidth="Infinity" onAction="#onBackClicked" prefHeight="45.0" styleClass="button, btn-secondary" text="Go Back" />
+                            </children>
+                        </VBox>
 
-			<VBox spacing="12" alignment="CENTER">
-				<Button text="Confirm Reservation"
-					onAction="#onSaveOrderClicked" prefHeight="50.0" prefWidth="420.0"
-					style="-fx-background-color: #2ecc71; -fx-text-fill: #1e1e2f; -fx-font-weight: bold; -fx-font-size: 16px; -fx-background-radius: 12; -fx-cursor: hand;">
-					<effect>
-						<DropShadow color="rgba(16,185,129,0.4)" radius="10"
-							offsetY="4" />
-					</effect>
-				</Button>
+                    </children>
+                </VBox>
+            </children>
+        </VBox>
+    </center>
 
-				<Button text="Go Back" onAction="#onBackClicked"
-					prefHeight="40.0" prefWidth="420.0"
-					style="-fx-background-color: transparent; -fx-text-fill: #e74c3c; -fx-font-weight: bold; -fx-cursor: hand;" />
-			</VBox>
-		</VBox>
-
-		<HBox alignment="CENTER" spacing="5" AnchorPane.bottomAnchor="40"
-			AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
-		</HBox>
-	</children>
-</AnchorPane>
+</BorderPane>

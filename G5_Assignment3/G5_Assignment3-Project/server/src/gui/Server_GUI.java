@@ -9,13 +9,9 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import java.io.IOException;
@@ -25,10 +21,6 @@ import Data.Reservation_Repository;
 import Data.Table_Repository;
 import Data.Waitlist_Repository;
 
-/**
- * Modern Graphical User Interface for the Bistro Server Management.
- * Refactored for a compact connection header and expanded log area.
- */
 public class Server_GUI extends Application {
 
     private Server_Controller serverController;
@@ -41,66 +33,62 @@ public class Server_GUI extends Application {
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Bistro System | Server Management");
 
-        // --- Header Section (Reduced padding) ---
+        // --- Header Section ---
         Label titleLabel = new Label("SERVER CONTROL PANEL");
-        titleLabel.setTextFill(Color.web("WHITE"));
-        titleLabel.setFont(Font.font("Segoe UI", FontWeight.BOLD, 20));
+        titleLabel.getStyleClass().add("header-title"); // שימוש ב-CSS
         
         VBox header = new VBox(titleLabel);
         header.setAlignment(Pos.CENTER);
         header.setPadding(new Insets(0, 0, 15, 0));
 
-        // --- Connection Bar (Changed to HBox for compactness) ---
+        // --- Connection Bar ---
         HBox connectionBar = new HBox(15);
         connectionBar.setAlignment(Pos.CENTER_LEFT);
-        connectionBar.setStyle("-fx-background-color: #26283b; -fx-background-radius: 18; -fx-padding: 18;");
-
-        connectionBar.setEffect(new DropShadow(10, Color.rgb(0, 0, 0, 0.3)));
+        connectionBar.setPadding(new Insets(20)); // ריווח פנימי לכרטיס
+        connectionBar.getStyleClass().add("card"); // עיצוב כרטיס מה-CSS
 
         Label portLabel = new Label("Port:");
-        portLabel.setTextFill(Color.web("#f1f5f9"));
-        portLabel.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 14));
+        portLabel.getStyleClass().add("card-label"); // טקסט תווית מה-CSS
 
         portField = new TextField("5555");
         portField.setPrefWidth(80);
         portField.setPrefHeight(35);
-        portField.setStyle("-fx-background-color: #2f324a; -fx-text-fill: white; -fx-background-radius: 10;");
+        // TextField מקבל עיצוב אוטומטי מה-CSS הכללי
 
         connectBtn = new Button("START SERVER");
         connectBtn.setPrefHeight(35);
         HBox.setHgrow(connectBtn, Priority.ALWAYS);
         connectBtn.setMaxWidth(Double.MAX_VALUE);
-        connectBtn.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: #1e1e2f; -fx-font-weight: bold; -fx-background-radius: 14; -fx-cursor: hand;");
-        
+        connectBtn.getStyleClass().addAll("button", "btn-primary"); // כפתור ראשי (זהב)
+
         exitBtn = new Button("SHUTDOWN");
         exitBtn.setPrefHeight(35);
         exitBtn.setDisable(true);
         exitBtn.setMinWidth(120);
-        exitBtn.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 14; -fx-cursor: hand;");
+        exitBtn.getStyleClass().addAll("button", "btn-danger"); // כפתור סכנה (אדום)
 
-        // Add all to the horizontal bar
+        // הוספת הרכיבים לבר העליון
         connectionBar.getChildren().addAll(portLabel, portField, connectBtn, exitBtn);
 
-        // --- Log Section (Expanded) ---
+        // --- Log Section ---
         Label logLabel = new Label("LIVE SERVER LOG");
-        logLabel.setTextFill(Color.web("#b0b3c6"));
-        logLabel.setFont(Font.font("Segoe UI", FontWeight.BOLD, 12));
+        logLabel.getStyleClass().add("card-label");
         logLabel.setPadding(new Insets(10, 0, 5, 5));
 
         logArea = new TextArea();
         logArea.setEditable(false);
-        // Using Priority.ALWAYS and increasing initial prefHeight
-        logArea.setStyle("-fx-control-inner-background: #2f324a; -fx-text-fill: #2ecc71; -fx-font-family: 'Consolas'; -fx-font-size: 13px; -fx-background-radius: 14;");
         VBox.setVgrow(logArea, Priority.ALWAYS);
+        logArea.getStyleClass().add("console-log"); // מחלקה ייעודית ללוג (ראה CSS למטה)
 
         // --- Main Layout Assembly ---
-        VBox root = new VBox(5);
-        root.setStyle("-fx-background-color: #1e1e2f;");
+        VBox root = new VBox(10);
         root.setPadding(new Insets(20));
         root.setAlignment(Pos.TOP_CENTER);
+        // Root מקבל אוטומטית את צבע הרקע מה-CSS כי הוספנו את ה-Stylesheet ל-Scene
+
         root.getChildren().addAll(header, connectionBar, logLabel, logArea);
 
-        // --- Event Handlers ---
+        // --- Event Handlers (ללא שינוי) ---
         connectBtn.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
@@ -122,11 +110,15 @@ public class Server_GUI extends Application {
             }
         });
 
-        // Adjusted scene size for horizontal layout
         Scene scene = new Scene(root, 750, 800);
+        // *** טעינת קובץ ה-CSS ***
+        scene.getStylesheets().add(getClass().getResource("/Theme/application.css").toExternalForm());
+        
         primaryStage.setScene(scene);
         primaryStage.show();
     }
+
+    // --- Logic Methods (ללא שינוי) ---
 
     private void closeProgram() {
         if (serverController != null) {

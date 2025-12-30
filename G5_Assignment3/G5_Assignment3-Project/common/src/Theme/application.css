@@ -1,0 +1,428 @@
+/* ==============================================
+   Theme: "Modern Matte Luxury"
+   ============================================== */
+
+.root {
+    /* רקע: כחול-פחם עמוק מאוד (כמעט שחור) */
+    -fx-background-color: #111315; 
+    -fx-font-family: "Segoe UI", "Roboto", sans-serif;
+}
+
+/* --- אזור כותרת עליונה (Header) לכל העמודים --- */
+.page-header {
+    -fx-background-color: #1a1d26; 
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 10, 0, 0, 2);
+}
+
+/* --- כותרות ראשיות --- */
+.header-title {
+    -fx-font-size: 24px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #ffffff;
+    -fx-border-color: transparent transparent transparent #c8a165; 
+    -fx-border-width: 0 0 0 4;
+    -fx-padding: 0 0 0 15;
+}
+
+/* --- כרטיסים (Cards) --- */
+.card, .titled-pane > .content {
+    -fx-background-color: #1c1e24; 
+    -fx-background-radius: 12; 
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 30, 0, 0, 10); 
+}
+
+/* עיצוב החלק העליון של TitledPane */
+.titled-pane > .title {
+    -fx-background-color: #1c1e24; 
+    -fx-background-radius: 12 12 0 0;
+    -fx-text-fill: #c8a165; 
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-border-color: transparent transparent #2a2d35 transparent; 
+    -fx-padding: 12 15;
+}
+
+/* טקסט בתוך כרטיסים */
+.card-label {
+    -fx-text-fill: #8a8d96; 
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+}
+
+/* --- כפתורים (General) --- */
+.button {
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 8 20;
+    -fx-background-insets: 0;
+    -fx-effect: none; 
+    -fx-border-width: 0;
+}
+
+/* כפתור ראשי (שמפניה/ברונזה) */
+.btn-primary, .btn-success {
+    -fx-background-color: #c8a165; 
+    -fx-text-fill: #111315; 
+}
+
+.btn-primary:hover, .btn-success:hover {
+    -fx-background-color: #dcc08e; 
+}
+
+/* כפתור מחיקה (Red) */
+.btn-danger {
+    -fx-background-color: rgba(239, 68, 68, 0.1); 
+    -fx-text-fill: #ef4444; 
+    -fx-border-color: #ef4444;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+}
+
+.btn-danger:hover {
+    -fx-background-color: #ef4444;
+    -fx-text-fill: white;
+}
+
+/* כפתור משני (Ghost Button) */
+.btn-secondary {
+    -fx-background-color: transparent;
+    -fx-text-fill: #8a8d96;
+    -fx-border-color: #3f424b;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+}
+
+.btn-secondary:hover {
+    -fx-border-color: #c8a165;
+    -fx-text-fill: #c8a165;
+}
+
+/* --- שדות קלט כלליים (Global Inputs) --- */
+.text-field {
+    -fx-background-color: #111315; 
+    -fx-text-fill: white;
+    -fx-prompt-text-fill: #4b4e5b;
+    -fx-background-radius: 8;
+    -fx-border-color: transparent;
+    -fx-padding: 8 12;
+}
+
+.text-field:focused {
+    -fx-background-color: #111315;
+    -fx-border-color: #c8a165; 
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+}
+
+/* --- טבלאות --- */
+.table-view {
+    -fx-background-color: transparent;
+    -fx-base: #1c1e24;
+    -fx-control-inner-background: #1c1e24;
+    -fx-border-color: transparent;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent #2a2d35 transparent;
+    -fx-border-width: 1;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: #c8a165; 
+    -fx-font-weight: 600;
+    -fx-font-size: 11px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 0 0 0 10;
+}
+
+.table-row-cell {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent #23262d transparent; 
+    -fx-cell-size: 40px; 
+}
+
+.table-row-cell:hover {
+    -fx-background-color: rgba(255,255,255, 0.03);
+}
+
+.table-row-cell:selected {
+    -fx-background-color: rgba(200, 161, 101, 0.1); 
+    -fx-border-color: transparent transparent transparent #c8a165;
+    -fx-border-width: 0 0 0 3; 
+}
+
+.table-cell {
+    -fx-text-fill: #e0e0e0;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 0 0 0 10;
+    -fx-border-color: transparent;
+}
+
+/* ================================================================= */
+/* POPUP WINDOW STYLING (AddManualReservation)                      */
+/* ================================================================= */
+
+.dark-form-container {
+    -fx-background-color: #1c1e24;
+    -fx-border-color: #c8a165 transparent transparent transparent;
+    -fx-border-width: 4 0 0 0;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 30, 0, 0, 10);
+}
+
+.form-header {
+    -fx-text-fill: #ffffff;
+    -fx-font-family: "Segoe UI";
+    -fx-font-weight: 700;
+    -fx-font-size: 22px;
+}
+
+.form-sub-header {
+    -fx-text-fill: #8a8d96;
+    -fx-font-size: 13px;
+}
+
+.field-label {
+    -fx-text-fill: #c8a165;
+    -fx-font-weight: 600;
+    -fx-font-size: 12px;
+}
+
+/* ================================================================= */
+/* DASHBOARD / WORKERS SCREEN STYLING                               */
+/* ================================================================= */
+
+.dashboard-title {
+    -fx-font-size: 36px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-alignment: CENTER;
+}
+
+.dashboard-subtitle {
+    -fx-text-fill: #b0b3c6;
+    -fx-font-size: 13px;
+}
+
+.dashboard-tile {
+    -fx-background-color: #1c1e24;
+    -fx-text-fill: #b0b3c6;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 18;
+    -fx-border-color: rgba(255, 255, 255, 0.05);
+    -fx-border-radius: 18;
+    -fx-cursor: hand;
+    -fx-alignment: CENTER;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 20, 0, 0, 5);
+}
+
+.dashboard-tile:hover {
+    -fx-background-color: #252830;
+    -fx-text-fill: #c8a165;
+    -fx-border-color: rgba(200, 161, 101, 0.3);
+    -fx-translate-y: -2;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 25, 0, 0, 8);
+}
+
+.tile-accent {
+    -fx-border-color: #c8a165;
+    -fx-border-width: 1;
+    -fx-text-fill: #c8a165;
+    -fx-background-color: rgba(200, 161, 101, 0.05);
+    -fx-effect: dropshadow(gaussian, rgba(200, 161, 101, 0.15), 25, 0, 0, 5);
+}
+
+.tile-accent:hover {
+    -fx-background-color: #c8a165;
+    -fx-text-fill: #111315;
+    -fx-effect: dropshadow(gaussian, rgba(200, 161, 101, 0.6), 30, 0.3, 0, 8);
+}
+
+/* =============================================================================
+   Schedule & Table Headers Fixes
+   ============================================================================= */
+
+.schedule-header-label {
+    -fx-text-fill: #d4a358; 
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-alignment: CENTER-LEFT;
+}
+
+#vboxRegularHours .label {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+    -fx-min-width: 100px;
+    -fx-pref-width: 100px;
+    -fx-alignment: CENTER-LEFT;
+    -fx-padding: 4px 0 0 0;
+}
+
+#vboxRegularHours > HBox, 
+#vboxRegularHours .hbox { 
+    -fx-spacing: 15px; 
+    -fx-alignment: CENTER_LEFT;
+}
+
+/* כותרות הקבוצות */
+.card-title {
+    -fx-text-fill: white;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(one-pass-box, rgba(0,0,0,0.3), 5, 0, 0, 1);
+}
+
+/* =============================================================================
+   Server Console Log Styling
+   ============================================================================= */
+.console-log {
+    -fx-font-family: 'Consolas', 'Monospaced', 'Courier New';
+    -fx-font-size: 13px;
+    -fx-text-fill: #2ecc71;
+    -fx-control-inner-background: #1e2124; 
+    -fx-background-color: #1e2124;
+    -fx-border-color: #4f545c;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+.console-log .content {
+    -fx-background-color: #1e2124;
+}
+
+.console-log .scroll-bar {
+    -fx-background-color: transparent;
+}
+.console-log .scroll-bar .thumb {
+    -fx-background-color: #4f545c;
+}
+
+/* =============================================================================
+   Compact & Unified Inputs (Spinner, DatePicker, ComboBox)
+   Height: 35px | Style: Dark
+   ============================================================================= */
+
+/* 1. הגדרה ראשית לכולם: אותו גובה, אותו רקע, אותה מסגרת */
+.spinner, .date-picker, .combo-box {
+    -fx-pref-height: 35px;          /* גובה מוקטן וסטנדרטי */
+    -fx-min-height: 35px;
+    -fx-max-height: 35px;
+    
+    -fx-background-color: #2f3136;  /* רקע כהה */
+    -fx-border-color: #4f545c;      /* מסגרת אפורה */
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-background-insets: 0;
+    -fx-padding: 0;                 /* איפוס ריפוד */
+    -fx-alignment: CENTER_LEFT;
+    -fx-font-size: 14px;
+}
+
+/* 2. מצב פוקוס לכולם - מסגרת זהובה */
+.spinner:focused, .date-picker:focused, .combo-box:focused {
+    -fx-border-color: #d4a358;
+    -fx-background-color: #2f3136;
+    -fx-background-insets: 0;
+    -fx-faint-focus-color: transparent;
+    -fx-focus-color: transparent;
+}
+
+/* 3. Spinner Internal Adjustments */
+.spinner .text-field {
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 0 10px;
+}
+.spinner .increment-arrow-button,
+.spinner .decrement-arrow-button {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0 8px;
+}
+.spinner .increment-arrow-button .arrow,
+.spinner .decrement-arrow-button .arrow {
+    -fx-background-color: #b0b3c6;
+    -fx-padding: 2px 3px;
+}
+.spinner .increment-arrow-button:hover .arrow,
+.spinner .decrement-arrow-button:hover .arrow {
+    -fx-background-color: #d4a358;
+}
+
+/* 4. DatePicker Internal Adjustments */
+.date-picker .text-field {
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+    -fx-padding: 0 10px;
+}
+.date-picker .arrow-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0 10px;
+    -fx-cursor: hand;
+}
+.date-picker .arrow-button .arrow {
+    -fx-background-color: #b0b3c6;
+    -fx-padding: 3px;
+}
+.date-picker:hover .arrow-button .arrow {
+    -fx-background-color: #d4a358;
+}
+
+/* DatePicker Popup Styling */
+.date-picker-popup {
+    -fx-background-color: #2f3136;
+    -fx-border-color: #d4a358;
+}
+.date-picker-popup .month-year-pane {
+    -fx-background-color: #26283b;
+}
+.date-picker-popup .label {
+    -fx-text-fill: #d4a358;
+}
+.date-picker-popup .day-cell {
+    -fx-background-color: #2f3136;
+    -fx-text-fill: white;
+}
+.date-picker-popup .day-cell:hover {
+    -fx-background-color: #4f545c;
+}
+.date-picker-popup .day-cell:selected {
+    -fx-background-color: #d4a358;
+    -fx-text-fill: #1e1e2f;
+    -fx-font-weight: bold;
+}
+
+/* 5. ComboBox Internal Adjustments */
+.combo-box .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+    -fx-padding: 0 10px;
+    -fx-alignment: CENTER_LEFT;
+}
+.combo-box .arrow-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0 10px;
+}
+.combo-box .arrow {
+    -fx-background-color: #d4a358;
+    -fx-padding: 3px;
+}
+.combo-box-popup .list-view {
+    -fx-background-color: #2f3136;
+    -fx-border-color: #4f545c;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.6), 8, 0.0, 0, 0);
+}
+.combo-box-popup .list-cell {
+    -fx-text-fill: white;
+    -fx-padding: 5px 10px;
+}
+.combo-box-popup .list-cell:filled:selected, 
+.combo-box-popup .list-cell:filled:hover {
+    -fx-background-color: #d4a358;
+    -fx-text-fill: #111111;
+}

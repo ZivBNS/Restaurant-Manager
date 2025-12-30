@@ -1,128 +1,66 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.control.*?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.effect.DropShadow?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
 
-<AnchorPane prefHeight="600.0" prefWidth="450.0"
-            xmlns="http://javafx.com/javafx/21"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="gui.CasualCustomer_GUI"
-            style="-fx-background-color: #1e1e2f;">
+<BorderPane prefHeight="600.0" prefWidth="450.0" stylesheets="/Theme/application.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.CasualCustomer_GUI">
 
-    <children>
-
-        <!-- Header -->
-        <VBox alignment="CENTER" spacing="6"
-              AnchorPane.leftAnchor="0"
-              AnchorPane.rightAnchor="0"
-              AnchorPane.topAnchor="35">
-
-            <Label text="Bistro Service"
-                   style="
-                       -fx-font-size: 32px;
-                       -fx-font-weight: bold;
-                       -fx-text-fill: #ffffff;
-                   "/>
-
-            <Label text="How can we help you today?"
-                   style="
-                       -fx-font-size: 14px;
-                       -fx-text-fill: #b0b3c6;
-                   "/>
+    <top>
+        <VBox alignment="CENTER" spacing="10">
+            <padding>
+                <Insets bottom="20" top="40" />
+            </padding>
+            <children>
+                <Label styleClass="header-title" text="Bistro Service" />
+                <Label styleClass="card-label" text="How can we help you today?" />
+                <Separator maxWidth="250" opacity="0.35" />
+            </children>
         </VBox>
+    </top>
 
-        <!-- Main Card -->
-        <VBox spacing="22" alignment="CENTER"
-              AnchorPane.leftAnchor="40"
-              AnchorPane.rightAnchor="40"
-              AnchorPane.topAnchor="150"
-              style="
-                  -fx-background-color: #26283b;
-                  -fx-background-radius: 22;
-                  -fx-padding: 40;
-              ">
+    <center>
+        <VBox alignment="CENTER">
+            <padding>
+                <Insets bottom="20" left="20" right="20" top="10" />
+            </padding>
+            <children>
+                <VBox maxWidth="350" spacing="15" styleClass="card">
+                    <padding>
+                        <Insets bottom="30" left="30" right="30" top="30" />
+                    </padding>
+                    <children>
+                        <Button fx:id="btnNewOrder" maxWidth="Infinity" onAction="#openNewOrder" prefHeight="45" styleClass="button, btn-secondary" text="New Reservation" />
+                        
+                        <Button fx:id="btnViewOrders" maxWidth="Infinity" onAction="#onViewReservations" prefHeight="45" styleClass="button, btn-secondary" text="View Reservations" />
+                        
+                        <Button fx:id="btnPayBill" maxWidth="Infinity" onAction="#onBillPaymentClicked" prefHeight="45" styleClass="button, btn-secondary" text="Bill Payment" />
 
-            <effect>
-                <DropShadow color="rgba(0,0,0,0.45)"
-                            radius="25"
-                            offsetX="0"
-                            offsetY="8"/>
-            </effect>
+                        <Separator opacity="0.3">
+                            <VBox.margin>
+                                <Insets bottom="5" top="5" />
+                            </VBox.margin>
+                        </Separator>
 
-            <!-- Create Reservation -->
-            <Button fx:id="btnNewOrder"
-                    text="New Reservation"
-                    onAction="#openNewOrder"
-                    prefHeight="55"
-                    prefWidth="300"
-                    style="
-                        -fx-background-color: #2f324a;
-                            -fx-text-fill: #b0b3c6;
-                            -fx-font-size: 13px;
-                            -fx-background-radius: 14;
-                            -fx-cursor: hand;
-                    "/>
-
-            <!-- View & Edit Orders (FIXED &amp;) -->
-            <Button fx:id="btnViewOrders"
-                    text="View Reservations"
-                    onAction="#onViewReservations"
-                    prefHeight="55"
-                    prefWidth="300"
-                    style="
-                        -fx-background-color: #2f324a;
-                            -fx-text-fill: #b0b3c6;
-                            -fx-font-size: 13px;
-                            -fx-background-radius: 14;
-                            -fx-cursor: hand;
-                    "/>
-
-            <!-- Pay Bill -->
-            <Button fx:id="btnPayBill"
-                    text="Bill Payment"
-                    onAction="#onBillPaymentClicked"
-                    prefHeight="55"
-                    prefWidth="300"
-                    style="
-                        -fx-background-color: #2f324a;
-                            -fx-text-fill: #b0b3c6;
-                            -fx-font-size: 13px;
-                            -fx-background-radius: 14;
-                            -fx-cursor: hand;
-                    "/>
-
-            <Separator prefWidth="220" opacity="0.3">
-                <padding>
-                    <Insets top="12" bottom="12"/>
-                </padding>
-            </Separator>
-
-            <!-- Sign Out -->
-            <Button text="Sign Out"
-                    onAction="#onBackClicked"
-                    prefWidth="300"
-                    style="
-                        -fx-background-color: transparent;
-                        -fx-text-fill: #e74c3c;
-                        -fx-font-size: 13px;
-                        -fx-font-weight: bold;
-                        -fx-cursor: hand;
-                    "/>
+                        <Button maxWidth="Infinity" onAction="#onBackClicked" styleClass="button, btn-danger" text="Sign Out" />
+                    </children>
+                </VBox>
+            </children>
         </VBox>
+    </center>
 
-        <!-- Footer -->
-        <Label text="Bistro Management System v1.0"
-               AnchorPane.bottomAnchor="20"
-               AnchorPane.leftAnchor="0"
-               AnchorPane.rightAnchor="0"
-               alignment="CENTER"
-               style="
-                   -fx-font-size: 10px;
-                   -fx-text-fill: #7f85a3;
-               "/>
+    <bottom>
+        <VBox alignment="CENTER">
+            <padding>
+                <Insets bottom="15" top="10" />
+            </padding>
+            <children>
+                <Label style="-fx-font-size: 10px; -fx-text-fill: #7f85a3;" text="Bistro Management System v1.0" />
+            </children>
+        </VBox>
+    </bottom>
 
-    </children>
-</AnchorPane>
-
+</BorderPane>
