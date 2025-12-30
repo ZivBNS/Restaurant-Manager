@@ -60,12 +60,15 @@ public class Reservation_Repository {
     public synchronized int getNextConfirmationCode() { return confirmationCodeGenerator++; }
 
     /**
-     * Saves a new reservation. TableID is explicitly set to NULL on creation.
+     * Saves a new reservation to the database.
+     * TableID is explicitly set to NULL on creation.
+     * Reminder flags are initialized to 0 (false).
      */
     public boolean set(Reservation res) {
         String sql = "INSERT INTO reservations (UserID, TableID, Phone, Email, ReservationStartTime, "
-                   + "ReservationEndTime, NumberOfDiners, ConfirmationCode, Status, CreationTime) "
-                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                   + "ReservationEndTime, NumberOfDiners, ConfirmationCode, Status, CreationTime, "
+                   + "RemindedPreArrival, RemindedDeparture) "
+                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"; 
         
         PooledConnection pConn = null;
         try {
@@ -74,7 +77,7 @@ public class Reservation_Repository {
                 if (res.getUserId() != null) pstmt.setInt(1, res.getUserId());
                 else pstmt.setNull(1, java.sql.Types.INTEGER);
 
-                // IMPORTANT: Always NULL to prevent fragmentation until arrival
+                // TableID is NULL on creation
                 pstmt.setNull(2, java.sql.Types.INTEGER);
 
                 pstmt.setString(3, res.getPhone());
@@ -85,10 +88,16 @@ public class Reservation_Repository {
                 pstmt.setInt(8, res.getConfirmationCode());
                 pstmt.setString(9, res.getStatus());
                 pstmt.setTimestamp(10, Timestamp.valueOf(res.getCreationTime()));
+                pstmt.setBoolean(11, false); 
+                pstmt.setBoolean(12, false);
 
                 return pstmt.executeUpdate() > 0;
             }
-        } catch (SQLException e) { return false; }
+        } catch (SQLException e) {
+            System.err.println("[Reservation_Repository] Insert Error: " + e.getMessage());
+            e.printStackTrace(); 
+            return false; 
+        }
         finally { if (pConn != null) db.releaseConnection(pConn); }
     }
 
@@ -272,15 +281,30 @@ public class Reservation_Repository {
     }
 
 
+    /**
+     * Helper method to map a SQL ResultSet row to a Reservation object.
+     * Updated to include the reminder flags.
+     * @param rs The result set cursor.
+     * @return A populated Reservation object.
+     * @throws SQLException If a database access error occurs.
+     */
     private Reservation extractReservationFromResultSet(ResultSet rs) throws SQLException {
         return new Reservation(
-            rs.getInt("ID"), (Integer) rs.getObject("UserID"), (Integer) rs.getObject("TableID"),
-            rs.getString("Phone"), rs.getString("Email"),
-            rs.getTimestamp("ReservationStartTime").toLocalDateTime(), rs.getTimestamp("ReservationEndTime").toLocalDateTime(),
+            rs.getInt("ID"), 
+            (Integer) rs.getObject("UserID"), 
+            (Integer) rs.getObject("TableID"),
+            rs.getString("Phone"), 
+            rs.getString("Email"),
+            rs.getTimestamp("ReservationStartTime").toLocalDateTime(), 
+            rs.getTimestamp("ReservationEndTime").toLocalDateTime(),
             rs.getTimestamp("ActualArrivalTime") != null ? rs.getTimestamp("ActualArrivalTime").toLocalDateTime() : null,
             rs.getTimestamp("ActualDepartureTime") != null ? rs.getTimestamp("ActualDepartureTime").toLocalDateTime() : null,
-            rs.getInt("NumberOfDiners"), rs.getInt("ConfirmationCode"), rs.getString("Status"),
-            rs.getTimestamp("CreationTime").toLocalDateTime()
+            rs.getInt("NumberOfDiners"), 
+            rs.getInt("ConfirmationCode"), 
+            rs.getString("Status"),
+            rs.getTimestamp("CreationTime").toLocalDateTime(),
+            rs.getBoolean("RemindedPreArrival"),
+            rs.getBoolean("RemindedDeparture")
         );
     }
     /**
@@ -410,43 +434,35 @@ public class Reservation_Repository {
         }
     }
 
-	public Reservation getById(int id) {
-	    String sql = "SELECT * FROM reservations WHERE ID = ?";
-	    PooledConnection pConn = null;
-	    
-	    try {
-	        pConn = db.getConnection();
-	        java.sql.Connection conn = pConn.getConnection();
-	        java.sql.PreparedStatement ps = conn.prepareStatement(sql);
-	        ps.setInt(1, id);
-	        
-	        java.sql.ResultSet rs = ps.executeQuery();
-	        
-	        if (rs.next()) {
-	          
-	            return new Reservation(
-	                rs.getInt("ID"),
-	                (Integer) rs.getObject("UserID"), 
-	                (Integer) rs.getObject("TableID"),
-	                rs.getString("Phone"),
-	                rs.getString("Email"),
-	                rs.getTimestamp("ReservationStartTime").toLocalDateTime(),
-	                rs.getTimestamp("ReservationEndTime") != null ? rs.getTimestamp("ReservationEndTime").toLocalDateTime() : null,
-	                rs.getTimestamp("ActualArrivalTime") != null ? rs.getTimestamp("ActualArrivalTime").toLocalDateTime() : null, 
-	                rs.getTimestamp("ActualDepartureTime") != null ? rs.getTimestamp("ActualDepartureTime").toLocalDateTime() : null,
-	                rs.getInt("NumberOfDiners"),
-	                rs.getInt("ConfirmationCode"),
-	                rs.getString("Status"),
-	                rs.getTimestamp("creationTime").toLocalDateTime()
-	            );
-	        }
-	    } catch (Exception e) {
-	        System.out.println("Error in getById: " + e.getMessage());
-	    } finally {
-	        if (pConn != null) db.releaseConnection(pConn);
-	    }
-	    return null; // לא נמצא
-	}
+    /**
+     * Retrieves a reservation by its unique internal ID.
+     * @param id The reservation ID.
+     * @return The Reservation object or null if not found.
+     */
+    public Reservation getById(int id) {
+        String sql = "SELECT * FROM reservations WHERE ID = ?";
+        PooledConnection pConn = null;
+        
+        try {
+            pConn = db.getConnection();
+            try (PreparedStatement ps = pConn.getConnection().prepareStatement(sql)) {
+                ps.setInt(1, id);
+                
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        // Use the centralized extraction logic to avoid duplication
+                        return extractReservationFromResultSet(rs);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[Reservation_Repository] Error in getById: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            if (pConn != null) db.releaseConnection(pConn);
+        }
+        return null; // Not found
+    }
 	
 	public boolean updateTableByConfirmationCode(int confCode, int tableId) {
 	    String sql = "UPDATE reservations SET TableID = ? WHERE ConfirmationCode = ?";
@@ -471,7 +487,15 @@ public class Reservation_Repository {
 	        }
 	    }
 	}	
-	
+
+	/**
+	 * Updates only the Actual Arrival Time of a reservation identified by its
+	 * confirmation code.
+	 * 
+	 * @param confCode    The unique confirmation code of the reservation.
+	 * @param arrivalTime The new actual arrival time to set.
+	 * @return true if the update was successful, false otherwise.
+	 */
 	public boolean updateActualArrivalTimeOnly(int confCode, LocalDateTime arrivalTime) {
 	    String sql = "UPDATE Reservations SET ActualArrivalTime = ? WHERE ConfirmationCode = ?";
 	    PooledConnection pConn = null;
@@ -493,5 +517,79 @@ public class Reservation_Repository {
 	        }
 	    }
 	}
+	/**
+     * Fetches ACTIVE reservations that have exceeded their time limit 
+     * AND have not been reminded yet.
+     * @return List of overdue reservations.
+     */
+    public List<Reservation> getExpiredActiveReservations() {
+        List<Reservation> expiredList = new ArrayList<>();
+        // Query: Status=ACTIVE, Time Passed, Not Reminded Yet
+        String sql = "SELECT * FROM reservations WHERE Status = 'ACTIVE' " +
+                     "AND ReservationEndTime < ? AND RemindedDeparture = 0";
+        
+        PooledConnection pConn = null;
+        try {
+            pConn = db.getConnection();
+            try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(sql)) {
+                pstmt.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    while (rs.next()) expiredList.add(extractReservationFromResultSet(rs));
+                }
+            }
+        } catch (SQLException e) { e.printStackTrace(); } 
+        finally { if (pConn != null) db.releaseConnection(pConn); }
+        return expiredList;
+    }
+
+    /**
+     * Fetches reservations scheduled to start within the next 2 hours (approx)
+     * that have NOT received a reminder yet.
+     * @return List of upcoming reservations.
+     */
+    public List<Reservation> getUpcomingReservationsForReminder() {
+        List<Reservation> upcomingList = new ArrayList<>();
+        // Logic: StartTime is between NOW and NOW+2.5 Hours, Status is Approved/Pending, Flag is 0
+        String sql = "SELECT * FROM reservations WHERE Status IN ('Pending', 'Approved') " +
+                     "AND ReservationStartTime BETWEEN ? AND ? " +
+                     "AND RemindedPreArrival = 0";
+
+        PooledConnection pConn = null;
+        try {
+            pConn = db.getConnection();
+            try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(sql)) {
+                LocalDateTime now = LocalDateTime.now();
+                pstmt.setTimestamp(1, Timestamp.valueOf(now));
+                pstmt.setTimestamp(2, Timestamp.valueOf(now.plusMinutes(120))); // Look ahead 2 hours
+
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    while (rs.next()) upcomingList.add(extractReservationFromResultSet(rs));
+                }
+            }
+        } catch (SQLException e) { e.printStackTrace(); } 
+        finally { if (pConn != null) db.releaseConnection(pConn); }
+        return upcomingList;
+    }
+
+    /**
+     * Updates the database to indicate a reminder email has been sent.
+     * @param reservationId The ID to update.
+     * @param type "PRE" for Pre-Arrival, "DEP" for Departure.
+     */
+    public void markAsReminded(int reservationId, String type) {
+        String column = type.equals("PRE") ? "RemindedPreArrival" : "RemindedDeparture";
+        String sql = "UPDATE reservations SET " + column + " = 1 WHERE ID = ?";
+        
+        PooledConnection pConn = null;
+        try {
+            pConn = db.getConnection();
+            try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(sql)) {
+                pstmt.setInt(1, reservationId);
+                pstmt.executeUpdate();
+            }
+        } catch (SQLException e) { e.printStackTrace(); } 
+        finally { if (pConn != null) db.releaseConnection(pConn); }
+    }
+    
 	
 }

@@ -6,10 +6,8 @@ import java.util.List;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.LocalDate;
-
 import Data.Reservation_Repository;
 import Data.Table_Repository;
-import Data.Waitlist_Repository;
 import entities.Opening_Hours;
 import entities.Reservation;
 import entities.ReservationStatus;
@@ -23,7 +21,7 @@ public class Reservation_Controller {
 
     private static final Reservation_Repository reservationRepository = Reservation_Repository.getInstance();
     private static final Table_Repository tableRepository = Table_Repository.getInstance();
-    private static final Waitlist_Repository WaitlistRepository = Waitlist_Repository.getInstance();
+    //private static final Waitlist_Repository WaitlistRepository = Waitlist_Repository.getInstance();
 
     public static Message handleMessage(Message msg) {
     	
@@ -60,18 +58,44 @@ public class Reservation_Controller {
 	}
 
 
-	private static Message createReservation(Message msg) {
+	/**
+     * Handles the creation of a new reservation for both Casual and Subscribed customers.
+     * Includes logic to identify subscribers via userId and ensure data integrity.
+     * * @param msg The message containing the Reservation object from the client.
+     * @return A Message indicating success (with confirmation code) or failure.
+     */
+    private static Message createReservation(Message msg) {
         try {
+            // 1. Validation: Check if the content is valid
+            if (!(msg.getContent() instanceof Reservation)) {
+                System.err.println("[Error] Message content is NOT a Reservation object.");
+                return new Message(MessageType.RESERVATION_FAILED, "Invalid data format received.");
+            }
+
             Reservation reservation = (Reservation) msg.getContent();
+            
+            // 2. Subscriber Logic Check
+            // If the reservation has a UserID, treat it as a Subscriber booking.
+            if (reservation.getUserId() != null) {
+                System.out.println("[Reservation_Controller] Processing reservation for Subscriber ID: " + reservation.getUserId());
+                // Here you could add specific logic for subscribers, e.g., fetching special discounts 
+                // or verifying the user exists in the Users table if necessary.
+            } else {
+                System.out.println("[Reservation_Controller] Processing reservation for Casual Customer.");
+            }
+
+            // 3. Time Slot Calculation
             LocalDateTime startTime = reservation.getOrderStartTime();
+            // Default dining duration is 2 hours
             LocalDateTime endTime = startTime.plusHours(2);
             
-            // Check availability for requested time
+            // 4. Capacity Check
+            // Check availability for requested time using the Table Repository
             if (!tableRepository.isCapacityAvailable(startTime, endTime, reservation.getNumberOfDiners(), null)) {
                 
                 System.out.println("[Reservation_Controller] Slot " + startTime + " is full. Searching for alternative...");
                 
-                // Find nearest available 30-minute slot
+                // Smart Feature: Find nearest available 30-minute slot
                 LocalDateTime suggestedTime = findNextAvailableSlot(startTime, reservation.getNumberOfDiners(), null);
                 
                 if (suggestedTime == null) {
@@ -79,20 +103,35 @@ public class Reservation_Controller {
                     return new Message(MessageType.RESERVATION_FAILED_NO_TABLE_FULLY_BOOKED, null);
                 }
                 
-                System.out.println("[Reservation_Controller] Suggesting: " + suggestedTime);
+                System.out.println("[Reservation_Controller] Suggesting alternative: " + suggestedTime);
                 return new Message(MessageType.RESERVATION_FAILED_NO_TABLE, suggestedTime);
             }
 
+            // 5. Finalize Reservation Data
+            // Logical Seating: TableID is NULL until actual arrival (Check-in)
             reservation.setTableId(null); 
             reservation.setOrderEndTime(endTime);
             reservation.setConfirmationCode(reservationRepository.getNextConfirmationCode());
             reservation.setStatus("Pending");
-
+            
+            // 6. Asynchronous Notification
+            // Check if email exists before trying to send to prevent errors
+            if (reservation.getEmail() != null && !reservation.getEmail().isEmpty()) {
+                System.out.println("[Email Service] Sending Confirmation Email to: " + reservation.getEmail());
+                integration.EmailService.sendConfirmationEmail(reservation);
+            } else {
+                System.out.println("[Warning] No email provided. Skipping notification.");
+            }
+            
+            // 7. Database Persistence
             if (reservationRepository.set(reservation)) {
+                System.out.println("[Success] Reservation created. Code: " + reservation.getConfirmationCode());
                 return new Message(MessageType.RESERVATION_CONFIRMED, reservation.getConfirmationCode());
             } else {
+                System.err.println("[Database Error] Failed to insert reservation.");
                 return new Message(MessageType.RESERVATION_FAILED, "Database Error");
             }
+
         } catch (Exception e) {
             e.printStackTrace();
             return new Message(MessageType.RESERVATION_FAILED, "Server Error: " + e.getMessage());

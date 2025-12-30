@@ -1,6 +1,5 @@
 package commands;
 
-import controllers.Reservation_Controller;
 import controllers.Waitlist_Controller;
 import messages.Message;
 import ocsf.server.ConnectionToClient;
