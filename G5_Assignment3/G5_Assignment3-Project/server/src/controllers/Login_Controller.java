@@ -3,6 +3,7 @@ package controllers;
 import Data.User_Repository;
 import entities.LoginData;
 import entities.Subscribed_Customer;
+import entities.UserRecord;
 import messages.Message;
 import messages.MessageType;
 
@@ -22,7 +23,7 @@ public class Login_Controller {
         String password = data.getPassword();
 
     	System.out.println("[Login_Controller] Recieved login request from subscribed user: "+username);
-        Subscribed_Customer user = userRepository.getByUsername(username, password);
+        UserRecord user = userRepository.getByUsername(username, password);
 
         if (user != null) {
             return new Message(MessageType.LOGIN_SUCCESS_SUB, user);

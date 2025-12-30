@@ -35,7 +35,7 @@ public class User_Repository {
         finally { if (pConn != null) db.releaseConnection(pConn); }
     }
 
-	public Subscribed_Customer getByUsername(String username, String password) { /* Patterned pool fetch... */ 
+	public UserRecord getByUsername(String username, String password) { /* Patterned pool fetch... */ 
         PooledConnection pConn = null;
         try {
             pConn = db.getConnection();
@@ -87,6 +87,33 @@ public class User_Repository {
         return false;
     }
 	
+	public UserRecord getByID(int id) {
+        PooledConnection pConn = null;
+        
+        try {
+            pConn = db.getConnection();
+            String sql;
+
+            sql = "SELECT ID, FirstName, LastName, Phone, Email,  Username, Password, subscriberCode, Identity"
+            		+ " FROM users WHERE ID = ? LIMIT 1";
+            
+            try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(sql)) {
+                pstmt.setInt(1, id);
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    if (rs.next()) {
+                        return mapRowToUser(rs);
+                    }
+                }
+            }
+            
+        } catch (SQLException e) {
+        	e.printStackTrace(); 
+        } finally { 
+        	if (pConn != null) db.releaseConnection(pConn); 
+        }
+        return null;
+    }
+	
 	public List<UserRecord> getAllSubscribedCustomers() {
 		
 		List<UserRecord> results = new ArrayList<>();
@@ -128,15 +155,18 @@ public class User_Repository {
 		return results;
 	}
 	
-	private Subscribed_Customer mapRowToUser(ResultSet rs) throws SQLException {
-        return new Subscribed_Customer(
+	private UserRecord mapRowToUser(ResultSet rs) throws SQLException {
+        return new UserRecord(
 
+        	rs.getInt("ID"),
             rs.getString("firstName"),
             rs.getString("lastName"),
             rs.getString("Phone"),
             rs.getString("Email"),
             rs.getString("Username"),
-            rs.getString("Password")
+            rs.getString("Password"),
+            rs.getString("Identity"),
+            rs.getInt("SubscriberCode")
         );
     }
 

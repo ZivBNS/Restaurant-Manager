@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import entities.LoginData;
 import entities.Subscribed_Customer;
+import entities.UserRecord;
 import javafx.application.Platform; // Added for Platform.exit()
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -224,10 +225,11 @@ public class MainScreen_GUI {
      * Triggered when a subscriber clicks the login button.
      * Handles authentication and navigation to the Subscriber Dashboard.
      */
-    public void onSubLoginSuccess(Subscribed_Customer user) {
+    public void onSubLoginSuccess(UserRecord user) {
     	try {
         	
             // 3. Load the Subscribed Customer Dashboard
+    		User_Session.setLoggedInUser(user);
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/SubscribedCustomer.fxml"));
             Parent root = loader.load();
             

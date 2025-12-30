@@ -70,12 +70,17 @@ public class Client_Controller implements ChatIF {
         responseHandlers.put(MessageType.LOGIN_SUCCESS_SUB, new ResponseHandler() {
             @Override
             public void handle(Message msg) {
-                Subscribed_Customer sub = (Subscribed_Customer) msg.getContent();
-                User_Session.setLoggedInUser(sub);
+            	UserRecord userRecord = (UserRecord) msg.getContent();
+                User_Session.setLoggedInUser(userRecord);
+                Subscribed_Customer sub = new Subscribed_Customer(
+                		userRecord.getFirstName(), userRecord.getLastName(),
+                		userRecord.getPhone(), userRecord.getEmail(),
+                		userRecord.getUsername(), userRecord.getPassword()
+                		);
                 if (Terminal_GUI.instance!=null)
                 	Terminal_GUI.instance.handleMessageIfLoggedIn(sub);
                 else if (MainScreen_GUI.instance != null) {
-                    MainScreen_GUI.instance.onSubLoginSuccess(sub);
+                    MainScreen_GUI.instance.onSubLoginSuccess(userRecord);
                 }
             }
         });
@@ -364,7 +369,30 @@ public class Client_Controller implements ChatIF {
         responseHandlers.put(MessageType.EDIT_USER_RESPONSE_ERR, userHandler);
         responseHandlers.put(MessageType.DELETE_USER_RESPONSE_OK, userHandler);
         responseHandlers.put(MessageType.DELETE_USER_RESPONSE_ERR, userHandler);
+        
+        // -----------------------------------------------------------
+        // Update User Profile
+        // -----------------------------------------------------------
 
+        responseHandlers.put(MessageType.UPDATE_USER_DETAILS_RESPONSE_OK, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+            	User_Session.setLoggedInUser((UserRecord) msg.getContent());
+                if (UpdateProfile_GUI.instance != null) {
+                	UpdateProfile_GUI.instance.onRefresh();
+                }
+            }
+        });
+        
+        responseHandlers.put(MessageType.UPDATE_USER_DETAILS_RESPONSE_ERR, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+            	User_Session.setLoggedInUser((UserRecord) msg.getContent());
+                if (UpdateProfile_GUI.instance != null) {
+                	UpdateProfile_GUI.instance.onError();
+                }
+            }
+        });
         // -----------------------------------------------------------
         // Table Management
         // -----------------------------------------------------------

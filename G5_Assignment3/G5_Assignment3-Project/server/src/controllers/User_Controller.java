@@ -1,6 +1,7 @@
 package controllers;
 
 import Data.User_Repository;
+import entities.Subscribed_Customer;
 import entities.UserRecord;
 import messages.Message;
 import messages.MessageType;
@@ -29,6 +30,8 @@ public class User_Controller {
                 case MessageType.EDIT_USER_REQUEST -> handleUpdate((UserRecord) msg.getContent());
 
                 case MessageType.DELETE_USER_REQUEST -> handleDelete((UserRecord) msg.getContent()); 
+                
+                case MessageType.UPDATE_USER_DETAILS_REQUEST -> handleUpdateAsUser((UserRecord) msg.getContent());
 
                 default -> new Message(MessageType.USERS_ERROR, "Unknown user action: " + msg.getType());
             };
@@ -90,6 +93,17 @@ public class User_Controller {
         return ok
             ? new Message(MessageType.DELETE_USER_RESPONSE_OK, "User deleted.")
             : new Message(MessageType.DELETE_USER_RESPONSE_ERR, "Failed to delete user.");
+    }
+    
+    private Message handleUpdateAsUser(UserRecord u) {
+        String err = validateForUpdate(u);
+        if (err != null) return new Message(MessageType.UPDATE_USER_DETAILS_RESPONSE_ERR, err);
+
+        boolean ok = repo.updateUser(u);
+        UserRecord userToReturn = repo.getByID(u.getId());
+        return ok
+            ? new Message(MessageType.UPDATE_USER_DETAILS_RESPONSE_OK, userToReturn)
+            : new Message(MessageType.UPDATE_USER_DETAILS_RESPONSE_ERR, userToReturn);
     }
 
     private String validateForAdd(UserRecord u) {

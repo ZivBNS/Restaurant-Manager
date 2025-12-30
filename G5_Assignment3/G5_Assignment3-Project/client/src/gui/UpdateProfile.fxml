@@ -47,7 +47,10 @@
                             </VBox.margin>
                         </Separator>
 
-                        <TextField fx:id="txtUsername" promptText="Username" />
+                       <TextField fx:id="txtUsername"
+				           promptText="Username"
+				           editable="false"
+				           focusTraversable="false" />
                         <PasswordField fx:id="txtPassword" promptText="Password" />
 
                         <Label fx:id="lblError" maxWidth="Infinity" styleClass="error-label" text="" visible="false" wrapText="true" />

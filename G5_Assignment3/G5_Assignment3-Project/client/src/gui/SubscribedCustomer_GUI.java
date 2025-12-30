@@ -1,6 +1,7 @@
 package gui;
 
 import entities.Subscribed_Customer;
+import entities.UserRecord;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -24,7 +25,7 @@ public class SubscribedCustomer_GUI {
      */
     @FXML
     public void initialize() {
-        Subscribed_Customer user = User_Session.getLoggedInUser();
+        UserRecord user = User_Session.getLoggedInUser();
         if (user != null) {
             welcomeLabel.setText("Welcome Back, " + user.getFirstName() + "!");
         }
