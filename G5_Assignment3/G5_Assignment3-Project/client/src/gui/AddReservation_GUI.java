@@ -224,7 +224,7 @@ public class AddReservation_GUI {
                         t = t.plusMinutes(30);
                         safetyBreaker++;
                     }
-                    timeCombo.setPromptText(timeCombo.getItems().isEmpty() ? "No slots available" : "Select Time");
+                    timeCombo.setPromptText(timeCombo.getItems().isEmpty() ? "No slots available / Closed Today" : "Select Time");
                 } else {
                     timeCombo.setPromptText("Closed Today");
                 }
@@ -295,7 +295,8 @@ public class AddReservation_GUI {
 
             Reservation newRes;
             if (User_Session.getLoggedInUser() != null) {
-                newRes = new Reservation(User_Session.getLoggedInUser().getSubscriberCode(), 
+            	System.out.println(User_Session.getLoggedInUser().getSubscriberCode());
+                newRes = new Reservation(1, 
                         User_Session.getLoggedInUser().getPhone(), 
                         User_Session.getLoggedInUser().getEmail(), 
                         startDateTime, endDateTime, diners);

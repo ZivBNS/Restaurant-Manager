@@ -107,7 +107,6 @@ public class Client_Controller implements ChatIF {
         responseHandlers.put(MessageType.RETURN_RESERVATIONS_BY_USER, new ResponseHandler() {
             @Override
             public void handle(Message msg) {
-                @SuppressWarnings("unchecked")
                 List<Reservation> resList = (List<Reservation>) msg.getContent();
                 if (ViewReservations_GUI.instance != null) {
                     ViewReservations_GUI.instance.updateTable(resList);
@@ -118,7 +117,6 @@ public class Client_Controller implements ChatIF {
         responseHandlers.put(MessageType.RETURN_ALL_PENDING_RESERVATIONS, new ResponseHandler() {
             @Override
             public void handle(Message msg) {
-                @SuppressWarnings("unchecked")
                 List<Reservation> adminList = (List<Reservation>) msg.getContent();
                 if (ManageOrders_GUI.instance != null) {
                     ManageOrders_GUI.instance.updateAdminUI(adminList);
@@ -372,7 +370,6 @@ public class Client_Controller implements ChatIF {
         responseHandlers.put(MessageType.RETURN_ALL_TABLES, new ResponseHandler() {
             @Override
             public void handle(Message msg) {
-                @SuppressWarnings("unchecked")
                 List<Restaurant_Table> tables = (List<Restaurant_Table>) msg.getContent();
                 if (ManageTables_GUI.instance != null) {
                     ManageTables_GUI.instance.loadTables(tables);

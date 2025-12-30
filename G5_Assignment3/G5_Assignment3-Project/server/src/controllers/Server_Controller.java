@@ -16,6 +16,7 @@ public class Server_Controller extends AbstractServer {
 	final public static int DEFAULT_PORT = 5555;
 	private Server_GUI gui;
 	private final User_Controller userController;
+	private ServerWatchdog watchdog;
 	// The Command Map
 	private Map<MessageType, Command> commands;
 
@@ -23,6 +24,7 @@ public class Server_Controller extends AbstractServer {
 		super(port);
 		this.gui = gui;
 		this.userController = new User_Controller();
+		this.watchdog = new ServerWatchdog(); 
 		initializeCommands();
 	}
 
@@ -144,11 +146,17 @@ public class Server_Controller extends AbstractServer {
 	@Override
 	protected void serverStarted() {
 		log("Server listening for connections on port " + getPort());
+		if (watchdog != null) {
+	        watchdog.start(); // Start the monitoring thread
+	    }
 	}
 
 	@Override
 	protected void serverStopped() {
 		log("Server has stopped listening for connections.");
+		if (watchdog != null) {
+	        watchdog.stop(); // Stop the monitoring thread gracefully
+	    }
 	}
 
 	@Override

@@ -110,7 +110,7 @@ public class Server_GUI extends Application {
             }
         });
 
-        Scene scene = new Scene(root, 750, 800);
+        Scene scene = new Scene(root, 500, 600);
         // *** טעינת קובץ ה-CSS ***
         scene.getStylesheets().add(getClass().getResource("/Theme/application.css").toExternalForm());
         
@@ -150,9 +150,7 @@ public class Server_GUI extends Application {
             connectBtn.setText("SERVER ONLINE");
             exitBtn.setDisable(false); 
             portField.setDisable(true);
-            
-            appendLog("SUCCESS: Server is listening on port " + port);
-            
+                        
             OpeningHours_Repository.getInstance().init();
             Waitlist_Repository.getInstance().init();
             Reservation_Repository.getInstance().init();
