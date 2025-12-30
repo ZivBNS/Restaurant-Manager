@@ -79,6 +79,10 @@ public enum MessageType {
     RESERVATION_CHECK_OUT,
     CHECK_IN_REQUEST,
     CHECK_IN_COMPLETED,
+    CHECK_IN_FAIL,
+    CHECK_IN_UNMATCH_CODE,
+    CHECK_IN_NO_TABLE,
+    
     
     // --- bill request ---
     BILL_REQUEST,
@@ -128,6 +132,6 @@ public enum MessageType {
     ERROR_RESPONSE,         // Server sends an error message (Content=String)
     SUCCESS_RESPONSE,        // Server confirms successful operation
     
-    TEXT_MESSAGE,  
+    TEXT_MESSAGE,
     
 }

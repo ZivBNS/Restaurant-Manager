@@ -125,7 +125,32 @@ public class Client_Controller implements ChatIF {
                 }
             }
         });
+        
+        // -----------------------------------------------------------
+        // Check in and out Actions
+        // -----------------------------------------------------------
 
+        //check in
+        
+        responseHandlers.put(MessageType.CHECK_IN_COMPLETED , new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+            	if (Terminal_GUI.instance != null) {
+                	int tableNumber=(int) msg.getContent();
+                	Terminal_GUI.instance.onCheckInSuccessResponse(tableNumber);
+                }}
+        });
+        
+        responseHandlers.put(MessageType.CHECK_IN_FAIL , new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+            	if (Terminal_GUI.instance != null) {
+                	String s=(String) msg.getContent();
+                	Terminal_GUI.instance.onCheckInFailedResponse(s);
+                }}
+        });
+        
+        
         // -----------------------------------------------------------
         // Reservation Actions
         // -----------------------------------------------------------
@@ -135,21 +160,20 @@ public class Client_Controller implements ChatIF {
         responseHandlers.put(MessageType.INSTANT_RESERVATION_FAILED , new ResponseHandler() {
             @Override
             public void handle(Message msg) {
-                if (AddReservation_GUI.instance != null)
-                	Terminal_GUI.instance.onInstantReservationFailedResponse();
-                }
+                if (Terminal_GUI.instance != null) {
+                	String s=(String) msg.getContent();
+                	Terminal_GUI.instance.onInstantReservationFailedResponse(s);
+                }}
         });
         
         responseHandlers.put(MessageType.INSTANT_RESERVATION_SUCCESS, new ResponseHandler() {
             @Override
             public void handle(Message msg) {
-                javafx.application.Platform.runLater(() -> {
-                    if (Terminal_GUI.instance != null) {
-                        int code = (int) msg.getContent();
-                        Terminal_GUI.instance.onInstantReservationSuccessResponse(code);
-                    }
-                });
-            }
+                if (Terminal_GUI.instance != null) {
+                    int code = (int) msg.getContent();
+                    Terminal_GUI.instance.onInstantReservationSuccessResponse(code);
+                }
+        	}
         });
         
 
@@ -575,4 +599,8 @@ public class Client_Controller implements ChatIF {
     public void sendCancelReservationOrWaitlistRequestFromTerminal(int code) {
         sendComplexObject(new Message(MessageType.CANCEL_WAITLIST_AND_RESERVATION_BY_CODE, code)); 
     }
+
+	public void sendCheckInRequest(int confiCode) {
+        sendComplexObject(new Message(MessageType.CHECK_IN_REQUEST, confiCode)); 		
+	}
 }

@@ -37,10 +37,14 @@ public class Server_Controller extends AbstractServer {
 		commands.put(MessageType.LOGIN_REQUEST_SUB, loginCmd);
 		commands.put(MessageType.LOGIN_REQUEST_GUEST, loginCmd);
 
+		
+		// --- check in ---
+		Command ckInCmd = new CheckInCommand();
+		commands.put(MessageType.CHECK_IN_REQUEST, ckInCmd);
+		
 		// --- Reservations ---
 		Command resCmd = new ReservationCommand();
 		commands.put(MessageType.CREATE_INSTANT_RESERVATION, resCmd);
-	
 		commands.put(MessageType.CREATE_RESERVATION, resCmd);
 		commands.put(MessageType.CANCEL_RESERVATION, resCmd);
 		commands.put(MessageType.CANCEL_RESERVATION_BY_CODE, resCmd);
@@ -48,7 +52,6 @@ public class Server_Controller extends AbstractServer {
 		commands.put(MessageType.UPDATE_RESERVATION_REQUEST, resCmd);
 		commands.put(MessageType.GET_ALL_PENDING_RESERVATIONS, resCmd);
 		commands.put(MessageType.ADMIN_UPDATE_RESERVATION, resCmd);
-		commands.put(MessageType.CHECK_IN_REQUEST, resCmd);
 		commands.put(MessageType.GET_LATEST_RESERVATION_BY_PHONE, resCmd);
 
 		// --- Tables ---

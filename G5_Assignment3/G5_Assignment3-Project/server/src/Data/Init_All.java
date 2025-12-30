@@ -174,7 +174,7 @@ public class Init_All {
                 try { stmt.executeUpdate(sql); } catch (SQLException e) { e.printStackTrace(); }
             }
         }
-        for (int dayOffset = 1; dayOffset <= 30; dayOffset++) {
+        for (int dayOffset = 1; dayOffset <= 3; dayOffset++) {
             LocalDate date = LocalDate.now().plusDays(dayOffset);
             DayOfWeek day = date.getDayOfWeek();
 
@@ -183,7 +183,7 @@ public class Init_All {
 
             if (day == DayOfWeek.SUNDAY || day == DayOfWeek.TUESDAY || day == DayOfWeek.THURSDAY) {
                 hours = new String[]{"08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:30"};
-                reservationsPerSlot = 8;
+                reservationsPerSlot = 5;
             } else if (day == DayOfWeek.MONDAY || day == DayOfWeek.WEDNESDAY) {
                 hours = new String[]{"09:00", "11:00", "13:00", "15:00", "19:00", "20:00"};
                 reservationsPerSlot = 2;
@@ -198,13 +198,13 @@ public class Init_All {
                 LocalDateTime resEnd = resStart.plusHours(2);
 
                 for (int j = 0; j < reservationsPerSlot; j++) {
-                    int tableId;
+                    Integer tableId;
                     int numDiners;
 
                     if (j < 4) { tableId = j + 1; numDiners = 2; } 
                     else if (j < 8) { tableId = j + 1; numDiners = 4; } 
                     else { tableId = (j % 2) + 9; numDiners = 8; }
-
+                    tableId=null;
                     String userIdVal = "NULL";
                     String phone = "0501112233";
                     String email = "guest@mail.com";
@@ -232,7 +232,7 @@ public class Init_All {
                 }
             }
         }
-        System.out.println("Finished inserting 30 days. Half of reservations are linked to subscribers.");
+        System.out.println("Finished inserting 3 days. Half of reservations are linked to subscribers.");
     }
     
     private static LocalDateTime pastTimeForHistory(LocalDate date, int index) {

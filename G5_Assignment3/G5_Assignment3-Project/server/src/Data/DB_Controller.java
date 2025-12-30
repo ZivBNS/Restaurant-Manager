@@ -18,11 +18,12 @@ public class DB_Controller {
     private static DB_Controller instance;
     
     /** Database connection details. */
-    private final String DB_URL = "jdbc:mysql://localhost:3306/bistro?serverTimezone=Asia/Jerusalem&useSSL=false";
+    private final String DB_URL = "jdbc:mysql://localhost:3306/bistro?serverTimezone=Asia/Jerusalem&useSSL=false&allowPublicKeyRetrieval=true";
     private final String USER = "root";
     //private final String PASS = "zaqwsxcde321";
     //private final String PASS = "212009666";
-    private final String PASS = "8630547";
+    //private final String PASS = "8630547";
+    private final String[] PASS = {"8630547","zaqwsxcde321","212009666"};
     private final int MAX_POOL_SIZE = 10;
 
     /** Thread-safe queue to store available pooled connections. */
@@ -57,11 +58,27 @@ public class DB_Controller {
     public PooledConnection getConnection() throws SQLException {
         // Attempt to retrieve a connection from the queue
         PooledConnection pConn = pool.poll();
-        
+        SQLException lastException = null;
+        Connection conn=null;
         if (pConn == null) {
             // No available connections in pool, create a new physical one
             System.out.println("[Pool] Queue empty. Creating NEW physical connection!!!");
-            Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+            //PASS are = 8630547, zaqwsxcde321, 212009666
+            for (String password:PASS) {
+            	try {
+                    conn = DriverManager.getConnection(DB_URL, USER, password);
+                    break;
+				} catch (SQLException e) {
+					if (e.getErrorCode() == 1045) { //if access denied- password not match issue
+	                    lastException = e;
+	                    continue;		//check the next password
+					}
+					else throw e;
+				}
+            }
+            if (conn == null) {
+                throw new SQLException("Failed to connect: All passwords rejected.", lastException);
+            }
             pConn = new PooledConnection(conn);
         } else {
             // Connection found, update its 'last used' status before returning

@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ArrayList;
 import entities.Reservation;
@@ -109,6 +110,53 @@ public class Reservation_Repository {
         finally { if (pConn != null) db.releaseConnection(pConn); }
     }
 
+    public boolean updateReservationForCheckIn(int confCode, int TableId, ReservationStatus rs) {
+       //UserID INT, TableID INT, Phone VARCHAR(14), Email VARCHAR(35), ReservationStartTime DATETIME, ReservationEndTime DATETIME , ActualArrivalTime DATETIME, ActualDepartureTime DATETIME, NumberOfDiners INT, ConfirmationCode INT, Status CreationTime DATETIME);
+    	String sql = "UPDATE reservations SET TableID = ?, ActualArrivalTime = ?, Status = ? WHERE ConfirmationCode = ?";
+        PooledConnection pConn = null;
+        try {
+            pConn = db.getConnection();
+            try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(sql)) {
+                pstmt.setInt(1, TableId);
+                pstmt.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+                pstmt.setString(3, rs.toString());
+                pstmt.setInt(4, confCode);
+                
+                int affectedRows = pstmt.executeUpdate();
+                return affectedRows > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (pConn != null) {
+                db.releaseConnection(pConn);
+            }
+        }
+       
+    }
+    
+    public boolean updateReservationForCheckOut(int confCode, LocalDateTime actualFinishTime) {
+        String sql = "UPDATE reservations SET Status = 'Completed', ActualDepartureTime = ? WHERE ConfirmationCode = ?";
+        PooledConnection pConn = null;
+        try {
+            pConn = db.getConnection();
+            try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(sql)) {
+                pstmt.setTimestamp(1, java.sql.Timestamp.valueOf(actualFinishTime));
+                pstmt.setInt(2, confCode);
+                
+                return pstmt.executeUpdate() > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (pConn != null) {
+                db.releaseConnection(pConn);
+            }
+        }
+    }
+    
     public boolean updateByEmployee(Reservation res) {
         String sql = "UPDATE reservations SET NumberOfDiners = ?, ReservationStartTime = ?, "
                    + "ReservationEndTime = ?, Status = ?, TableID = ?, Phone = ?, Email = ? WHERE ID = ?";
@@ -362,41 +410,88 @@ public class Reservation_Repository {
         }
     }
 
-public Reservation getById(int id) {
-    String sql = "SELECT * FROM reservations WHERE ID = ?";
-    PooledConnection pConn = null;
-    
-    try {
-        pConn = db.getConnection();
-        java.sql.Connection conn = pConn.getConnection();
-        java.sql.PreparedStatement ps = conn.prepareStatement(sql);
-        ps.setInt(1, id);
-        
-        java.sql.ResultSet rs = ps.executeQuery();
-        
-        if (rs.next()) {
-          
-            return new Reservation(
-                rs.getInt("ID"),
-                (Integer) rs.getObject("UserID"), 
-                (Integer) rs.getObject("TableID"),
-                rs.getString("Phone"),
-                rs.getString("Email"),
-                rs.getTimestamp("ReservationStartTime").toLocalDateTime(),
-                rs.getTimestamp("ReservationEndTime") != null ? rs.getTimestamp("ReservationEndTime").toLocalDateTime() : null,
-                rs.getTimestamp("ActualArrivalTime") != null ? rs.getTimestamp("ActualArrivalTime").toLocalDateTime() : null, 
-                rs.getTimestamp("ActualDepartureTime") != null ? rs.getTimestamp("ActualDepartureTime").toLocalDateTime() : null,
-                rs.getInt("NumberOfDiners"),
-                rs.getInt("ConfirmationCode"),
-                rs.getString("Status"),
-                rs.getTimestamp("creationTime").toLocalDateTime()
-            );
-        }
-    } catch (Exception e) {
-        System.out.println("Error in getById: " + e.getMessage());
-    } finally {
-        if (pConn != null) db.releaseConnection(pConn);
-    }
-    return null; // לא נמצא
-}
+	public Reservation getById(int id) {
+	    String sql = "SELECT * FROM reservations WHERE ID = ?";
+	    PooledConnection pConn = null;
+	    
+	    try {
+	        pConn = db.getConnection();
+	        java.sql.Connection conn = pConn.getConnection();
+	        java.sql.PreparedStatement ps = conn.prepareStatement(sql);
+	        ps.setInt(1, id);
+	        
+	        java.sql.ResultSet rs = ps.executeQuery();
+	        
+	        if (rs.next()) {
+	          
+	            return new Reservation(
+	                rs.getInt("ID"),
+	                (Integer) rs.getObject("UserID"), 
+	                (Integer) rs.getObject("TableID"),
+	                rs.getString("Phone"),
+	                rs.getString("Email"),
+	                rs.getTimestamp("ReservationStartTime").toLocalDateTime(),
+	                rs.getTimestamp("ReservationEndTime") != null ? rs.getTimestamp("ReservationEndTime").toLocalDateTime() : null,
+	                rs.getTimestamp("ActualArrivalTime") != null ? rs.getTimestamp("ActualArrivalTime").toLocalDateTime() : null, 
+	                rs.getTimestamp("ActualDepartureTime") != null ? rs.getTimestamp("ActualDepartureTime").toLocalDateTime() : null,
+	                rs.getInt("NumberOfDiners"),
+	                rs.getInt("ConfirmationCode"),
+	                rs.getString("Status"),
+	                rs.getTimestamp("creationTime").toLocalDateTime()
+	            );
+	        }
+	    } catch (Exception e) {
+	        System.out.println("Error in getById: " + e.getMessage());
+	    } finally {
+	        if (pConn != null) db.releaseConnection(pConn);
+	    }
+	    return null; // לא נמצא
+	}
+	
+	public boolean updateTableByConfirmationCode(int confCode, int tableId) {
+	    String sql = "UPDATE reservations SET TableID = ? WHERE ConfirmationCode = ?";
+	    
+	    PooledConnection pConn = null;
+	    try {
+	        pConn = db.getConnection();
+	        try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(sql)) {
+	            pstmt.setInt(1, tableId);
+	            pstmt.setInt(2, confCode);
+	            int affectedRows = pstmt.executeUpdate();
+	            
+	            return affectedRows > 0;
+	        }
+	    } catch (SQLException e) {
+	        System.err.println("[Database] Error updating table ID for code: " + confCode);
+	        e.printStackTrace();
+	        return false;
+	    } finally {
+	        if (pConn != null) {
+	            db.releaseConnection(pConn);
+	        }
+	    }
+	}	
+	
+	public boolean updateActualArrivalTimeOnly(int confCode, LocalDateTime arrivalTime) {
+	    String sql = "UPDATE Reservations SET ActualArrivalTime = ? WHERE ConfirmationCode = ?";
+	    PooledConnection pConn = null;
+	    try {
+	        pConn = db.getConnection();
+	        try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(sql)) {
+	            pstmt.setTimestamp(1, java.sql.Timestamp.valueOf(arrivalTime));
+	            pstmt.setInt(2, confCode);
+	            
+	            int rowsAffected = pstmt.executeUpdate();
+	            return rowsAffected > 0;
+	        }
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	        return false;
+	    } finally {
+	        if (pConn != null) {
+	            db.releaseConnection(pConn);
+	        }
+	    }
+	}
+	
 }

@@ -36,7 +36,6 @@ public class Reservation_Controller {
             case CANCEL_RESERVATION_BY_CODE: return cancelReservationByCode(msg);
             case GET_ALL_PENDING_RESERVATIONS: return fetchAllPending(msg);
             case ADMIN_UPDATE_RESERVATION: return processAdminUpdate(msg);
-            case CHECK_IN_REQUEST: return handleCheckIn(msg);
             case GET_LATEST_RESERVATION_BY_PHONE: return getLatestReservationById(msg);
             default: return null;
         }
@@ -48,11 +47,16 @@ public class Reservation_Controller {
         return new Message(
                 MessageType.RETURN_LATEST_RESERVATION_BY_PHONE,r);
 	}
+    
 	private static Message createInstantReservation(Message msg) {
-		Message tryToCreateReservation = createReservation(msg);
-		if (tryToCreateReservation.getType().equals(MessageType.RESERVATION_FAILED_NO_TABLE))
-			return new Message(MessageType.INSTANT_RESERVATION_SUCCESS,tryToCreateReservation.getContent());
-		return new Message(MessageType.INSTANT_RESERVATION_FAILED);
+		Message createInstantReservation = createReservation(msg);
+		String errorMsg = "no slot available";
+		if (createInstantReservation.getType().equals(MessageType.RESERVATION_CONFIRMED)) {
+			return new Message(MessageType.INSTANT_RESERVATION_SUCCESS,createInstantReservation.getContent());			
+		}
+		if (createInstantReservation.getType().equals(MessageType.RESERVATION_FAILED))
+			return new Message(MessageType.INSTANT_RESERVATION_FAILED,createInstantReservation.getContent());
+		return new Message(MessageType.INSTANT_RESERVATION_FAILED,errorMsg);
 	}
 
 
@@ -177,30 +181,6 @@ public class Reservation_Controller {
         }
     }
 
-    private static Message handleCheckIn(Message msg) {
-        try {
-            int code = (int) msg.getContent();
-            Reservation res = reservationRepository.getByConfirmationCode(code);
-            
-            if (res == null || !res.getStatus().equalsIgnoreCase(ReservationStatus.PENDING.toString())) {
-                return new Message(MessageType.ERROR_RESPONSE, "Invalid status for check-in.");
-            }
-
-            Integer tableId = tableRepository.findBestAvailableTable(res.getOrderStartTime(), res.getOrderEndTime(), res.getNumberOfDiners());
-            
-            if (tableId != null) {
-                res.setTableId(tableId);
-                res.setStatus(ReservationStatus.ACTIVE.toString());
-                reservationRepository.updateByEmployee(res);
-                return new Message(MessageType.CHECK_IN_COMPLETED, tableId);
-            } else {
-                return new Message(MessageType.ERROR_RESPONSE, "No tables available now.");
-            }
-        } catch (Exception e) {
-            return new Message(MessageType.ERROR_RESPONSE, "Check-in failed.");
-        }
-    }
-
     private static Message getReservationsByUser(Message msg) {
         try {
             List<Reservation> reservations;
@@ -226,7 +206,8 @@ public class Reservation_Controller {
         Message notSucceed = new Message(MessageType.RESERVATION_CANCEL_FAILED, ConfirmationCode);
         
         Reservation r= reservationRepository.getByConfirmationCode(ConfirmationCode);
-        if (r==null || r.getStatus().equals("Completed") || r.getStatus().equals("Canceled")) return notSucceed;
+        if (r==null || r.getStatus().equals(ReservationStatus.CANCELED.toString()) || r.getStatus().equals("CANCELED") || r.getStatus().equals(ReservationStatus.COMPLETED.toString()) ||r.getStatus().equals("COMPLETED"))
+        	return notSucceed;
         //boolean WasInWaitlist= WaitlistRepository.cancelByReservationId(int r.getId());
         boolean canceled = reservationRepository.updateStatusByConfirmationCode(ConfirmationCode, ReservationStatus.CANCELED);
         
