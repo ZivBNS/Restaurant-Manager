@@ -2,8 +2,9 @@ package entities;
 
 
 public class Bill {
-	private final double UserDiscountRate=0.15;
-    private double totalAmount=0.0;
+	private final double UserDiscountRate=0.1;
+    
+	private double totalAmount=0.0;
     private double discountRate=0.0;    
     private String status="";
     private String billDetails;
@@ -15,11 +16,17 @@ public class Bill {
     	this(reservation);
     	this.totalAmount = totalAmount;
     	this.billDetails=billDetails;
-
     }
+    
     public Bill(Reservation reservation) {
         this.reservation = reservation;
         if(reservation.getUserId()!=null) discountRate=UserDiscountRate;    
+    }
+
+    //constructor to set new bill related to new reservation in db
+    public Bill(int reservationId , boolean isSubscriber) {
+        this.reservationId = reservationId;
+        if (isSubscriber) discountRate=UserDiscountRate;    
     }    
     
     public Bill(int id, int reservationId, String billDetails, double totalAmount, String status) {

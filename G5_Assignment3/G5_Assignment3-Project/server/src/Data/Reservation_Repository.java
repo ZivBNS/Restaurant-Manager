@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ArrayList;
@@ -77,13 +78,12 @@ public class Reservation_Repository {
                 if (res.getUserId() != null) pstmt.setInt(1, res.getUserId());
                 else pstmt.setNull(1, java.sql.Types.INTEGER);
 
-                // TableID is NULL on creation
                 pstmt.setNull(2, java.sql.Types.INTEGER);
 
                 pstmt.setString(3, res.getPhone());
                 pstmt.setString(4, res.getEmail());
-                pstmt.setTimestamp(5, Timestamp.valueOf(res.getOrderStartTime()));
-                pstmt.setTimestamp(6, Timestamp.valueOf(res.getOrderEndTime()));
+            	pstmt.setTimestamp(5, Timestamp.valueOf(res.getOrderStartTime()));
+            	pstmt.setTimestamp(6, Timestamp.valueOf(res.getOrderEndTime()));
                 pstmt.setInt(7, res.getNumberOfDiners());
                 pstmt.setInt(8, res.getConfirmationCode());
                 pstmt.setString(9, res.getStatus());
@@ -590,6 +590,146 @@ public class Reservation_Repository {
         } catch (SQLException e) { e.printStackTrace(); } 
         finally { if (pConn != null) db.releaseConnection(pConn); }
     }
+
     
+    //for waitlist controller:
+    public Reservation getLastReservationByContact(String phone, String email) {
+        String query = "SELECT * FROM Reservations WHERE (Phone = ? OR Email = ?) ORDER BY ID DESC LIMIT 1";
+        
+        PooledConnection pConn = null;
+        PreparedStatement pstmt = null;
+        Reservation reservation = null;
+
+        try {
+            pConn = db.getConnection();
+            pstmt = pConn.getConnection().prepareStatement(query);
+
+            pstmt.setString(1, phone);
+            pstmt.setString(2, email);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    
+                    int id = rs.getInt("ID");
+                    
+                    int uId = rs.getInt("UserID");
+                    Integer userId = rs.wasNull() ? null : uId;
+
+                    int tId = rs.getInt("TableID");
+                    Integer tableId = rs.wasNull() ? null : tId;
+
+                    String resPhone = rs.getString("Phone");
+                    String resEmail = rs.getString("Email");
+
+                    java.sql.Timestamp startTs = rs.getTimestamp("ReservationStartTime");
+                    LocalDateTime orderStartTime = (startTs != null) ? startTs.toLocalDateTime() : null;
+
+                    java.sql.Timestamp endTs = rs.getTimestamp("ReservationEndTime");
+                    LocalDateTime orderEndTime = (endTs != null) ? endTs.toLocalDateTime() : null;
+
+                    java.sql.Timestamp arrTs = rs.getTimestamp("ActualArrivalTime");
+                    LocalDateTime actualArrivalTime = (arrTs != null) ? arrTs.toLocalDateTime() : null;
+
+                    java.sql.Timestamp depTs = rs.getTimestamp("ActualDepartureTime");
+                    LocalDateTime actualDepartureTime = (depTs != null) ? depTs.toLocalDateTime() : null;
+
+                    int diners = rs.getInt("NumberOfDiners");
+                    int code = rs.getInt("ConfirmationCode");
+                    String status = rs.getString("Status");
+
+                    java.sql.Timestamp createTs = rs.getTimestamp("CreationTime");
+                    LocalDateTime creationTime = (createTs != null) ? createTs.toLocalDateTime() : null;
+                    
+                    boolean remindedPre = false;
+                    try { remindedPre = rs.getBoolean("RemindedPreArrival"); } catch (SQLException e) {}
+
+                    boolean remindedDep = false;
+                    try { remindedDep = rs.getBoolean("RemindedDeparture"); } catch (SQLException e) {}
+
+                    reservation = new Reservation(id, userId, tableId, resPhone, resEmail, orderStartTime, orderEndTime, 
+                                                  actualArrivalTime, actualDepartureTime, diners, code, status, 
+                                                  creationTime, remindedPre, remindedDep);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+            e.printStackTrace();
+        } finally {
+            try { if (pstmt != null) pstmt.close(); } catch (SQLException e) {}
+            if (pConn != null) db.releaseConnection(pConn);
+        }
+
+        return reservation;
+    }
+
+    //FOR TIMER
+    public List<Reservation> getOverstayingReservations(int hours) {
+        List<Reservation> lateReservations = new ArrayList<>();
+        
+        // השאילתה:
+        // 1. Status = 'Active' -> הלקוח עדיין יושב
+        // 2. ActualArrivalTime < (עכשיו פחות X שעות) -> הוא הגיע מזמן
+        String query = "SELECT * FROM reservations WHERE Status = 'Active' AND ActualArrivalTime < DATE_SUB(NOW(), INTERVAL ? HOUR)";
+
+        PooledConnection pConn = null;
+        PreparedStatement pstmt = null;
+
+        try {
+            pConn = db.getConnection();
+            pstmt = pConn.getConnection().prepareStatement(query);
+            
+            pstmt.setInt(1, hours); // הצבת מספר השעות (למשל 2)
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    Reservation r = extractReservationFromResultSet(rs);
+                    lateReservations.add(r);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error fetching overstaying reservations: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            try { if (pstmt != null) pstmt.close(); } catch (SQLException e) {}
+            if (pConn != null) db.releaseConnection(pConn);
+        }
+
+        return lateReservations;
+    }
+
+    //FOR TIMER
+    public List<Reservation> getNoShowCandidates(int minutes) {
+        List<Reservation> noShowReservations = new ArrayList<>();
+
+        // השאילתה:
+        // 1. Status = 'Pending' -> הלקוח טרם הגיע
+        // 2. ReservationStartTime < (עכשיו פחות X דקות) -> זמן ההגעה עבר מזמן
+        String query = "SELECT * FROM reservations WHERE Status = 'Pending' AND ReservationStartTime < DATE_SUB(NOW(), INTERVAL ? MINUTE)";
+
+        PooledConnection pConn = null;
+        PreparedStatement pstmt = null;
+
+        try {
+            pConn = db.getConnection();
+            pstmt = pConn.getConnection().prepareStatement(query);
+            
+            pstmt.setInt(1, minutes);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                	Reservation r = extractReservationFromResultSet(rs);
+                    noShowReservations.add(r);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error fetching no-show candidates: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            try { if (pstmt != null) pstmt.close(); } catch (SQLException e) {}
+            if (pConn != null) db.releaseConnection(pConn);
+        }
+
+        return noShowReservations;
+    }
 	
 }

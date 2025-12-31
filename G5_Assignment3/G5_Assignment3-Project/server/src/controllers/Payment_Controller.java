@@ -8,6 +8,7 @@ import messages.Message;
 import messages.MessageType;
 import entities.Bill;
 import entities.Reservation;
+import entities.ReservationStatus;
 
 public class Payment_Controller {
 
@@ -25,7 +26,14 @@ public class Payment_Controller {
         }
 
         switch (msg.getType()) {
-
+        	case BILL_REQUEST: {
+                Integer reservationCode = (Integer) msg.getContent();
+                Reservation r = reservationRepo.getByConfirmationCode(reservationCode);
+                if (r==null || r.getId()<=0 || !r.getStatus().equals(ReservationStatus.ACTIVE.toString())) return new Message(MessageType.BILL_REQUEST_FAILED,"Your code is invalid");
+                Bill bill = billRepo.getBillByReservationId(r.getId());
+                return new Message(MessageType.RETURN_BILL_BY_RESERVATION_ID, bill);	
+        	}
+        	
             // -----------------------------------------------------------
             // Get bill by reservation id
             // Content: Integer reservationId
@@ -60,7 +68,7 @@ public class Payment_Controller {
                 if (reservationId != -1) {
                 	reservationRepo.markReservationAsCompleted(reservationId);
                 }
-
+                else return new Message(MessageType.BILL_PAYMENT_FAILED, null);
                 return new Message(MessageType.BILL_PAYMENT_SUCCESS, null);
                 
 

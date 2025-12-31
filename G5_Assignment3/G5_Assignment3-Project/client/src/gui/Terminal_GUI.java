@@ -3,28 +3,27 @@ package gui;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.scene.text.TextAlignment;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 
+import entities.Bill;
 import entities.LoginData;
 import entities.Reservation;
-import entities.Subscribed_Customer;
+import entities.UserRecord;
 
 public class Terminal_GUI {
 
     public static Terminal_GUI instance;
-    private Subscribed_Customer loggedInUser = null; 
-    private VBox waitlistProposalBox;
+    private UserRecord loggedInUser = null;
+    private int confiCode=0;
+    private Bill currentBillToPay=null; 
 
     @FXML private BorderPane terminalRoot;
     @FXML private AnchorPane welcomeView;
@@ -33,6 +32,10 @@ public class Terminal_GUI {
     @FXML private StackPane actionFormsContainer;
 
     @FXML private VBox checkInForm, instantForm, payBillForm, cancelForm, billDetailsBox;
+    
+    @FXML private VBox waitlistProposalBox; 
+    @FXML private Button btnJoinWaitlist, btnReturnWaitlist;
+
     @FXML private Button btnCheckIn, btnInstantBooking, btnPayBill, btnCancelRes, backBtn;
 
     @FXML private TextField checkInCodeField, instPhoneField, instEmailField, payBillCodeField, cancelCodeField;
@@ -55,11 +58,57 @@ public class Terminal_GUI {
     public void initialize() {
         instance = this;
         instDinersSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 15, 2));
-        btnCancelRes.setText("CANCEL RES/\nWAITLIST");
+        btnCancelRes.setText("CANCEL ORDER/\nEXIT WAITLIST");
         btnCancelRes.setStyle("-fx-text-alignment: center;");
         hlForgotCode.setVisible(false);
 
-        // --- Event Handlers ---
+        if (waitlistProposalBox != null) {
+            waitlistProposalBox.setVisible(false);
+            waitlistProposalBox.setManaged(false);
+        }
+
+        if (btnReturnWaitlist != null) {
+            btnReturnWaitlist.setOnAction(event -> {
+                waitlistProposalBox.setVisible(false);
+                waitlistProposalBox.setManaged(false);
+                
+                for (Node node : instantForm.getChildren()) {
+                    if (node != waitlistProposalBox) {
+                        node.setVisible(true);
+                        node.setManaged(true);
+                    }
+                }
+                
+                if (loggedInUser == null) {
+                    instPhoneField.clear();
+                    instEmailField.clear();
+                }
+                instDinersSpinner.getValueFactory().setValue(2);
+                highlightButton(btnInstantBooking);
+            });
+        }
+
+        if (btnJoinWaitlist != null) {
+            btnJoinWaitlist.setOnAction(event -> {
+                int diners = instDinersSpinner.getValue();
+                String phone, email;
+                Integer userId = null;
+
+                if (loggedInUser != null) {
+                    phone = loggedInUser.getPhone();
+                    email = loggedInUser.getEmail();
+                    userId = loggedInUser.getId(); 
+                } else {
+                    phone = instPhoneField.getText().trim();
+                    email = instEmailField.getText().trim();
+                }
+                Reservation waitlistReq = new Reservation(userId,phone,email,LocalDateTime.now(),LocalDateTime.now().plusHours(2),diners);
+                ConnectToServer_GUI.clientController.sendJoinWaitlistRequest(waitlistReq);
+                waitlistProposalBox.setVisible(false);
+                waitlistProposalBox.setManaged(false);
+            });
+        }
+
         btnContinueAsGuest.setOnAction(event -> {
             loggedInUser = null;
             showTerminal(null);
@@ -75,6 +124,12 @@ public class Terminal_GUI {
         btnInstantBooking.setOnAction(event -> {
             toggleForm(instantForm);
             highlightButton(btnInstantBooking);
+            
+            if (waitlistProposalBox != null) {
+                waitlistProposalBox.setVisible(false);
+                waitlistProposalBox.setManaged(false);
+            }
+            
             if(loggedInUser != null) {
                 instPhoneField.setText(loggedInUser.getPhone());
                 instEmailField.setText(loggedInUser.getEmail());
@@ -108,14 +163,31 @@ public class Terminal_GUI {
 
         btnSubmitCheckIn.setOnAction(event -> submitCheckIn(checkInCodeField, checkInStatusLabel));
         btnSubmitInstant.setOnAction(event -> handleInstantBookingSubmit());
-        btnGoToPayment.setOnAction(event -> openCreditCardPopup());
+        
+        btnGoToPayment.setOnAction(event -> {
+        	if (currentBillToPay != null) {
+        		ConnectToServer_GUI.clientController.sendPayBillRequest(currentBillToPay);
+        	}
+        });
+        
         btnCloseForgot.setOnAction(event -> forgotCodeView.setVisible(false));
         hlForgotCode.setOnAction(event -> handleForgotCodeClick());
         
         btnFetchBill.setOnAction(event -> {
-            if (!payBillCodeField.getText().isEmpty()) {
-                billDetailsBox.setVisible(true);
+            String codeStr = payBillCodeField.getText().trim();            
+            if (codeStr.isEmpty()) {
+                payBillStatusLabel.setText("Please enter a code.");
+                payBillStatusLabel.setVisible(true);
+                return;
+            }
+
+            try {
+                int code = Integer.parseInt(codeStr);
+                ConnectToServer_GUI.clientController.sendGetBillRequest(code);
                 payBillStatusLabel.setVisible(false);
+            } catch (NumberFormatException e) {
+                payBillStatusLabel.setText("Code must be a number.");
+                payBillStatusLabel.setVisible(true);
             }
         });
 
@@ -141,19 +213,32 @@ public class Terminal_GUI {
         if (formToShow != null) formToShow.setVisible(true);
         
         billDetailsBox.setVisible(false);
+        billDetailsBox.setManaged(false);
+        payBillCodeField.setVisible(true);
+        payBillCodeField.setManaged(true);
+        btnFetchBill.setVisible(true);
+        btnFetchBill.setManaged(true);
+        payBillCodeField.clear();
+        payBillCodeField.setEditable(true);
+        currentBillToPay = null;
+        
         if (forgotCodeView != null) forgotCodeView.setVisible(false);
         
         if (waitlistProposalBox != null) {
             waitlistProposalBox.setVisible(false);
             waitlistProposalBox.setManaged(false);
         }
-        for (javafx.scene.Node node : instantForm.getChildren()) {
+
+        for (Node node : instantForm.getChildren()) {
             if (node != waitlistProposalBox) {
                 node.setVisible(true);
                 node.setManaged(true);
             }
         }
+        
         instStatusLabel.setText("");
+        checkInStatusLabel.setText("");
+        payBillStatusLabel.setText("");
     }
 
     private void handleInstantBookingSubmit() {
@@ -169,10 +254,7 @@ public class Terminal_GUI {
         }
 
         try {
-            Reservation instantRes = new Reservation((loggedInUser == null ? null : loggedInUser.getSubscriberCode()), phone, email, LocalDateTime.now(), LocalDateTime.now().plusHours(2), diners);
-            instStatusLabel.setText("Checking availability...");
-            instStatusLabel.setStyle("-fx-text-fill: #e67e22;");
-            instStatusLabel.setVisible(true);
+            Reservation instantRes = new Reservation((loggedInUser == null ? null : loggedInUser.getId()), phone, email, LocalDateTime.now(), LocalDateTime.now().plusHours(2), diners);
             ConnectToServer_GUI.clientController.sendNewInstantReservationRequest(instantRes);
         } catch (Exception e) {
             instStatusLabel.setText("Error processing request.");
@@ -180,24 +262,21 @@ public class Terminal_GUI {
     }
 
     private void submitCheckIn(TextField field, Label statusLabel) {
-    	String code = field.getText().trim();
-    	if (code.isEmpty() ) {
+        String code = field.getText().trim();
+        if (code.isEmpty() ) {
             statusLabel.setText("Input required.");
             statusLabel.setStyle("-fx-text-fill: #e74c3c;");
             statusLabel.setVisible(true);
             return;
         }
-    	if (!code.matches("\\d+")) {
+        if (!code.matches("\\d+")) {
             statusLabel.setText("Code must contain numbers only!");
             statusLabel.setStyle("-fx-text-fill: #e74c3c;");
             statusLabel.setVisible(true);
             return;
         }
-    	int confiCode=Integer.parseInt(code);
+        int confiCode = Integer.parseInt(code);
         ConnectToServer_GUI.clientController.sendCheckInRequest(confiCode);
-
-        //statusLabel.setText(successMsg);
-        //statusLabel.setStyle("-fx-text-fill: #27ae60;");
     }
 
     private void highlightButton(Button selected) {
@@ -250,17 +329,6 @@ public class Terminal_GUI {
         btnSubmitForgot.setVisible(!isSubscriber);
     }
 
-    private void openCreditCardPopup() {
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource("CreditCardPopup.fxml"));
-            Stage stage = new Stage();
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.initStyle(StageStyle.UNDECORATED);
-            stage.setScene(new Scene(root));
-            stage.showAndWait();
-        } catch (IOException e) { e.printStackTrace(); }
-    }
-
     private void loadScreen(String fxml) {
         try {
             instance = null;
@@ -269,26 +337,31 @@ public class Terminal_GUI {
         } catch (IOException e) { e.printStackTrace(); }
     }
 
-    public void onCancellationResponse(int i) {
-        if (i == 3) {
+    public void onCancellationResponse(String response) {
+    	if (response==null|| response.equals("error")) {
+    		cancelStatusLabel.setText("Operation failed or wrong code");
+    		cancelStatusLabel.setStyle("-fx-text-fill: #e74c3c;");
+    	}
+    	else if (response.equals("approved r")) {
             cancelStatusLabel.setText("Your Reservation is canceled");
             cancelStatusLabel.setStyle("-fx-text-fill: #27ae60;");
             cancelCodeField.clear(); 
-        } else if (i == 1) {
+        } else if (response.equals("approved w")) {
             cancelStatusLabel.setText("Your Waitlist is canceled");
             cancelStatusLabel.setStyle("-fx-text-fill: #27ae60;");
             cancelCodeField.clear(); 
-        } else {
-            cancelStatusLabel.setText("Operation failed or wrong code");
-            cancelStatusLabel.setStyle("-fx-text-fill: #e74c3c;");
+        }
+        else {
+            cancelStatusLabel.setText("The "+ response +" is not longer exist in the system");
+            cancelStatusLabel.setStyle("-fx-text-fill: #27ae60;");        	
         }
         cancelStatusLabel.setVisible(true);
     }
     
-    public void handleMessageIfLoggedIn(Subscribed_Customer msg) {
+    public void handleMessageIfLoggedIn(UserRecord userRecord) {
         Platform.runLater(() -> {
-            if (msg != null) {
-                loggedInUser = msg;
+            if (userRecord != null) {
+                loggedInUser = userRecord;
                 showTerminal(loggedInUser.getFirstName());
             } else {
                 welcomeErrorLabel.setText("Invalid username or password.");
@@ -300,73 +373,171 @@ public class Terminal_GUI {
     public void onInstantReservationFailedResponse(String s) {
         Platform.runLater(() -> {
             highlightButton(null);
+            
             for (javafx.scene.Node node : instantForm.getChildren()) {
                 if (node != waitlistProposalBox) {
                     node.setVisible(false);
                     node.setManaged(false);
                 }
             }
-            if (waitlistProposalBox == null) {
-                waitlistProposalBox = new VBox(15);
-                waitlistProposalBox.setAlignment(Pos.CENTER);
-                waitlistProposalBox.setStyle("-fx-background-color: #fff3cd; -fx-padding: 20; -fx-background-radius: 10; -fx-border-color: #ffeeba; -fx-border-width: 2;");
-                Label msgLabel = new Label("No tables available at the moment.\nWould you like to join the Waitlist?");
-                msgLabel.setWrapText(true);
-                msgLabel.setTextAlignment(TextAlignment.CENTER);
-                msgLabel.setStyle("-fx-text-fill: #856404; -fx-font-weight: bold; -fx-font-size: 15px;");
-                
-                HBox buttonsBox = new HBox(15);
-                buttonsBox.setAlignment(Pos.CENTER);
-                Button btnJoin = new Button("Join Waitlist");
-                btnJoin.setStyle("-fx-background-color: #28a745; -fx-text-fill: white; -fx-cursor: hand; -fx-font-weight: bold; -fx-padding: 8 20;");
-                
-                Button btnBack = new Button("Return");
-                btnBack.setStyle("-fx-background-color: #6c757d; -fx-text-fill: white; -fx-cursor: hand; -fx-padding: 8 20;");
-                btnBack.setOnAction(e -> {
-                    toggleForm(instantForm);
-                    instPhoneField.clear();
-                    instEmailField.clear();
-                    instDinersSpinner.getValueFactory().setValue(2);
-                    highlightButton(btnInstantBooking);
-                });
-
-                buttonsBox.getChildren().addAll(btnJoin, btnBack);
-                waitlistProposalBox.getChildren().addAll(msgLabel, buttonsBox);
-                instantForm.getChildren().add(waitlistProposalBox);
+            
+            if (waitlistProposalBox != null) {
+                waitlistProposalBox.setVisible(true);
+                waitlistProposalBox.setManaged(true);
             }
-            waitlistProposalBox.setVisible(true);
-            waitlistProposalBox.setManaged(true);
         });
     }
     
-    public void onInstantReservationSuccessResponse(int confirmationCodeMsg) {
+    public void onInstantReservationSuccessResponse(int confirmationCode) {
         Platform.runLater(() -> {
-            toggleForm(instantForm);
-            instStatusLabel.setText("Reservation Approved! your Confirmation Code is: " + confirmationCodeMsg+".\nInsert the code in the check-in window to complete check-in");
-            instStatusLabel.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold; -fx-font-size: 14px;");
-            instStatusLabel.setVisible(true);
-            if (loggedInUser == null) {
-                instPhoneField.clear();
-                instEmailField.clear();
-            }
+    		confiCode=confirmationCode;
+            toggleForm(checkInForm);
+            highlightButton(btnCheckIn);
+            checkInStatusLabel.setText("Reservation Approved! Auto-processing Check-In...");
+            checkInStatusLabel.setStyle("-fx-text-fill: #2980b9; -fx-font-weight: bold;");
+            checkInStatusLabel.setVisible(true);
         });
     }
 
     public void onCheckInSuccessResponse(int tableNumber) {
         Platform.runLater(() -> {
-            checkInStatusLabel.setText("Check-In Successful! Please proceed to Table Number: " + tableNumber);
+            toggleForm(checkInForm);
+            highlightButton(btnCheckIn);
+            if (confiCode==0) checkInStatusLabel.setText( "Check-In Successful!" + "\nPlease proceed to Table Number: " + tableNumber);
+            else checkInStatusLabel.setText("Reservation Approved! your code is: " + confiCode + "\nPlease proceed to Table Number: " + tableNumber);
+            confiCode=0;
             checkInStatusLabel.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold; -fx-font-size: 16px;");
             checkInStatusLabel.setVisible(true);
             checkInCodeField.clear();
-            System.out.println("[Terminal] Check-in success. Assigned Table: " + tableNumber);
         });
     }
 
-	public void onCheckInFailedResponse(String s) {
-		checkInStatusLabel.setText("Check-In FAILED");
-        checkInStatusLabel.setVisible(true);
-        checkInCodeField.clear();
-        System.out.println("[Terminal] Check-in FAIL");
+    public void onCheckInFailedResponse(String s) {
+        Platform.runLater(() -> {
+            checkInStatusLabel.setText("Check-In FAILED");
+            checkInStatusLabel.setStyle("-fx-text-fill: #e74c3c;");
+            checkInStatusLabel.setVisible(true);
+            checkInCodeField.clear();
+        });
+    }
 
-	}
+    public void onJoinWaitlistFailedResponse(String msg) {
+        Platform.runLater(() -> {
+            if (waitlistProposalBox != null) {
+                waitlistProposalBox.setVisible(false);
+                waitlistProposalBox.setManaged(false);
+            }            
+            for (Node node : instantForm.getChildren()) {
+                if (node != waitlistProposalBox) {
+                    node.setVisible(true);
+                    node.setManaged(true);
+                }
+            }
+            instStatusLabel.setText((msg!=null)? msg : "System Error, refresh the page");
+            instStatusLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;"); 
+            instStatusLabel.setVisible(true);
+        });
+    }
+
+    public void onJoinWaitlistSucceedResponse(int content) {
+        Platform.runLater(() -> {
+            if (waitlistProposalBox != null) {
+                waitlistProposalBox.setVisible(false);
+                waitlistProposalBox.setManaged(false);
+            }
+
+            for (Node node : instantForm.getChildren()) {
+                if (node != waitlistProposalBox && node != instStatusLabel) {
+                    node.setVisible(false);
+                    node.setManaged(false);
+                }
+            }
+            if (loggedInUser == null) {
+                instPhoneField.clear();
+                instEmailField.clear();
+            }
+            String successMsg = "You have successfully joined the Waitlist!\n" +
+                                "Your Confirmation Code is: " + content + "\n" +
+                                "We will notify you immediately when a table becomes free.\n" +
+                                "Please keep this code safe for check-in.";
+            
+            instStatusLabel.setText(successMsg);
+            instStatusLabel.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold; -fx-font-size: 15px;");
+            instStatusLabel.setVisible(true);
+            instStatusLabel.setManaged(true); 
+        });
+    }
+
+    public void onGetBillSuccess(Bill bill) {
+        Platform.runLater(() -> {
+            this.currentBillToPay = bill;
+            double total = bill.calculateFinalAmount()+10;
+
+            payBillCodeField.setVisible(false);
+            payBillCodeField.setManaged(false);
+            btnFetchBill.setVisible(false);
+            btnFetchBill.setManaged(false);
+
+            if (total == 0) {
+                payBillStatusLabel.setText("No payment needed. Thanks for checking out.");
+                payBillStatusLabel.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold; -fx-font-size: 16px;");
+                payBillStatusLabel.setVisible(true);
+                billDetailsBox.setVisible(false); 
+                billDetailsBox.setManaged(false);
+            } else {
+            	bill.setBillDetails("Pancakes - 4$");
+                String details = (bill.getBillDetails() == null) ? "" : bill.getBillDetails();
+                payBillStatusLabel.setText(details + "\nSitting - 3$\nTips - 3$" + "\n\nTotal to Pay: " + total + "$");
+                payBillStatusLabel.setStyle("-fx-text-fill: #2c3e50; -fx-font-size: 14px;");
+                payBillStatusLabel.setVisible(true);
+                
+                billDetailsBox.setVisible(true);
+                billDetailsBox.setManaged(true);
+            }
+        });
+    }
+
+    public void onGetBillFailure(String reason) {
+        Platform.runLater(() -> {
+            billDetailsBox.setVisible(false);
+            billDetailsBox.setManaged(false);
+            payBillStatusLabel.setText(reason);
+            payBillStatusLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
+            payBillStatusLabel.setVisible(true);
+            
+            payBillCodeField.setVisible(true);
+            payBillCodeField.setManaged(true);
+            btnFetchBill.setVisible(true);
+            btnFetchBill.setManaged(true);
+        });
+    }
+
+    public void onPaymentSuccessResponse(boolean success) {
+        Platform.runLater(() -> {
+            if (success) {
+                billDetailsBox.setVisible(false);
+                billDetailsBox.setManaged(false);
+                
+                payBillCodeField.clear();
+                payBillCodeField.setVisible(true);
+                payBillCodeField.setManaged(true);
+                btnFetchBill.setVisible(true);
+                btnFetchBill.setManaged(true);
+                
+                payBillStatusLabel.setText("Payment Successful! Thank you for dining with us.");
+                payBillStatusLabel.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold; -fx-font-size: 16px;");
+                payBillStatusLabel.setVisible(true);
+                
+                currentBillToPay = null;
+                
+            } else {
+                payBillStatusLabel.setText("Payment Failed. Please try again or contact staff.");
+                payBillStatusLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold; -fx-font-size: 14px;");
+                payBillStatusLabel.setVisible(true);
+                
+                billDetailsBox.setVisible(true);
+                billDetailsBox.setManaged(true);
+            }
+        });
+    }
 }

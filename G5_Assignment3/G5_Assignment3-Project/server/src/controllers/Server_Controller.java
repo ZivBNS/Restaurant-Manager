@@ -74,6 +74,7 @@ public class Server_Controller extends AbstractServer {
 		// --- Payment & Bills ---
 		Command payCmd = new PaymentCommand();
 		commands.put(MessageType.GET_LATEST_BILL_BY_PHONE, payCmd);
+		commands.put(MessageType.BILL_REQUEST, payCmd);
 		commands.put(MessageType.GET_BILL_BY_RESERVATION_ID, payCmd);
 		commands.put(MessageType.BILL_PAYMENT_REQUEST, payCmd);
 		commands.put(MessageType.GET_ALL_BILLS, payCmd);
@@ -83,7 +84,10 @@ public class Server_Controller extends AbstractServer {
 		// --- waitlists ---
 		Command WaitlistCmd = new WaitlistCommand();
 		commands.put(MessageType.CANCEL_WAITLIST_AND_RESERVATION_BY_CODE, WaitlistCmd);
-		commands.put(MessageType.CANCEL_WAITLIST, WaitlistCmd);
+		commands.put(MessageType.JOIN_WAITLIST, WaitlistCmd);
+
+
+		
 
 		// --- Opening Hours Management ---
 		Command ohCmd = new OpeningHoursCommand();

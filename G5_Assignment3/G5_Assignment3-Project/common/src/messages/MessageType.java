@@ -87,6 +87,8 @@ public enum MessageType {
     
     // --- bill request ---
     BILL_REQUEST,
+    BILL_REQUEST_FAILED,
+    BILL_REQUEST_SUCCESS,
     BILL_RETURN_DETAILS,
     BILL_PAYMENT_SUCCESS,
     BILL_PAYMENT_FAILED,

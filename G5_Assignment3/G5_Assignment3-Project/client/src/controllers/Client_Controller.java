@@ -72,13 +72,15 @@ public class Client_Controller implements ChatIF {
             public void handle(Message msg) {
             	UserRecord userRecord = (UserRecord) msg.getContent();
                 User_Session.setLoggedInUser(userRecord);
-                Subscribed_Customer sub = new Subscribed_Customer(
+        /*        Subscribed_Customer sub = new Subscribed_Customer(
                 		userRecord.getFirstName(), userRecord.getLastName(),
                 		userRecord.getPhone(), userRecord.getEmail(),
                 		userRecord.getUsername(), userRecord.getPassword()
-                		);
-                if (Terminal_GUI.instance!=null)
-                	Terminal_GUI.instance.handleMessageIfLoggedIn(sub);
+                		);*/
+                if (Terminal_GUI.instance!=null) {
+                	//sub.setUserId(userRecord.getId());
+                	Terminal_GUI.instance.handleMessageIfLoggedIn(userRecord);
+                	}
                 else if (MainScreen_GUI.instance != null) {
                     MainScreen_GUI.instance.onSubLoginSuccess(userRecord);
                 }
@@ -175,6 +177,7 @@ public class Client_Controller implements ChatIF {
                 if (Terminal_GUI.instance != null) {
                     int code = (int) msg.getContent();
                     Terminal_GUI.instance.onInstantReservationSuccessResponse(code);
+                    sendComplexObject(new Message(MessageType.CHECK_IN_REQUEST,code));
                 }
         	}
         });
@@ -253,6 +256,19 @@ public class Client_Controller implements ChatIF {
                 if (BillPayment_GUI.instance != null) {
                     Platform.runLater(() -> BillPayment_GUI.instance.displayBill(bill));
                 }
+                else if (Terminal_GUI.instance != null) {
+                	Terminal_GUI.instance.onGetBillSuccess(bill);
+                }
+            }
+        });
+        
+        responseHandlers.put(MessageType.BILL_REQUEST_FAILED, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+            	String s= (String)msg.getContent(); 
+                if (Terminal_GUI.instance != null) {
+                	Terminal_GUI.instance.onGetBillFailure(s);
+                }
             }
         });
         
@@ -261,6 +277,9 @@ public class Client_Controller implements ChatIF {
             public void handle(Message msg) {
                 if (BillPayment_GUI.instance != null) {
                     Platform.runLater(() -> BillPayment_GUI.instance.onPaymentSuccess());
+                }
+                else if (Terminal_GUI.instance != null) {
+                	Terminal_GUI.instance.onPaymentSuccessResponse(true);
                 }
             }
         });
@@ -303,7 +322,7 @@ public class Client_Controller implements ChatIF {
                     ManageOrders_GUI.instance.refreshAdminData();
                 }
                 else if (Terminal_GUI.instance != null) {
-                    Terminal_GUI.instance.onCancellationResponse(3);
+                    Terminal_GUI.instance.onCancellationResponse("approved r");
                 }
             }
         });
@@ -317,7 +336,8 @@ public class Client_Controller implements ChatIF {
                     ManageOrders_GUI.instance.refreshAdminData();
                 }
                 else if (Terminal_GUI.instance != null) {
-                    Terminal_GUI.instance.onCancellationResponse(2);
+                	
+                    Terminal_GUI.instance.onCancellationResponse((String)msg.getContent());
                 }
             }
         });        
@@ -426,12 +446,12 @@ public class Client_Controller implements ChatIF {
             }
         });
         
-        // --- Waitlist Handlers ---
+
         responseHandlers.put(MessageType.WAITLIST_CANCELED_FAILED, new ResponseHandler() {
             @Override
             public void handle(Message msg) {
             	if (Terminal_GUI.instance != null)        
-            		Terminal_GUI.instance.onCancellationResponse(0);
+            		Terminal_GUI.instance.onCancellationResponse((String)msg.getContent());
         	}
         });
         
@@ -439,7 +459,22 @@ public class Client_Controller implements ChatIF {
             @Override
             public void handle(Message msg) {
             	if (Terminal_GUI.instance != null)        
-            		Terminal_GUI.instance.onCancellationResponse(1);
+            		Terminal_GUI.instance.onCancellationResponse("approved w");
+        	}
+        });
+        responseHandlers.put(MessageType.WAITLIST_JOINED_FAILED, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+            	if (Terminal_GUI.instance != null)        
+            		Terminal_GUI.instance.onJoinWaitlistFailedResponse((String)msg.getContent());
+        	}
+        });
+        
+        responseHandlers.put(MessageType.WAITLIST_JOINED_SUCCESS, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+            	if (Terminal_GUI.instance != null)        
+            		Terminal_GUI.instance.onJoinWaitlistSucceedResponse((int)msg.getContent());
         	}
         });
     }
@@ -627,5 +662,18 @@ public class Client_Controller implements ChatIF {
 
 	public void sendCheckInRequest(int confiCode) {
         sendComplexObject(new Message(MessageType.CHECK_IN_REQUEST, confiCode)); 		
+	}
+
+	public void sendJoinWaitlistRequest(Reservation waitlistReq) {
+        sendComplexObject(new Message(MessageType.JOIN_WAITLIST, waitlistReq)); 				
+	}
+
+	public void sendGetBillRequest(int code) {
+        sendComplexObject(new Message(MessageType.BILL_REQUEST , code)); 						
+	}
+
+	public void sendPayBillRequest(Bill currentBillToPay) {
+        sendComplexObject(new Message(MessageType.BILL_PAYMENT_REQUEST , currentBillToPay.getId())); 						
+		
 	}
 }

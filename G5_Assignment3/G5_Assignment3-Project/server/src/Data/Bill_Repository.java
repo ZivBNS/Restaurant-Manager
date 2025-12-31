@@ -34,8 +34,7 @@ public class Bill_Repository implements Repository_Interface<Bill> {
     
     @Override
     public boolean set(Bill bill) {
-        String query = "INSERT INTO bills (ReservationID, TotalAmount, BillDetails, Status) VALUES (?, ?, ?, ?)";
-        
+    	String query = "INSERT INTO bills (ReservationID, TotalAmount, BillDetails, Status, DiscountPercentage) VALUES (?, ?, ?, ?, ?)";        
         PooledConnection pConn = null;
         PreparedStatement ps = null;
 
@@ -47,7 +46,7 @@ public class Bill_Repository implements Repository_Interface<Bill> {
             ps.setDouble(2, bill.getTotalAmount());
             ps.setString(3, bill.getBillDetails());
             ps.setString(4, "Unpaid"); 
-
+            ps.setDouble(5, bill.getDiscountRate());
             int rows = ps.executeUpdate();
             return rows > 0;
 
@@ -118,7 +117,8 @@ public class Bill_Repository implements Repository_Interface<Bill> {
         }
         return bill;
     }
-
+    
+    
     @Override
     public boolean update(Bill objToUpdate) {
         
