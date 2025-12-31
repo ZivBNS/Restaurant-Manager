@@ -110,7 +110,7 @@ public class Server_GUI extends Application {
             }
         });
 
-        Scene scene = new Scene(root, 500, 600);
+        Scene scene = new Scene(root, 600, 700);
         // *** טעינת קובץ ה-CSS ***
         scene.getStylesheets().add(getClass().getResource("/Theme/application.css").toExternalForm());
         

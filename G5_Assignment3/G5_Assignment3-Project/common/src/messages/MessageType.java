@@ -64,7 +64,8 @@ public enum MessageType {
     UPDATE_USER_DETAILS_REQUEST,
     UPDATE_USER_DETAILS_RESPONSE_OK,
     UPDATE_USER_DETAILS_RESPONSE_ERR,
-    UPDATE_USER_PROFILE, 
+    UPDATE_USER_PROFILE,
+    USER_NOT_FOUND,
     
     // --- restaurant waitlist management ---
     WAITLIST_JOINED_SUCCESS,

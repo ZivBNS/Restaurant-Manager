@@ -13,7 +13,6 @@ import javafx.stage.Stage;
 import messages.Message;
 import messages.MessageType;
 import entities.Bill;
-import entities.Reservation;
 import javafx.event.ActionEvent;
 
 public class BillPayment_GUI {

@@ -1,6 +1,5 @@
 package gui;
 
-import entities.Subscribed_Customer;
 import entities.UserRecord;
 
 /**

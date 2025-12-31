@@ -3,9 +3,8 @@ package gui;
 import java.io.IOException;
 
 import entities.LoginData;
-import entities.Subscribed_Customer;
 import entities.UserRecord;
-import javafx.application.Platform; // Added for Platform.exit()
+import javafx.application.Platform; 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;

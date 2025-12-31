@@ -17,7 +17,6 @@
                 <Insets bottom="20" top="40" />
             </padding>
             <children>
-                <Label styleClass="card-label" text="BISTRO SYSTEM" />
                 <Label styleClass="header-title" text="Client Connection" />
                 <Separator maxWidth="300" opacity="0.35" />
             </children>

@@ -21,9 +21,7 @@
                 <Insets bottom="20" top="40" />
             </padding>
             <children>
-                <Label styleClass="header-title" text="Bistro Service" />
-                <Label styleClass="card-label" text="Welcome to Bistro Management System" />
-                <Separator maxWidth="300" opacity="0.35" />
+                <Label styleClass="header-title-main " text="Bistro" />
             </children>
         </VBox>
     </top>

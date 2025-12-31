@@ -17,7 +17,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane prefHeight="600" prefWidth="1300" stylesheets="/Theme/application.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.ManageUsers_GUI">
+<BorderPane prefHeight="600" prefWidth="1300" stylesheets="/Theme/application.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.ManageUsers_GUI">
 
     <top>
         <VBox spacing="8" BorderPane.alignment="CENTER">
@@ -60,10 +60,9 @@
                 </TableView>
 
                 <HBox spacing="10">
-                    <Button onAction="#onAddNew" styleClass="button, btn-primary" text="Add New" />
-                    <Button fx:id="deleteBtn" disable="true" onAction="#onDelete" styleClass="button, btn-danger" text="Delete" />
                             
                     <Label fx:id="statusMessageLabel" styleClass="error-label" text="" visible="false" />
+                   <Button fx:id="backBtn" onAction="#onBack" styleClass="button, btn-secondary" text="Back to Menu" />
                 </HBox>
             </VBox>
 
@@ -127,9 +126,10 @@
                     <Button fx:id="saveBtn" onAction="#onSave" styleClass="button, btn-primary" text="Save" />
                     <Button onAction="#onClear" styleClass="button, btn-secondary" text="Clear" />
                 </HBox>
+                 <Button fx:id="deleteBtn" disable="true" onAction="#onDelete" styleClass="button, btn-danger" text="Delete" />
+                 <Button onAction="#onAddNew" styleClass="button, btn-primary" text="Add New" />
 
                 <Region VBox.vgrow="ALWAYS" />
-                <Button fx:id="backBtn" onAction="#onBack" styleClass="button, btn-secondary" text="Back" />
             </VBox>
 
         </HBox>

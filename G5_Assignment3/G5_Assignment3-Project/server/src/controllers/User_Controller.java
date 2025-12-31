@@ -1,7 +1,6 @@
 package controllers;
 
 import Data.User_Repository;
-import entities.Subscribed_Customer;
 import entities.UserRecord;
 import messages.Message;
 import messages.MessageType;
@@ -33,6 +32,8 @@ public class User_Controller {
                 
                 case MessageType.UPDATE_USER_DETAILS_REQUEST -> handleUpdateAsUser((UserRecord) msg.getContent());
 
+                case MessageType.GET_USER_DETAILS -> handleGetUser((int) msg.getContent());
+                
                 default -> new Message(MessageType.USERS_ERROR, "Unknown user action: " + msg.getType());
             };
         } catch (ClassCastException e) {
@@ -116,7 +117,21 @@ public class User_Controller {
 
         return null;
     }
-
+    /**
+     * Handles the request to fetch a user by their ID.
+     * @param id The ID provided by the client.
+     * @return A message containing the UserRecord or USER_NOT_FOUND.
+     */
+    private Message handleGetUser(int id) {
+        // Try finding by internal ID first
+        UserRecord user = repo.getBySubscriberCode(id);
+        
+        if (user != null) {
+            return new Message(MessageType.RETURN_USER_DETAILS, user);
+        } else {
+            return new Message(MessageType.USER_NOT_FOUND, null);
+        }
+    }
     private String validateForUpdate(UserRecord u) {
         if (u == null) return "Missing user data.";
 

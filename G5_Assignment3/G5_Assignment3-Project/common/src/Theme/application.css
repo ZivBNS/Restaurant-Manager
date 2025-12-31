@@ -1,344 +1,15 @@
-/* =============================================================================
-   ACTIVE THEME: "Royal Light Luxury" (Light)
-   ============================================================================= */
+
+/*========================================================================================
+   "Modern Matte Luxury" (Dark MODE)
+========================================================================================*/
 
 .root {
-    /* Background: Very soft grayish-white, not blinding white */
-    -fx-background-color: #f4f6f9; 
-    -fx-font-family: "Segoe UI", "Roboto", sans-serif;
-}
-
-/* --- Header Section --- */
-.page-header {
-    -fx-background-color: #ffffff; 
-    /* Very subtle shadow at the bottom */
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 3);
-}
-
-/* --- Main Headers --- */
-.header-title {
-    -fx-font-size: 24px;
-    -fx-font-weight: 700;
-    -fx-text-fill: #2c3e50; /* Dark blue/gray */
-    -fx-border-color: transparent transparent transparent #c8a165; 
-    -fx-border-width: 0 0 0 4;
-    -fx-padding: 0 0 0 15;
-}
-
-/* --- Cards --- */
-.card, .titled-pane > .content {
-    -fx-background-color: #ffffff; /* Clean white */
-    -fx-background-radius: 12; 
-    /* Soft shadow separating card from background */
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 20, 0, 0, 5); 
-}
-
-/* Text inside cards */
-.card-label {
-    -fx-text-fill: #636e72; /* Medium gray */
-    -fx-font-size: 12px;
-    -fx-font-weight: 600;
-}
-
-/* TitledPane Header Styling */
-.titled-pane > .title {
-    -fx-background-color: #ffffff;
-    -fx-text-fill: #c8a165;
-    -fx-font-weight: bold;
-    -fx-border-color: transparent transparent #ececec transparent;
-}
-
-/* --- Buttons (General) --- */
-.button {
-    -fx-background-radius: 8;
-    -fx-cursor: hand;
-    -fx-font-size: 13px;
-    -fx-font-weight: bold;
-    -fx-padding: 8 20;
-    -fx-background-insets: 0;
-    -fx-effect: none; 
-}
-
-/* Primary Button (Gold) */
-.btn-primary, .btn-success {
-    -fx-background-color: #c8a165; 
-    -fx-text-fill: #ffffff; /* White text on gold */
-}
-.btn-primary:hover, .btn-success:hover {
-    -fx-background-color: #dcc08e; 
-}
-
-/* Delete Button (Gentle Red) */
-.btn-danger {
-    -fx-background-color: #fff1f1; 
-    -fx-text-fill: #e74c3c; 
-    -fx-border-color: #e74c3c;
-    -fx-border-width: 1;
-    -fx-border-radius: 8;
-}
-.btn-danger:hover {
-    -fx-background-color: #e74c3c;
-    -fx-text-fill: white;
-}
-
-/* Secondary Button (Ghost Button) */
-.btn-secondary {
-    -fx-background-color: transparent;
-    -fx-text-fill: #636e72;
-    -fx-border-color: #b2bec3;
-    -fx-border-width: 1;
-    -fx-border-radius: 8;
-}
-.btn-secondary:hover {
-    -fx-border-color: #c8a165;
-    -fx-text-fill: #c8a165;
-}
-
-/* --- Global Input Fields --- */
-.text-field {
-    -fx-background-color: #f9f9f9; /* Very light gray */
-    -fx-text-fill: #2d3436;        /* Dark text */
-    -fx-prompt-text-fill: #a4b0be;
-    -fx-background-radius: 8;
-    -fx-border-color: #dfe6e9;     /* Gentle gray border */
-    -fx-padding: 8 12;
-}
-
-.text-field:focused {
-    -fx-background-color: #ffffff;
-    -fx-border-color: #c8a165; 
-    -fx-border-width: 1;
-}
-
-/* --- Tables --- */
-.table-view {
-    -fx-background-color: transparent;
-    -fx-base: #ffffff;
-    -fx-control-inner-background: #ffffff;
-    -fx-table-cell-border-color: transparent;
-}
-
-.table-view .column-header-background {
-    -fx-background-color: transparent;
-    -fx-border-color: transparent transparent #ececec transparent;
-    -fx-border-width: 2;
-}
-
-.table-view .column-header .label {
-    -fx-text-fill: #c8a165; /* Headers in gold */
-    -fx-font-weight: 700;
-    -fx-font-size: 12px;
-}
-
-.table-row-cell {
-    -fx-background-color: transparent;
-    -fx-border-color: transparent transparent #f4f4f4 transparent;
-}
-.table-row-cell:hover {
-    -fx-background-color: #fdfaf5; /* Gentle cream color on hover */
-}
-.table-row-cell:selected {
-    -fx-background-color: #fdf6e7; /* Very light golden background on selection */
-    -fx-border-color: transparent transparent transparent #c8a165;
-    -fx-border-width: 0 0 0 3;
-}
-.table-cell {
-    -fx-text-fill: #2d3436; /* Dark row text */
-    -fx-alignment: CENTER_LEFT;
-}
-
-/* --- Popup Window --- */
-.dark-form-container {
-    -fx-background-color: #ffffff;
-    -fx-border-color: #c8a165 transparent transparent transparent;
-    -fx-border-width: 4 0 0 0;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 30, 0, 0, 10);
-}
-.form-header {
-    -fx-text-fill: #2d3436;
-    -fx-font-weight: 700;
-    -fx-font-size: 22px;
-}
-.form-sub-header {
-    -fx-text-fill: #636e72;
-    -fx-font-size: 13px;
-}
-.field-label {
-    -fx-text-fill: #c8a165;
-    -fx-font-weight: 600;
-}
-
-/* --- Dashboard --- */
-.dashboard-title {
-    -fx-font-size: 36px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #2d3436; /* Dark */
-}
-.dashboard-subtitle {
-    -fx-text-fill: #636e72;
-}
-
-.dashboard-tile {
-    -fx-background-color: #ffffff;
-    -fx-text-fill: #636e72;
-    -fx-font-size: 16px;
-    -fx-font-weight: bold;
-    -fx-background-radius: 18;
-    -fx-border-color: #f0f0f0;
-    -fx-border-radius: 18;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 15, 0, 0, 5);
-    -fx-cursor: hand;
-}
-.dashboard-tile:hover {
-    -fx-background-color: #fffcf5;
-    -fx-text-fill: #c8a165;
-    -fx-border-color: #c8a165;
-    -fx-translate-y: -2;
-    -fx-effect: dropshadow(gaussian, rgba(200, 161, 101, 0.2), 20, 0, 0, 5);
-}
-
-/* --- Schedule and Header Fixes --- */
-.schedule-header-label {
-    -fx-text-fill: #c8a165;
-    -fx-font-weight: bold;
-    -fx-font-size: 14px;
-}
-#vboxRegularHours .label {
-    -fx-text-fill: #2d3436; /* Days in dark color */
-    -fx-font-weight: bold;
-    -fx-font-size: 13px;
-    -fx-min-width: 100px;
-    -fx-pref-width: 100px;
-    -fx-padding: 4px 0 0 0;
-}
-.card-title {
-    -fx-text-fill: #2d3436;
-    -fx-font-size: 18px;
-    -fx-font-weight: bold;
-}
-.error-label {
-    -fx-text-fill: #e74c3c;
-}
-
-/* --- Server Log --- */
-.console-log {
-    -fx-control-inner-background: #ffffff;
-    -fx-background-color: #ffffff;
-    -fx-text-fill: #2d3436; /* Dark text */
-    -fx-border-color: #dfe6e9;
-    -fx-font-family: 'Consolas', monospace;
-}
-.console-log .content { -fx-background-color: #ffffff; }
-
-/* =============================================================================
-   Compact & Unified Inputs (Light Version)
-   Height: 35px
-   ============================================================================= */
-
-/* 1. Main definition for all */
-.spinner, .date-picker, .combo-box {
-    -fx-pref-height: 35px;
-    -fx-min-height: 35px;
-    -fx-max-height: 35px;
-    
-    -fx-background-color: #f9f9f9;  /* Light background */
-    -fx-border-color: #dfe6e9;      /* Gray border */
-    -fx-border-radius: 4;
-    -fx-background-radius: 4;
-    -fx-padding: 0;
-    -fx-alignment: CENTER_LEFT;
-    -fx-font-size: 14px;
-}
-
-/* 2. Focus state */
-.spinner:focused, .date-picker:focused, .combo-box:focused {
-    -fx-background-color: #ffffff;
-    -fx-border-color: #c8a165;
-}
-
-/* 3. Spinner Internal */
-.spinner .text-field {
-    -fx-background-color: transparent;
-    -fx-text-fill: #2d3436; /* Dark text */
-    -fx-padding: 0 10px;
-}
-.spinner .increment-arrow-button .arrow,
-.spinner .decrement-arrow-button .arrow {
-    -fx-background-color: #636e72; /* Dark arrows */
-}
-.spinner .increment-arrow-button:hover .arrow,
-.spinner .decrement-arrow-button:hover .arrow {
-    -fx-background-color: #c8a165;
-}
-
-/* 4. DatePicker Internal */
-.date-picker .text-field {
-    -fx-background-color: transparent;
-    -fx-text-fill: #2d3436;
-    -fx-padding: 0 10px;
-}
-.date-picker .arrow-button .arrow {
-    -fx-background-color: #636e72;
-}
-.date-picker:hover .arrow-button .arrow {
-    -fx-background-color: #c8a165;
-}
-
-/* DatePicker Popup (Light) */
-.date-picker-popup {
-    -fx-background-color: #ffffff;
-    -fx-border-color: #c8a165;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 5);
-}
-.date-picker-popup .month-year-pane {
-    -fx-background-color: #f9f9f9;
-}
-.date-picker-popup .label {
-    -fx-text-fill: #c8a165;
-}
-.date-picker-popup .day-cell {
-    -fx-background-color: #ffffff;
-    -fx-text-fill: #2d3436;
-}
-.date-picker-popup .day-cell:hover {
-    -fx-background-color: #fdfaf5;
-    -fx-border-color: #c8a165;
-}
-.date-picker-popup .day-cell:selected {
-    -fx-background-color: #c8a165;
-    -fx-text-fill: white;
-}
-
-/* 5. ComboBox Internal */
-.combo-box .list-cell {
-    -fx-background-color: transparent;
-    -fx-text-fill: #2d3436;
-    -fx-padding: 0 10px;
-}
-.combo-box .arrow {
-    -fx-background-color: #c8a165;
-}
-.combo-box-popup .list-view {
-    -fx-background-color: #ffffff;
-    -fx-border-color: #dfe6e9;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 5);
-}
-.combo-box-popup .list-cell {
-    -fx-text-fill: #2d3436;
-}
-.combo-box-popup .list-cell:filled:selected, 
-.combo-box-popup .list-cell:filled:hover {
-    -fx-background-color: #c8a165;
-    -fx-text-fill: white;
-}
-
-/* ========================================================================================
-   OPTIONAL THEME: "Modern Matte Luxury" (Dark)
-   To use: Uncomment the section below and comment out the Light theme above.
-========================================================================================
-
-.root {
-    -fx-background-color: #111315; 
+    /* Layer 1: Base color, Layer 2: Subtle radial pattern (dots) */
+    -fx-background-color: 
+        #111315, 
+        radial-gradient(center 50% 50%, radius 1px, #2a2d35 0%, transparent 100%);
+    /* Define the 'density' of the texture grid */
+    -fx-background-size: 100% 100%, 20px 20px; 
     -fx-font-family: "Segoe UI", "Roboto", sans-serif;
 }
 
@@ -346,20 +17,103 @@
     -fx-background-color: #1a1d26; 
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 10, 0, 0, 2);
 }
-
-.header-title {
-    -fx-font-size: 24px;
-    -fx-font-weight: 700;
-    -fx-text-fill: #ffffff;
-    -fx-border-color: transparent transparent transparent #c8a165; 
-    -fx-border-width: 0 0 0 4;
-    -fx-padding: 0 0 0 15;
+/* --- THE ULTIMATE ELITE HEADER --- */
+.header-title-main {
+    -fx-font-size: 60px; /* Enhanced size */
+    -fx-font-weight: 900;
+    -fx-font-family: "Georgia", serif; 
+    
+    /* High-contrast 5-stop metallic gradient */
+    -fx-text-fill: linear-gradient(to bottom, 
+        #fcf6ba 0%,   /* Specular Reflection */
+        #bf953f 25%,  /* Brushed Gold */
+        #fbf5b7 50%,  /* Surface Highlight */
+        #aa771c 75%,  /* Deep Gold Shadow */
+        #917430 100%  /* Dark Edge */
+    );
+    
+    /* STRENGTHENED 3D EFFECT: Combined depth shadow and ambient gold glow */
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.95), 15, 0, 0, 10);
+    
+    /* Luxury Hairline Borders: Engraved plaque look */
+    -fx-border-color: linear-gradient(to right, transparent, rgba(200, 161, 101, 0.6), transparent);
+    -fx-border-width: 1 0 1 0; /* Top and bottom hairlines only */
+    
+    -fx-padding: 25 100;
+    -fx-alignment: CENTER;
 }
 
-.card, .titled-pane > .content {
+
+
+.header-title {
+    -fx-font-size: 32px;
+    -fx-font-weight: 900;
+    -fx-font-family: "Georgia", serif; 
+    -fx-text-fill: linear-gradient(to bottom, #fcf6ba 0%, #bf953f 40%, #aa771c 100%);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.8), 10, 0, 0, 4);
+    -fx-border-width: 0; 
+    -fx-padding: 10 0;
+    -fx-alignment: CENTER;
+}
+
+/* --- CARDS --- */
+.card {
     -fx-background-color: #1c1e24; 
     -fx-background-radius: 12; 
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 30, 0, 0, 10); 
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 30, 0, 0, 10);
+    
+    /* Using -1 tells JavaFX to use computed size based on content */
+    -fx-min-height: -1; 
+    -fx-pref-height: -1;
+    -fx-max-height: -1;
+    
+    -fx-padding: 30; /* Generous internal padding for a luxury feel */
+}
+
+.card-title {
+    -fx-text-fill: white;
+    -fx-font-size: 20px; 
+    -fx-font-weight: bold;
+    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-max-width: infinity;
+    -fx-alignment: CENTER;
+    -fx-text-alignment: CENTER;
+    -fx-effect: dropshadow(gaussian, rgba(255,255,255,0.05), 5, 0, 0, 0);
+    -fx-padding: 0 0 15 0;
+}
+
+.card-label {
+    -fx-text-fill: #8a8d96; 
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+}
+
+/* --- CUSTOM RADIO BUTTONS --- */
+.radio-button {
+	-fx-padding: 0 0 15 0;
+    -fx-cursor: hand;
+}
+
+/* The outer circle */
+.radio-button .radio {
+    -fx-background-color: #111315;
+    -fx-border-color: #4b4e5b;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 15;
+    -fx-background-radius: 15;
+    -fx-padding: 3; /* Size of the circle */
+}
+
+/* Border color when selected */
+.radio-button:selected .radio {
+    -fx-border-color: #c8a165;
+}
+
+/* The inner dot when selected */
+.radio-button:selected .radio .dot {
+    -fx-background-color: #c8a165;
+    -fx-background-insets: 0;
+    -fx-background-radius: 10;
 }
 
 .titled-pane > .title {
@@ -372,10 +126,11 @@
     -fx-padding: 12 15;
 }
 
-.card-label {
-    -fx-text-fill: #8a8d96; 
-    -fx-font-size: 12px;
-    -fx-font-weight: 600;
+.titled-pane > .content {
+    -fx-background-color: #1c1e24; 
+    -fx-background-radius: 12; 
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 30, 0, 0, 10);
+    -fx-min-height: 280px; 
 }
 
 .button {
@@ -383,7 +138,7 @@
     -fx-cursor: hand;
     -fx-font-size: 13px;
     -fx-font-weight: bold;
-    -fx-padding: 8 20;
+    -fx-padding: 10 20;
     -fx-background-insets: 0;
     -fx-effect: none; 
     -fx-border-width: 0;
@@ -579,12 +334,6 @@
     -fx-alignment: CENTER_LEFT;
 }
 
-.card-title {
-    -fx-text-fill: white;
-    -fx-font-size: 18px;
-    -fx-font-weight: bold;
-    -fx-effect: dropshadow(one-pass-box, rgba(0,0,0,0.3), 5, 0, 0, 1);
-}
 
 .error-label {
     -fx-text-fill: #e74c3c;
@@ -726,4 +475,29 @@
     -fx-background-color: #d4a358;
     -fx-text-fill: #111111;
 }
-*/
+
+/* --- EMPLOYEE LOGIN FIELDS (Simple Thin Border) --- */
+#empUserField, #empPassField {
+    /* Transparent background to emphasize the border */
+    -fx-background-color: transparent; 
+    
+    /* Simple thin border in a subtle grey/gold tint */
+    -fx-border-color: #3f424b; 
+    -fx-border-width: 1; 
+    -fx-border-radius: 4;
+    
+    /* Ensure text remains visible */
+    -fx-text-fill: white;
+    -fx-prompt-text-fill: #5a5d66;
+    
+    /* Adjusted padding for a more compact, clean look */
+    -fx-padding: 10 10;
+}
+
+/* Interaction state: Subtle highlight when clicking the field */
+#empUserField:focused, #empPassField:focused {
+    -fx-background-color: rgba(255, 255, 255, 0.02);
+    -fx-border-color: #c8a165; /* Theme gold for focus */
+}
+
+

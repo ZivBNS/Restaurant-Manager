@@ -7,7 +7,6 @@ import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
-import entities.Subscribed_Customer;
 import entities.UserRecord;
 
 public class User_Repository {
@@ -280,5 +279,30 @@ public class User_Repository {
 
 	    return false;
 	}
+	/**
+     * Retrieves a user by their unique Subscriber Code (e.g., 100001).
+     * Useful for manual entry forms.
+     */
+    public UserRecord getBySubscriberCode(int code) {
+        PooledConnection pConn = null;
+        try {
+            pConn = db.getConnection();
+            String sql = "SELECT * FROM users WHERE subscriberCode = ? LIMIT 1";
+            
+            try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(sql)) {
+                pstmt.setInt(1, code);
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    if (rs.next()) {
+                        return mapRowToUser(rs);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            if (pConn != null) db.releaseConnection(pConn);
+        }
+        return null;
+    }
 	
 }

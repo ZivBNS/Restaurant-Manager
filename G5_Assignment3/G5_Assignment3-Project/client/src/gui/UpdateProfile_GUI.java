@@ -1,7 +1,5 @@
 package gui;
 
-import entities.Subscribed_Customer;
-import entities.User;
 import entities.UserRecord;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;

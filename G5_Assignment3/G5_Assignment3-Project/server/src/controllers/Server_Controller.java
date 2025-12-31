@@ -69,7 +69,7 @@ public class Server_Controller extends AbstractServer {
 		commands.put(MessageType.ADD_USER_REQUEST, userCmd);
 		commands.put(MessageType.EDIT_USER_REQUEST, userCmd);
 		commands.put(MessageType.DELETE_USER_REQUEST, userCmd);
-		
+		commands.put(MessageType.GET_USER_DETAILS, userCmd);
 		commands.put(MessageType.UPDATE_USER_DETAILS_REQUEST, userCmd);
 		// --- Payment & Bills ---
 		Command payCmd = new PaymentCommand();

@@ -2,7 +2,6 @@ package controllers;
 
 import Data.User_Repository;
 import entities.LoginData;
-import entities.Subscribed_Customer;
 import entities.UserRecord;
 import messages.Message;
 import messages.MessageType;

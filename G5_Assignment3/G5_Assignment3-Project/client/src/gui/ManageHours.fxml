@@ -17,7 +17,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane prefHeight="700.0" prefWidth="1100.0" stylesheets="/Theme/application.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.ManageHours_GUI">
+<BorderPane prefHeight="900.0" prefWidth="1100.0" stylesheets="/Theme/application.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.ManageHours_GUI">
 
     <top>
         <VBox alignment="CENTER" spacing="10">

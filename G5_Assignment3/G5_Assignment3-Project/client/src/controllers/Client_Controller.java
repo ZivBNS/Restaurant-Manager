@@ -190,8 +190,8 @@ public class Client_Controller implements ChatIF {
                 int confirmationCode = (Integer) msg.getContent();
                 if (AddReservation_GUI.instance != null) {
                     AddReservation_GUI.instance.showSuccessAlert(confirmationCode);
-                } else if (AddManualReservation_GUI.instance != null) {
-                    AddManualReservation_GUI.instance.showSuccessAlert(confirmationCode);
+                } else if (ManageOrders_GUI.instance != null) {
+                    ManageOrders_GUI.instance.showSuccessAlert(confirmationCode);   
                 }
             }
         });
@@ -202,8 +202,8 @@ public class Client_Controller implements ChatIF {
                 LocalDateTime suggestedTime = (LocalDateTime) msg.getContent();
                 if (AddReservation_GUI.instance != null) {
                     AddReservation_GUI.instance.showNoTableAlert(suggestedTime);
-                } else if (AddManualReservation_GUI.instance != null) {
-                    AddManualReservation_GUI.instance.showNoTableAlert(suggestedTime);
+                }  else if (ManageOrders_GUI.instance != null) {
+                    ManageOrders_GUI.instance.showNoTableAlert(suggestedTime);   
                 } else if (ViewReservations_GUI.instance != null) {
                     ViewReservations_GUI.instance.showNoTableAlert(suggestedTime);
                 }
@@ -217,8 +217,8 @@ public class Client_Controller implements ChatIF {
                     AddReservation_GUI.instance.showNoTableAlert(null);
                 } else if (ViewReservations_GUI.instance != null) {
                     ViewReservations_GUI.instance.showNoTableAlert(null);
-                } else if (AddManualReservation_GUI.instance != null) {
-                    AddManualReservation_GUI.instance.showNoTableAlert(null);
+                } else if (ManageOrders_GUI.instance != null) {
+                    ManageOrders_GUI.instance.showNoTableAlert(null); 
                 }
             }
         });
@@ -387,7 +387,25 @@ public class Client_Controller implements ChatIF {
         responseHandlers.put(MessageType.EDIT_USER_RESPONSE_ERR, userHandler);
         responseHandlers.put(MessageType.DELETE_USER_RESPONSE_OK, userHandler);
         responseHandlers.put(MessageType.DELETE_USER_RESPONSE_ERR, userHandler);
-        
+        responseHandlers.put(MessageType.RETURN_USER_DETAILS, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                if (ManageOrders_GUI.instance != null) {
+                    UserRecord user = (UserRecord) msg.getContent();
+                    ManageOrders_GUI.instance.fillUserDetails(user);
+                }
+            }
+        });
+        responseHandlers.put(MessageType.USER_NOT_FOUND, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                // Check if the GUI is currently active
+                if (ManageOrders_GUI.instance != null) {
+                    // Passing null triggers the "User Not Found" alert in the GUI
+                    ManageOrders_GUI.instance.fillUserDetails(null);
+                }
+            }
+        });
         // -----------------------------------------------------------
         // Update User Profile
         // -----------------------------------------------------------
@@ -676,4 +694,11 @@ public class Client_Controller implements ChatIF {
         sendComplexObject(new Message(MessageType.BILL_PAYMENT_REQUEST , currentBillToPay.getId())); 						
 		
 	}
+	/**
+     * Sends a request to fetch user details by ID for auto-filling forms.
+     * @param userId The ID of the subscriber to look up.
+     */
+    public void sendGetUserDetailsRequest(int userId) {
+        sendComplexObject(new Message(MessageType.GET_USER_DETAILS, userId));
+    }
 }
