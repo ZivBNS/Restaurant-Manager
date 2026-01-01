@@ -120,6 +120,8 @@ public class MainScreen_GUI {
             Stage stage = (Stage) terminalBtn.getScene().getWindow();
             Scene scene = new Scene(root);
             stage.setScene(scene);
+            stage.centerOnScreen();
+
             stage.show();
             System.out.println("Switched to Terminal Screen");
         } catch (IOException e) {
@@ -135,6 +137,7 @@ public class MainScreen_GUI {
             Parent root = loader.load();
             Stage stage = (Stage) empSubmitBtn.getScene().getWindow();
             Scene scene = new Scene(root);
+            stage.centerOnScreen();
             stage.setScene(scene);
             stage.show();
             System.out.println("Switched to Manager Dashboard");
@@ -154,6 +157,7 @@ public class MainScreen_GUI {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("ConnectToServer.fxml"));
             Parent loginRoot = loader.load();
             Stage stage = (Stage) mainRoot.getScene().getWindow();
+            stage.centerOnScreen();
             stage.setScene(new Scene(loginRoot));
             stage.setTitle("Bistro - Connect");
         } catch (IOException e) {
@@ -214,6 +218,8 @@ public class MainScreen_GUI {
             return;
         }
         stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        stage.centerOnScreen();
+
         LoginData loginData = new LoginData(username, password);
         ConnectToServer_GUI.clientController.sendSubscriberLoginRequest(loginData);
 
@@ -234,12 +240,14 @@ public class MainScreen_GUI {
             
             // Switch scene
             stage.setScene(new Scene(root));
+            stage.centerOnScreen();
             stage.setTitle("Casual Customer Menu");
             stage.show();
 
             System.out.println("Login Success: Switched to Subscriber Dashboard");
 
         } catch (IOException e) {
+        
             System.err.println("Error loading SubscribedCustomer.fxml");
             e.printStackTrace();
             subErrorLabel.setText("System error loading dashboard.");
@@ -261,6 +269,8 @@ public class MainScreen_GUI {
             
             // Switch scene
             stage.setScene(new Scene(root));
+            stage.centerOnScreen();
+
             stage.setTitle("Bistro - Member Dashboard");
             stage.show();
 

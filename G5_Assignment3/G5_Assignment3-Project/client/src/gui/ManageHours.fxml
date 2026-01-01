@@ -17,13 +17,11 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane prefHeight="900.0" prefWidth="1100.0" stylesheets="/Theme/application.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.ManageHours_GUI">
+<BorderPane prefHeight="900.0" prefWidth="1250.0" stylesheets="/Theme/application.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.ManageHours_GUI">
 
     <top>
         <VBox alignment="CENTER" spacing="10">
-            <padding>
-                <Insets bottom="20" top="20" />
-            </padding>
+            <padding><Insets bottom="20" top="20" /></padding>
             <children>
                 <Label styleClass="header-title" text="Restaurant Hours Management" />
                 <Label styleClass="card-label" text="Configure regular weekly schedule and special date exceptions" />
@@ -34,28 +32,23 @@
 
     <center>
         <HBox spacing="20">
-            <padding>
-                <Insets bottom="20" left="20" right="20" top="10" />
-            </padding>
+            <padding><Insets bottom="20" left="20" right="20" top="10" /></padding>
             <children>
                 
                 <VBox prefWidth="550.0" spacing="15.0" styleClass="card">
-                    <padding>
-                        <Insets bottom="20" left="20" right="20" top="20" />
-                    </padding>
+                    <padding><Insets bottom="20" left="20" right="20" top="20" /></padding>
                     <children>
                         <Label styleClass="card-title" text="Weekly Schedule (Sun - Sat)" />
                         <Separator opacity="0.1" />
                         
-                        <HBox alignment="CENTER_LEFT" spacing="15.0">
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
                             <children>
                                 <Label minWidth="100.0" prefWidth="100.0" styleClass="schedule-header-label" text="Day" />
-                                
-                                <Label minWidth="130.0" prefWidth="130.0" styleClass="schedule-header-label" text="Open" />
-                                <Label minWidth="130.0" prefWidth="130.0" styleClass="schedule-header-label" text="Close" />
-                                
+                                <Label minWidth="120.0" prefWidth="120.0" styleClass="schedule-header-label" text="Open" />
+                                <Label minWidth="120.0" prefWidth="120.0" styleClass="schedule-header-label" text="Close" />
                                 <Label styleClass="schedule-header-label" text="Active" />
                             </children>
+                            <padding><Insets left="5.0" /></padding>
                         </HBox>
 
                         <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: transparent;" vbarPolicy="NEVER" VBox.vgrow="ALWAYS">
@@ -70,14 +63,10 @@
 
                 <VBox spacing="20.0" HBox.hgrow="ALWAYS">
                     <children>
-                        
                         <VBox spacing="10.0" styleClass="card" VBox.vgrow="ALWAYS">
-                            <padding>
-                                <Insets bottom="20" left="20" right="20" top="20" />
-                            </padding>
+                            <padding><Insets bottom="20" left="20" right="20" top="20" /></padding>
                             <children>
                                 <Label styleClass="card-title" text="Special Date Exceptions" />
-                                
                                 <TableView fx:id="tableSpecialHours" VBox.vgrow="ALWAYS">
                                     <columns>
                                         <TableColumn fx:id="colDate" prefWidth="100.0" text="Date" />
@@ -85,11 +74,8 @@
                                         <TableColumn fx:id="colClose" prefWidth="80.0" text="Close" />
                                         <TableColumn fx:id="colDesc" prefWidth="150.0" text="Description" />
                                     </columns>
-                                    <columnResizePolicy>
-                                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-                                    </columnResizePolicy>
+                                    <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY" /></columnResizePolicy>
                                 </TableView>
-                                
                                 <HBox alignment="CENTER_RIGHT">
                                     <Button fx:id="btnDeleteSpecial" styleClass="button, btn-danger" text="Delete Selected" />
                                 </HBox>
@@ -97,48 +83,43 @@
                         </VBox>
 
                         <VBox spacing="15.0" styleClass="card">
-                            <padding>
-                                <Insets bottom="20" left="20" right="20" top="20" />
-                            </padding>
+                            <padding><Insets bottom="20" left="20" right="20" top="20" /></padding>
                             <children>
                                 <Label styleClass="card-title" text="Add New Special Hour" />
                                 
                                 <GridPane hgap="15.0" vgap="10.0">
                                     <columnConstraints>
-                                        <ColumnConstraints prefWidth="140.0" />
-                                        <ColumnConstraints prefWidth="140.0" />
-                                        <ColumnConstraints hgrow="ALWAYS" />
-                                    </columnConstraints>
+                                        <ColumnConstraints prefWidth="160.0" /> <ColumnConstraints prefWidth="130.0" /> <ColumnConstraints hgrow="ALWAYS" />    </columnConstraints>
                                     <rowConstraints>
-                                        <RowConstraints />
-                                        <RowConstraints />
-                                    </rowConstraints>
+                                        <RowConstraints vgrow="SOMETIMES" />    <RowConstraints vgrow="SOMETIMES" />    </rowConstraints>
                                     <children>
-                                        <VBox spacing="5.0">
+                                        <VBox spacing="5.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
                                             <children>
                                                 <Label styleClass="card-label" text="Date" />
                                                 <DatePicker fx:id="dpSpecialDate" maxWidth="Infinity" />
                                             </children>
                                         </VBox>
                                         
-                                        <VBox spacing="5.0" GridPane.columnIndex="1">
+                                        <VBox spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
                                             <children>
                                                 <Label styleClass="card-label" text="Open Time" />
                                                 <ComboBox fx:id="cbSpecialOpen" maxWidth="Infinity" promptText="HH:mm" />
                                             </children>
                                         </VBox>
                                         
-                                        <VBox spacing="5.0" GridPane.columnIndex="2">
+                                        <VBox spacing="5.0" GridPane.columnIndex="2" GridPane.rowIndex="0">
                                             <children>
                                                 <Label styleClass="card-label" text="Close Time" />
                                                 <ComboBox fx:id="cbSpecialClose" maxWidth="Infinity" promptText="HH:mm" />
                                             </children>
                                         </VBox>
                                         
-                                        <VBox spacing="5.0" GridPane.columnSpan="3" GridPane.rowIndex="1">
+                                        <Button fx:id="btnMarkClosed" disable="true" maxWidth="Infinity" prefHeight="35.0" styleClass="button, btn-secondary" text="Set as Closed" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.valignment="BOTTOM" />
+                                        
+                                        <VBox spacing="5.0" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="1">
                                             <children>
                                                 <Label styleClass="card-label" text="Reason / Description" />
-                                                <TextField fx:id="txtSpecialDesc" promptText="e.g. Holiday, Private Event..." />
+                                                <TextField fx:id="txtSpecialDesc" prefHeight="35.0" promptText="e.g. Holiday, Private Event..." />
                                             </children>
                                         </VBox>
                                     </children>
@@ -155,11 +136,9 @@
 
     <bottom>
         <HBox alignment="CENTER_LEFT">
-            <padding>
-                <Insets bottom="30" left="30" />
-            </padding>
+            <padding><Insets bottom="30" left="30" /></padding>
             <children>
-                <Button fx:id="btnBack" styleClass="button, btn-secondary" text="Back to Dashboard" />
+                <Button fx:id="btnBack" styleClass="button, btn-secondary" text="Back to Menu" />
             </children>
         </HBox>
     </bottom>

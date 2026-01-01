@@ -30,7 +30,6 @@ import entities.Opening_Hours.TimeRange;
 /**
  * Controller for the Opening Hours Management screen.
  * Provides a GUI for batch updating weekly schedules and managing special exceptions.
- * Uses ComboBoxes for time selection to ensure data integrity.
  */
 public class ManageHours_GUI {
 
@@ -47,29 +46,47 @@ public class ManageHours_GUI {
     @FXML private TableColumn<SpecialHourRow, String> colClose;
     @FXML private TableColumn<SpecialHourRow, String> colDesc;
 
-    // Special Hour Form (Now using ComboBox for "Hour Picker" style)
+    // Special Hour Form
     @FXML private DatePicker dpSpecialDate;
     @FXML private ComboBox<String> cbSpecialOpen;
     @FXML private ComboBox<String> cbSpecialClose;
     @FXML private TextField txtSpecialDesc;
     @FXML private Button btnAddSpecial;
     @FXML private Button btnDeleteSpecial;
+    
+    // NEW BUTTON
+    @FXML private Button btnMarkClosed;
 
     /** Map to keep track of the UI controls for each day. */
     private Map<DayOfWeek, DayRowControls> dayControlsMap = new HashMap<DayOfWeek, DayRowControls>();
 
-    /**
-     * Initializes the controller, populates time pickers, and setup table columns.
-     */
     @FXML
     public void initialize() {
         instance = this;
         setupTableColumns();
         
-        // Populate the "Hour Pickers" in the Add Form
         populateTimeComboBox(cbSpecialOpen);
         populateTimeComboBox(cbSpecialClose);
         
+        // --- Listener: Enable "Mark Closed" only if date is selected ---
+        dpSpecialDate.valueProperty().addListener(new ChangeListener<LocalDate>() {
+            @Override
+            public void changed(ObservableValue<? extends LocalDate> obs, LocalDate oldVal, LocalDate newVal) {
+                btnMarkClosed.setDisable(newVal == null);
+            }
+        });
+
+        // --- Action: Mark as Closed ---
+        btnMarkClosed.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                // Set logic: 06:00 to 06:30 implies "Closed" logic on server side or just invalid range
+                cbSpecialOpen.setValue("06:00");
+                cbSpecialClose.setValue("06:30");
+                txtSpecialDesc.setText("Closed");
+            }
+        });
+
         // --- 1. Batch Save Action ---
         btnSaveRegular.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -102,13 +119,9 @@ public class ManageHours_GUI {
             }
         });
 
-        // Synchronize with server on startup
         ConnectToServer_GUI.clientController.sendGetOpeningHoursRequest();
     }
 
-    /**
-     * Fills a ComboBox with time strings in 30-minute intervals (00:00 to 23:30).
-     */
     private void populateTimeComboBox(ComboBox<String> cb) {
         cb.getItems().clear();
         for (int h = 0; h < 24; h++) {
@@ -117,9 +130,6 @@ public class ManageHours_GUI {
         }
     }
 
-    /**
-     * Collects all UI data and sends a batch update to the server.
-     */
     private void onSaveBatch() {
         Map<DayOfWeek, Object[]> batchData = new HashMap<DayOfWeek, Object[]>();
         for (Map.Entry<DayOfWeek, DayRowControls> entry : dayControlsMap.entrySet()) {
@@ -137,10 +147,6 @@ public class ManageHours_GUI {
         ConnectToServer_GUI.clientController.sendBatchUpdateHours(batchData);
     }
 
-    /**
-     * Refreshes the UI using the data from the Opening_Hours entity.
-     * Updated to handle actual descriptions and sync statuses.
-     */
     public void refreshUI(final Opening_Hours oh) {
         Platform.runLater(new Runnable() {
             @Override
@@ -151,9 +157,6 @@ public class ManageHours_GUI {
         });
     }
 
-    /**
-     * Dynamically builds the rows for the weekly schedule using ComboBoxes.
-     */
     private void updateRegularHoursUI(Opening_Hours oh) {
         vboxRegularHours.getChildren().clear();
         dayControlsMap.clear();
@@ -169,17 +172,16 @@ public class ManageHours_GUI {
             row.setStyle("-fx-padding: 5;");
 
             Label lblDay = new Label(day.toString());
-            lblDay.setPrefWidth(90);
+            lblDay.setPrefWidth(100);
             lblDay.setStyle("-fx-text-fill: white;");
 
             final ComboBox<String> cbOpen = new ComboBox<String>();
             final ComboBox<String> cbClose = new ComboBox<String>();
             populateTimeComboBox(cbOpen);
             populateTimeComboBox(cbClose);
-            cbOpen.setPrefWidth(95);
-            cbClose.setPrefWidth(95);
-            cbOpen.setStyle("-fx-background-color: #455e77;");
-            cbClose.setStyle("-fx-background-color: #455e77;");
+            cbOpen.setPrefWidth(120);
+            cbClose.setPrefWidth(120);
+
 
             final CheckBox cbActive = new CheckBox();
             cbActive.setStyle("-fx-mark-color: #3498db;");
@@ -207,9 +209,6 @@ public class ManageHours_GUI {
         }
     }
 
-    /**
-     * Fix: Fetches the actual description from the entity for the special hours table.
-     */
     private void updateSpecialHoursTable(Opening_Hours oh) {
         ObservableList<SpecialHourRow> specialRows = FXCollections.observableArrayList();
         for (Map.Entry<LocalDate, TimeRange> entry : oh.getExceptionSchedule().entrySet()) {
@@ -218,7 +217,6 @@ public class ManageHours_GUI {
                 entry.getKey().toString(),
                 range.getOpenTime() != null ? range.getOpenTime().toString() : "Closed",
                 range.getCloseTime() != null ? range.getCloseTime().toString() : "N/A",
-                // Use the description from the entity if available
                 range.getDescription() != null ? range.getDescription() : "Manual Override"
             ));
         }
@@ -246,7 +244,7 @@ public class ManageHours_GUI {
         if (selected != null) {
             ConnectToServer_GUI.clientController.sendDeleteSpecialHourRequest(LocalDate.parse(selected.getDate()));
         } else {
-            showAlert("Missing Selection", "Select a row to delete.");
+            showAlert("Missing Selection", "Select a Special Hour(row) to delete.");
         }
     }
 
@@ -256,12 +254,12 @@ public class ManageHours_GUI {
         colClose.setCellValueFactory(new PropertyValueFactory<SpecialHourRow, String>("close"));
         colDesc.setCellValueFactory(new PropertyValueFactory<SpecialHourRow, String>("description"));
     }
-
     private void onBackClicked(ActionEvent event) {
         try {
             Parent root = FXMLLoader.load(getClass().getResource("/gui/Workers.fxml"));
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
+            stage.centerOnScreen();
         } catch (Exception e) { e.printStackTrace(); }
     }
 
@@ -270,6 +268,7 @@ public class ManageHours_GUI {
         cbSpecialOpen.setValue(null);
         cbSpecialClose.setValue(null);
         txtSpecialDesc.clear();
+        btnMarkClosed.setDisable(true);
     }
 
     private void showAlert(String title, String content) {
@@ -279,7 +278,6 @@ public class ManageHours_GUI {
         alert.showAndWait();
     }
 
-    /** Group of UI controls for each day row. */
     private static class DayRowControls {
         ComboBox<String> open, close;
         CheckBox active;
@@ -288,7 +286,6 @@ public class ManageHours_GUI {
         }
     }
 
-    /** POJO class for Special Hours table rows. */
     public static class SpecialHourRow {
         private String date, open, close, description;
         public SpecialHourRow(String d, String o, String c, String desc) {

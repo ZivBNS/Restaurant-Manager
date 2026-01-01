@@ -1,11 +1,6 @@
 package Data;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Timestamp;
-import java.time.DayOfWeek;
+import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -16,265 +11,316 @@ import java.util.Map;
 
 import entities.Restaurant_Table;
 
+/**
+ * Database Initialization class.
+ * This class drops existing tables, creates the schema, and populates the 
+ * database with default and sample data for testing purposes.
+ */
 public class Init_All {
-    //READ: how to use:
-	//1. make sure that the tables are not exist in the db(mysql)
-	//2. change the password in db_controller to the pass that matches yours
-	//3. then you can run this main
-	
-	
+
+    /**
+     * Entry point for database initialization.
+     * This will wipe the existing database schema and recreate it from scratch.
+     */
     public static void main(String[] args) {
-    	Statement stmt;
-    	DB_Controller db=DB_Controller.getInstance();
-    	try {
-    		PooledConnection pcon=db.getConnection();
-    		Connection con = pcon.getConnection();
-    		
-    		stmt = con.createStatement();
-    		createTables(con, stmt);
-    		initTables(con, stmt);
-    		initOpeningHours(con, stmt);
-    		initUsers(con,stmt);
-    		//initReservations(con, stmt);
-    		initWaitlists(con, stmt);
-    	}
-    	
-    	catch (SQLException e) {
-    		e.printStackTrace();
-    		System.out.println("ERROR - COULD NOT CREATE TABLES ISSUE");
-    		}
-    	}
-    
-
-	private static void createTables(Connection con,Statement stmt) {
-		//create all tables
-		try {
-	    	stmt.executeUpdate("CREATE TABLE Users (ID INT PRIMARY KEY AUTO_INCREMENT, FirstName VARCHAR(25),LastName VARCHAR(25), Phone VARCHAR(14), Email VARCHAR(35), Username VARCHAR(20) UNIQUE , Password VARCHAR(20), subscriberCode INT, Identity ENUM('Subscriber', 'Manager', 'Employee') NOT NULL);");
-			stmt.executeUpdate("CREATE TABLE Tables (ID INT PRIMARY KEY AUTO_INCREMENT, TableNumber INT , Size INT , IsActive BOOLEAN DEFAULT TRUE);");
-			stmt.executeUpdate("CREATE TABLE OpeningHours (DayOfWeek ENUM('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday') NOT NULL, OpenTime TIME, CloseTime TIME,IsActive BOOLEAN DEFAULT TRUE, PRIMARY KEY (DayOfWeek, OpenTime));");
-			stmt.executeUpdate("CREATE TABLE SpecialHours (Date DATE PRIMARY KEY, OpenTime TIME, CloseTime TIME, Description TEXT);");	
-			stmt.executeUpdate("CREATE TABLE Reservations (ID INT PRIMARY KEY AUTO_INCREMENT, UserID INT, TableID INT, Phone VARCHAR(14), Email VARCHAR(35), ReservationStartTime DATETIME, ReservationEndTime DATETIME , ActualArrivalTime DATETIME, ActualDepartureTime DATETIME, NumberOfDiners INT, ConfirmationCode INT, Status VARCHAR(25), CreationTime DATETIME DEFAULT CURRENT_TIMESTAMP,RemindedPreArrival BOOLEAN DEFAULT FALSE,RemindedDeparture BOOLEAN DEFAULT FALSE, FOREIGN KEY (UserID) REFERENCES Users(ID), FOREIGN KEY (TableID) REFERENCES Tables(ID));");
-			stmt.executeUpdate("CREATE TABLE Waitlist (ID INT PRIMARY KEY AUTO_INCREMENT, ReservationID INT UNIQUE, Status VARCHAR(25),creationTime DATETIME, TableFreedTime DATETIME, FOREIGN KEY (ReservationID) REFERENCES Reservations(ID));");
-			stmt.executeUpdate("CREATE TABLE Bills (ID INT PRIMARY KEY AUTO_INCREMENT, ReservationID INT UNIQUE, TotalAmount DECIMAL(10, 2) NOT NULL, BillDetails TEXT, DiscountPercentage DECIMAL(5, 2) DEFAULT 0.00, Status VARCHAR(25), FOREIGN KEY (ReservationID) REFERENCES Reservations(ID));");
-		}catch (SQLException e) {
-			e.printStackTrace();
-    		System.out.println("ERROR - COULD NOT CREATE TABLES ISSUE");
-		}
-    }
-
-    private static void initOpeningHours(Connection con, Statement stmt) {
-    	try {
-    		//create default oppening time for the first time
-    		//ראשון-חמישי מ8 בבוקר עד 11 בלילה
-    		//שישי מהבוקר עד הצהריים, מוצש מ8 בלילה עד 11
-    		String[] weekDays = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"};
-    		for (String day : weekDays) {
-    		    stmt.executeUpdate("INSERT INTO OpeningHours (DayOfWeek, OpenTime, CloseTime) VALUES ('" + day + "', '08:00:00', '23:00:00')");
-    		}
-    		stmt.executeUpdate("INSERT INTO OpeningHours (DayOfWeek, OpenTime, CloseTime) VALUES ('Friday', '08:00:00', '14:00:00')");
-    		stmt.executeUpdate("INSERT INTO OpeningHours (DayOfWeek, OpenTime, CloseTime) VALUES ('Saturday', '20:00:00', '23:00:00')");
-    		System.out.println("inserted DEFAULT data to OPENING HOURS");
-		} catch (SQLException e) {
-			e.printStackTrace();
-			System.out.println("failed to insert open hours for some day");
-		}	
-	}
-    
-    private static void initTables(Connection con,Statement stmt) {
-		int i=0;
-    	try {
-    		//create default tables for the first time
-    		//4 tables for 2,4 tables for 4, 2 tables for 8
-    		List<Restaurant_Table> rTables= new ArrayList<Restaurant_Table>();
-    		for (i = 0; i < 4; i++) {
-    			rTables.add(new Restaurant_Table(2));
-    			rTables.add(new Restaurant_Table(4));
-    			if (i<2) rTables.add(new Restaurant_Table(8));
-    		}
-    		i=1;
-    		for (Restaurant_Table rt:rTables) 
-    			stmt.executeUpdate("INSERT INTO Tables (TableNumber, Size, IsActive) VALUES ("+ (i++) +", "+ rt.getSize() +", true)");
-    		System.out.println("inserted DEFAULT data to TABLES");
-    		System.out.println("Created successfully, all the cavod");
-		} catch (SQLException e) {
-			e.printStackTrace();
-			System.out.println("failed to insert table: "+ i);
-			}
-    }
-
-    private static void initUsers(Connection con, Statement stmt) {
-        String[] firstNames = {"Oshri", "Dor", "Daniel", "Ziv", "John", "Jennifer", "Michael", "Linda", "William", "Elizabeth", "David", "Barbara", "Richard", "Susan", "Joseph", "Jessica", "Thomas", "Sarah", "Charles", "Karen"};
-        String[] lastNames = {"Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin"};
-
-        int subscriberCode = 100000;
-        char usernameChar = 'a';
-
+        Statement stmt;
+        DB_Controller db = DB_Controller.getInstance();
         try {
-            for (int i = 0; i < 20; i++) {
-                String firstName = firstNames[i];
-                String lastName = lastNames[i];
-                String phone = "050" + (1000000 + i); // מייצר מספר טלפון ייחודי
-                String email = firstName.toLowerCase() + i + "@bistro.com";
-                String username = String.valueOf(usernameChar++); // a, b, c...
-                String password = "1";
-                
-                // יצירת השאילתה
-                String sql = String.format(
-                    "INSERT INTO Users (FirstName, LastName, Phone, Email, Username, Password, subscriberCode, Identity) " +
-                    "VALUES ('%s', '%s', '%s', '%s', '%s', '%s', %d, 'Subscriber')",
-                    firstName, lastName, phone, email, username, password, subscriberCode++
-                );
+            PooledConnection pcon = db.getConnection();
+            Connection con = pcon.getConnection();
 
-                stmt.executeUpdate(sql);
-            }
-            System.out.println("Successfully initialized 20 Subscribers (Users 'a' through 't').");
-
+            stmt = con.createStatement();
+            
+            System.out.println("Starting database initialization...");
+            
+            // Step 0: Clear existing data
+            dropExistingTables(con, stmt);
+            
+            // Step 1: Create Schema
+            createTables(con, stmt);
+            
+            // Step 2: Populate Data
+            initTables(con, stmt);
+            initOpeningHours(con, stmt);
+            initUsers(con, stmt);
+            initReservations(con, stmt); 
+            initWaitlists(con, stmt);    
+            initMonthlyReports(con, stmt); 
+            
+            System.out.println("Initialization completed successfully.");
         } catch (SQLException e) {
-            System.err.println("Error initializing users: " + e.getMessage());
+            e.printStackTrace();
+            System.out.println("ERROR - DATABASE INITIALIZATION FAILED");
+        }
+    }
+
+    /**
+     * Drops all existing tables in the database to ensure a clean state.
+     * Foreign key checks are disabled during this process to avoid dependency errors.
+     */
+    private static void dropExistingTables(Connection con, Statement stmt) {
+        try {
+            System.out.println("Dropping existing tables...");
+            
+            // Disable foreign key checks to allow dropping tables with relationships
+            stmt.executeUpdate("SET FOREIGN_KEY_CHECKS = 0");
+
+            String[] tables = {
+                "Bills", 
+                "Waitlist", 
+                "Reservations", 
+                "subscriber_report_details", 
+                "time_report_details", 
+                "reports_management", 
+                "SpecialHours", 
+                "OpeningHours", 
+                "Tables", 
+                "Users"
+            };
+
+            for (String table : tables) {
+                stmt.executeUpdate("DROP TABLE IF EXISTS " + table);
+            }
+
+            // Re-enable foreign key checks
+            stmt.executeUpdate("SET FOREIGN_KEY_CHECKS = 1");
+            
+            System.out.println("All existing tables dropped.");
+        } catch (SQLException e) {
+            System.err.println("Error dropping tables: " + e.getMessage());
             e.printStackTrace();
         }
     }
-    
-    
-    
-    private static void initReservations(Connection con, Statement stmt) {
-        
-    	int lastCode = 100000;
-        List<Integer> userIds = new ArrayList<>();
-        Map<Integer, String[]> userData = new HashMap<>(); // לשמירת טלפון ואימייל לפי ID
 
-        // 1. שליפת ה-IDs והנתונים של המשתמשים הקיימים
-        try (ResultSet rs = stmt.executeQuery("SELECT ID, Phone, Email FROM Users WHERE Identity = 'Subscriber'")) {
+    /**
+     * Creates all necessary tables for the restaurant system.
+     */
+    private static void createTables(Connection con, Statement stmt) {
+        try {
+            System.out.println("Creating tables...");
+            stmt.executeUpdate("CREATE TABLE Users (ID INT PRIMARY KEY AUTO_INCREMENT, FirstName VARCHAR(25),LastName VARCHAR(25), Phone VARCHAR(14), Email VARCHAR(35), Username VARCHAR(20) UNIQUE , Password VARCHAR(20), subscriberCode INT, Identity ENUM('Subscriber', 'Manager', 'Employee') NOT NULL);");
+            stmt.executeUpdate("CREATE TABLE Tables (ID INT PRIMARY KEY AUTO_INCREMENT, TableNumber INT , Size INT , IsActive BOOLEAN DEFAULT TRUE);");
+            stmt.executeUpdate("CREATE TABLE OpeningHours (DayOfWeek ENUM('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday') NOT NULL, OpenTime TIME, CloseTime TIME,IsActive BOOLEAN DEFAULT TRUE, PRIMARY KEY (DayOfWeek, OpenTime));");
+            stmt.executeUpdate("CREATE TABLE SpecialHours (Date DATE PRIMARY KEY, OpenTime TIME, CloseTime TIME, Description TEXT);");
+            stmt.executeUpdate("CREATE TABLE Reservations (ID INT PRIMARY KEY AUTO_INCREMENT, UserID INT, TableID INT, Phone VARCHAR(14), Email VARCHAR(35), ReservationStartTime DATETIME, ReservationEndTime DATETIME , ActualArrivalTime DATETIME, ActualDepartureTime DATETIME, NumberOfDiners INT, ConfirmationCode INT, Status VARCHAR(25), CreationTime DATETIME DEFAULT CURRENT_TIMESTAMP,RemindedPreArrival BOOLEAN DEFAULT FALSE,RemindedDeparture BOOLEAN DEFAULT FALSE, FOREIGN KEY (UserID) REFERENCES Users(ID), FOREIGN KEY (TableID) REFERENCES Tables(ID));");
+            stmt.executeUpdate("CREATE TABLE Waitlist (ID INT PRIMARY KEY AUTO_INCREMENT, ReservationID INT UNIQUE, Status VARCHAR(25),creationTime DATETIME, TableFreedTime DATETIME, FOREIGN KEY (ReservationID) REFERENCES Reservations(ID));");
+            stmt.executeUpdate("CREATE TABLE Bills (ID INT PRIMARY KEY AUTO_INCREMENT, ReservationID INT UNIQUE, TotalAmount DECIMAL(10, 2) NOT NULL, BillDetails TEXT, DiscountPercentage DECIMAL(5, 2) DEFAULT 0.00, Status VARCHAR(25), FOREIGN KEY (ReservationID) REFERENCES Reservations(ID));");
+            
+            // Report Management Tables
+            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS reports_management ("
+                    + "report_id INT AUTO_INCREMENT PRIMARY KEY, " + "report_month INT NOT NULL, "
+                    + "report_year INT NOT NULL, " + "date_generated DATETIME DEFAULT CURRENT_TIMESTAMP)");
+
+            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS time_report_details (" + "report_id INT, " + "day_index INT NOT NULL, "
+                            + "avg_lateness DOUBLE, " + "avg_overstay DOUBLE, " + "PRIMARY KEY (report_id, day_index), "
+                            + "FOREIGN KEY (report_id) REFERENCES reports_management(report_id) ON DELETE CASCADE)");
+
+            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS subscriber_report_details (" + "report_id INT, "
+                    + "day_index INT NOT NULL, " + "total_orders INT, " + "waiting_list_count INT, "
+                    + "PRIMARY KEY (report_id, day_index), "
+                    + "FOREIGN KEY (report_id) REFERENCES reports_management(report_id) ON DELETE CASCADE)");
+            
+            System.out.println("Tables created successfully.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Initializes default opening hours for a standard week.
+     */
+    private static void initOpeningHours(Connection con, Statement stmt) {
+        try {
+            String[] weekDays = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday" };
+            for (String day : weekDays) {
+                stmt.executeUpdate("INSERT INTO OpeningHours (DayOfWeek, OpenTime, CloseTime) VALUES ('" + day + "', '08:00:00', '23:00:00')");
+            }
+            stmt.executeUpdate("INSERT INTO OpeningHours (DayOfWeek, OpenTime, CloseTime) VALUES ('Friday', '08:00:00', '14:00:00')");
+            stmt.executeUpdate("INSERT INTO OpeningHours (DayOfWeek, OpenTime, CloseTime) VALUES ('Saturday', '20:00:00', '23:00:00')");
+            System.out.println("Inserted default opening hours.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Initializes default restaurant tables with varying capacities.
+     */
+    private static void initTables(Connection con, Statement stmt) {
+        try {
+            List<Restaurant_Table> rTables = new ArrayList<Restaurant_Table>();
+            for (int i = 0; i < 4; i++) {
+                rTables.add(new Restaurant_Table(2));
+                rTables.add(new Restaurant_Table(4));
+                if (i < 2) rTables.add(new Restaurant_Table(8));
+            }
+            int tableNum = 1;
+            for (Restaurant_Table rt : rTables) {
+                stmt.executeUpdate("INSERT INTO Tables (TableNumber, Size, IsActive) VALUES (" + (tableNum++) + ", " + rt.getSize() + ", true)");
+            }
+            System.out.println("Inserted default tables.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Initializes a set of dummy subscribers for the system.
+     */
+    private static void initUsers(Connection con, Statement stmt) {
+        String[] firstNames = { "Oshri", "Dor", "Daniel", "Ziv", "John", "Jennifer", "Michael", "Linda", "William", "Elizabeth", "David", "Barbara", "Richard", "Susan", "Joseph", "Jessica", "Thomas", "Sarah", "Charles", "Karen" };
+        String[] lastNames = { "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin" };
+        int subCode = 100000;
+        char userChar = 'a';
+        try {
+            for (int i = 0; i < 20; i++) {
+                String sql = String.format("INSERT INTO Users (FirstName, LastName, Phone, Email, Username, Password, subscriberCode, Identity) VALUES ('%s', '%s', '050%d', '%s', '%s', '1', %d, 'Subscriber')",
+                        firstNames[i], lastNames[i], (1000000 + i), firstNames[i].toLowerCase() + "@mail.com", String.valueOf(userChar++), subCode++);
+                stmt.executeUpdate(sql);
+            }
+            System.out.println("Inserted 20 subscribers.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void initReservations(Connection con, Statement stmt) {
+        int lastCode = 200000;
+        List<Integer> userIds = new ArrayList<Integer>();
+        Map<Integer, String[]> userData = new HashMap<Integer, String[]>();
+        
+        String insertSql = "INSERT INTO Reservations (UserID, Phone, Email, ReservationStartTime, " +
+                           "ReservationEndTime, ActualArrivalTime, ActualDepartureTime, " +
+                           "NumberOfDiners, TableID, Status, ConfirmationCode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Completed', ?)";
+
+        try {
+            // Fetch users to link
+            ResultSet rs = stmt.executeQuery("SELECT ID, Phone, Email FROM Users WHERE Identity = 'Subscriber'");
             while (rs.next()) {
                 int id = rs.getInt("ID");
                 userIds.add(id);
-                userData.put(id, new String[]{rs.getString("Phone"), rs.getString("Email")});
+                userData.put(id, new String[] { rs.getString("Phone"), rs.getString("Email") });
             }
-        } catch (SQLException e) {
-            System.out.println("Could not fetch users for reservations linking.");
-        }
 
-        int userIndex = 0;
-     // --- חלק חדש: יצירת 30 הזמנות עבר (לפני 1, 2, 3 ימים) ---
-        for (int daysAgo = 1; daysAgo <= 3; daysAgo++) {
-            LocalDate pastDate = LocalDate.now().minusDays(daysAgo);
-            for (int i = 0; i < 10; i++) {
-                int currentUserId = userIds.get(userIndex % userIds.size());
-                userIndex++;
+            try (PreparedStatement ps = con.prepareStatement(insertSql)) {
+                int userIdx = 0;
                 
-                LocalDateTime start = pastTimeForHistory(pastDate, i);
-                LocalDateTime end = start.plusHours(2);
+                // Iterate through all 31 days of December 2025
+                for (int day = 1; day <= 31; day++) {
+                    LocalDate date = LocalDate.of(2025, 12, day);
+                    
+                    // Randomize number of reservations for this day (between 8 and 25)
+                    int dailyOrders = 8 + (int)(Math.random() * 18); 
 
-                String sql = String.format(
-                    "INSERT INTO Reservations (UserID, Phone, Email, ReservationStartTime, ReservationEndTime, NumberOfDiners, TableID, Status, ConfirmationCode) " +
-                    "VALUES (%d, '%s', '%s', '%s', '%s', 4, %d, 'Completed', %d)",
-                    currentUserId, userData.get(currentUserId)[0], userData.get(currentUserId)[1],
-                    Timestamp.valueOf(start), Timestamp.valueOf(end), (i % 10) + 1, lastCode++
-                );
-                try { stmt.executeUpdate(sql); } catch (SQLException e) { e.printStackTrace(); }
-            }
-        }
-        for (int dayOffset = 1; dayOffset <= 3; dayOffset++) {
-            LocalDate date = LocalDate.now().plusDays(dayOffset);
-            DayOfWeek day = date.getDayOfWeek();
+                    for (int i = 0; i < dailyOrders; i++) {
+                        int uid = userIds.get(userIdx % userIds.size());
+                        userIdx++;
 
-            String[] hours = {};
-            int reservationsPerSlot = 0;
+                        // Distribute times between 10:00 and 22:00
+                        LocalDateTime start = LocalDateTime.of(date, LocalTime.of(10 + (i % 12), 0));
+                        LocalDateTime end = start.plusHours(2);
+                        
+                        // --- Logic for +/- 30 Minutes Variance ---
+                        // Math.random() * 61 -> 0 to 60.99
+                        // Subtract 30 -> Range becomes -30 to +30
+                        int arrivalOffset = (int)(Math.random() * 61) - 30; 
+                        int departureOffset = (int)(Math.random() * 61) - 30;
+                        
+                        LocalDateTime actArr = start.plusMinutes(arrivalOffset); 
+                        LocalDateTime actDep = end.plusMinutes(departureOffset);
 
-            if (day == DayOfWeek.SUNDAY || day == DayOfWeek.TUESDAY || day == DayOfWeek.THURSDAY) {
-                hours = new String[]{"08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:30"};
-                reservationsPerSlot = 5;
-            } else if (day == DayOfWeek.MONDAY || day == DayOfWeek.WEDNESDAY) {
-                hours = new String[]{"09:00", "11:00", "13:00", "15:00", "19:00", "20:00"};
-                reservationsPerSlot = 2;
-            } else if (day == DayOfWeek.FRIDAY) {
-                hours = new String[]{"09:00", "11:00", "12:00"};
-                reservationsPerSlot = 2;
-            }
+                        // Randomize number of diners (between 2 and 8)
+                        int numDiners = 2 + (int)(Math.random() * 7);
+                        
+                        // Randomize Table ID (assuming 10 tables exist from initTables)
+                        int tableId = 1 + (int)(Math.random() * 10);
 
-            for (String hour : hours) {
-                LocalTime startTime = LocalTime.parse(hour);
-                LocalDateTime resStart = LocalDateTime.of(date, startTime);
-                LocalDateTime resEnd = resStart.plusHours(2);
-
-                for (int j = 0; j < reservationsPerSlot; j++) {
-                    Integer tableId;
-                    int numDiners;
-
-                    if (j < 4) { tableId = j + 1; numDiners = 2; } 
-                    else if (j < 8) { tableId = j + 1; numDiners = 4; } 
-                    else { tableId = (j % 2) + 9; numDiners = 8; }
-                    tableId=null;
-                    String userIdVal = "NULL";
-                    String phone = "0501112233";
-                    String email = "guest@mail.com";
-
-                    if (j % 2 == 0 && !userIds.isEmpty()) {
-                        int currentUserId = userIds.get(userIndex % userIds.size());
-                        userIdVal = String.valueOf(currentUserId);
-                        phone = userData.get(currentUserId)[0];
-                        email = userData.get(currentUserId)[1];
-                        userIndex++;
+                        ps.setInt(1, uid);
+                        ps.setString(2, userData.get(uid)[0]);
+                        ps.setString(3, userData.get(uid)[1]);
+                        ps.setTimestamp(4, Timestamp.valueOf(start));
+                        ps.setTimestamp(5, Timestamp.valueOf(end));
+                        ps.setTimestamp(6, Timestamp.valueOf(actArr));
+                        ps.setTimestamp(7, Timestamp.valueOf(actDep));
+                        ps.setInt(8, numDiners);
+                        ps.setInt(9, tableId);
+                        ps.setInt(10, lastCode++);
+                        
+                        ps.addBatch();
                     }
+                }
+                ps.executeBatch();
+            }
+            System.out.println("Reservations: Generated randomized full coverage for December 2025.");
+        } catch (SQLException e) { 
+            e.printStackTrace(); 
+        }
+    }
 
-                    String sql = String.format(
-                        "INSERT INTO Reservations (UserID, Phone, Email, ReservationStartTime, ReservationEndTime, NumberOfDiners, TableID, Status, ConfirmationCode) " +
-                        "VALUES (%s, '%s', '%s', '%s', '%s', %d, %d, 'Pending', %d)",
-                        userIdVal, phone, email, Timestamp.valueOf(resStart), Timestamp.valueOf(resEnd), numDiners, tableId, lastCode++
-                    );
+    /**
+     * Initializes Waitlist records for December 2025 with deliberate gaps.
+     */
+    private static void initWaitlists(Connection con, Statement stmt) {
+        String selectSql = "SELECT ID, ReservationStartTime FROM Reservations " +
+                           "WHERE Status = 'Completed' AND MONTH(ReservationStartTime) = 12";
+        String insertSql = "INSERT INTO Waitlist (ReservationID, Status, creationTime, TableFreedTime) " +
+                           "VALUES (?, 'COMPLETED', ?, ?)";
 
-                    try {
-                        stmt.executeUpdate(sql);
-                    } catch (SQLException e) {
-                        System.out.println("failed to insert reservation: " + sql);
-                        e.printStackTrace();
+        try (ResultSet rs = stmt.executeQuery(selectSql);
+             PreparedStatement ps = con.prepareStatement(insertSql)) {
+
+            while (rs.next()) {
+                LocalDateTime arrival = rs.getTimestamp("ReservationStartTime").toLocalDateTime();
+                int day = arrival.getDayOfMonth();
+
+                if (day % 5 == 0) {
+                    continue; 
+                }
+
+                if (Math.random() > 0.3) {
+                    int resId = rs.getInt("ID");
+                    int waitMins = 5 + (int)(Math.random() * 30);
+                    LocalDateTime created = arrival.minusMinutes(waitMins);
+
+                    ps.setInt(1, resId);
+                    ps.setTimestamp(2, Timestamp.valueOf(created));
+                    ps.setTimestamp(3, Timestamp.valueOf(arrival));
+                    ps.addBatch();
+                }
+            }
+            ps.executeBatch();
+            System.out.println("Waitlist: Initialized December data with deliberate gaps.");
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
+
+    /**
+     * Pre-generates historical report data for October and November.
+     */
+    private static void initMonthlyReports(Connection con, Statement stmt) {
+        try {
+            int[] months = {10, 11}; 
+            int year = 2025;
+
+            for (int month : months) {
+                String insertMgmt = String.format("INSERT INTO reports_management (report_month, report_year) VALUES (%d, %d)", month, year);
+                stmt.executeUpdate(insertMgmt, Statement.RETURN_GENERATED_KEYS);
+                
+                ResultSet rs = stmt.getGeneratedKeys();
+                if (rs.next()) {
+                    int reportId = rs.getInt(1);
+                    for (int day = 1; day <= 30; day++) {
+                        double avgLat = 5 + (Math.random() * 15);
+                        double avgOver = 2 + (Math.random() * 20);
+                        stmt.executeUpdate(String.format("INSERT INTO time_report_details (report_id, day_index, avg_lateness, avg_overstay) VALUES (%d, %d, %.2f, %.2f)", reportId, day, avgLat, avgOver));
+
+                        int orders = 15 + (int)(Math.random() * 40);
+                        int waitlist = (int)(Math.random() * 10);
+                        stmt.executeUpdate(String.format("INSERT INTO subscriber_report_details (report_id, day_index, total_orders, waiting_list_count) VALUES (%d, %d, %d, %d)", reportId, day, orders, waitlist));
                     }
                 }
             }
-        }
-        System.out.println("Finished inserting 3 days. Half of reservations are linked to subscribers.");
-    }
-    
-    private static LocalDateTime pastTimeForHistory(LocalDate date, int index) {
-        int hour = 10 + (index % 10); // מפזר את 10 ההזמנות על פני היום
-        return LocalDateTime.of(date, LocalTime.of(hour, 0));
-    }
-    
-    	//creates 10 waitlists with status COMPLITED, also the revesvation linked to it.
-    private static void initWaitlists(Connection con, Statement stmt) {
-        // שליפת הזמנות שהושלמו מהימים האחרונים (כדי לקשר לווייטליסט)
-        String selectSql = "SELECT ID, ReservationStartTime FROM Reservations WHERE Status = 'Completed' AND DATE(ReservationStartTime) < CURDATE()";
-        
-        try (ResultSet rs = stmt.executeQuery(selectSql)) {
-            List<Integer> resIds = new ArrayList<>();
-            List<LocalDateTime> startTimes = new ArrayList<>();
-            
-            while (rs.next()) {
-                resIds.add(rs.getInt("ID"));
-                startTimes.add(rs.getTimestamp("ReservationStartTime").toLocalDateTime());
-            }
-
-            for (int i = 0; i < resIds.size(); i++) {
-                int resId = resIds.get(i);
-                LocalDateTime actualArrival = startTimes.get(i);
-                
-                // הגרלת זמן המתנה ממוצע של 10 דקות (בין 5 ל-15 דקות)
-                int waitMinutes = 5 + (int)(Math.random() * 11); 
-                LocalDateTime creationTime = actualArrival.minusMinutes(waitMinutes);
-                
-                // בווייטליסט שלנו, TableFreedTime הוא הרגע שבו הלקוח באמת קיבל שולחן (actualArrival)
-                String insertWait = String.format(
-                    "INSERT INTO Waitlist (ReservationID, Status, creationTime, TableFreedTime) " +
-                    "VALUES (%d, 'COMPLETED', '%s', '%s')",
-                    resId, Timestamp.valueOf(creationTime), Timestamp.valueOf(actualArrival)
-                );
-                
-                stmt.executeUpdate(insertWait);
-            }
-            System.out.println("Successfully initialized Waitlist for " + resIds.size() + " past reservations.");
-
+            System.out.println("Initialized reports for months 10 and 11.");
         } catch (SQLException e) {
-            System.err.println("Error initializing waitlists: " + e.getMessage());
             e.printStackTrace();
         }
     }

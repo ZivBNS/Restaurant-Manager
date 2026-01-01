@@ -48,6 +48,7 @@ public class Workers_GUI {
                     // Retrieve the current stage from the button and switch scenes
                     Stage stage = (Stage) btnManageOpeningHours.getScene().getWindow();
                     stage.setScene(new Scene(root));
+                    stage.centerOnScreen();
                     stage.setTitle("Employee Dashboard - Opening Hours Management");
                     stage.show();
                     
@@ -71,6 +72,8 @@ public class Workers_GUI {
 
                     Stage stage = (Stage) btnManageTables.getScene().getWindow();
                     stage.setScene(new Scene(root));
+                    stage.centerOnScreen();
+
 
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -91,6 +94,7 @@ public class Workers_GUI {
                     // Retrieve the current stage from the button and switch scenes
                     Stage stage = (Stage) btnManageOrders.getScene().getWindow();
                     stage.setScene(new Scene(root));
+                    stage.centerOnScreen();
                     stage.setTitle("Employee Dashboard - User Management");
                     stage.show();
                     
@@ -102,9 +106,25 @@ public class Workers_GUI {
         });
 
         btnReports.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
+        	@Override
             public void handle(ActionEvent event) {
-                System.out.println("Go to: Reports Screen");
+                System.out.println("Go to: Manage Report Screen");
+                try {
+                    // Load the FXML for the management panel
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/reports.fxml"));
+                    Parent root = loader.load();
+
+                    // Retrieve the current stage from the button and switch scenes
+                    Stage stage = (Stage) btnManageOrders.getScene().getWindow();
+                    stage.setScene(new Scene(root));
+                    stage.centerOnScreen();
+                    stage.setTitle("Employee Dashboard - reports Management");
+                    stage.show();
+                    
+                } catch (IOException e) {
+                    System.err.println("Navigation Error: Failed to load reports.fxml");
+                    e.printStackTrace();
+                }
             }
         });
         
@@ -124,6 +144,7 @@ public class Workers_GUI {
                     // Retrieve the current stage from the button and switch scenes
                     Stage stage = (Stage) btnManageOrders.getScene().getWindow();
                     stage.setScene(new Scene(root));
+                    stage.centerOnScreen();
                     stage.setTitle("Employee Dashboard - Order Management");
                     stage.show();
                     
@@ -152,6 +173,8 @@ public class Workers_GUI {
                     Parent root = loader.load();
                     Stage stage = (Stage) btnLogout.getScene().getWindow();
                     stage.setScene(new Scene(root));
+                    stage.centerOnScreen();
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -159,7 +182,6 @@ public class Workers_GUI {
         });
     }
     
-    // פונקציה חיצונית לקביעת הרשאות (תקרא לה אחרי הלוגין)
     public void setAdminPermission(boolean isAdmin) {
         this.isCurrentUserAdmin = isAdmin;
         if (!isAdmin) {

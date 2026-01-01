@@ -20,6 +20,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -459,10 +460,14 @@ public class ManageOrders_GUI {
         } catch (Exception e) { e.printStackTrace(); }
     }
 
-    @FXML void onBackClicked(ActionEvent event) {
+    @FXML 
+    private void onBackClicked(ActionEvent event) {
         try {
-            Parent r = FXMLLoader.load(getClass().getResource("/gui/Workers.fxml"));
-            ((Stage) adminTable.getScene().getWindow()).setScene(new Scene(r));
+            Parent root = FXMLLoader.load(getClass().getResource("/gui/Workers.fxml"));
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.centerOnScreen();
+            stage.centerOnScreen();
         } catch (Exception e) { e.printStackTrace(); }
     }
 

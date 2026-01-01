@@ -1,6 +1,5 @@
 package gui;
 
-import entities.Subscribed_Customer;
 import entities.UserRecord;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -17,9 +16,6 @@ import javafx.stage.Stage;
 public class SubscribedCustomer_GUI {
 
     @FXML private Label welcomeLabel;
-    private Subscribed_Customer currentUser;
-
-
     /**
      * Called automatically when the FXML is loaded.
      */

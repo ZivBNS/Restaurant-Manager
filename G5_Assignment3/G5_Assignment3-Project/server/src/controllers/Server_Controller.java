@@ -86,9 +86,11 @@ public class Server_Controller extends AbstractServer {
 		commands.put(MessageType.CANCEL_WAITLIST_AND_RESERVATION_BY_CODE, WaitlistCmd);
 		commands.put(MessageType.JOIN_WAITLIST, WaitlistCmd);
 
-
-		
-
+		// --- Reporting ---
+		Command reportCmd = new ReportCommand();
+		commands.put(MessageType.GET_MONTHLY_REPORT, reportCmd);
+		commands.put(MessageType.GENERATE_NEW_REPORT, reportCmd);
+		commands.put(MessageType.DELETE_REPORT, reportCmd);
 		// --- Opening Hours Management ---
 		Command ohCmd = new OpeningHoursCommand();
 		commands.put(MessageType.GET_OPENING_HOURS, ohCmd);
@@ -154,6 +156,7 @@ public class Server_Controller extends AbstractServer {
 		if (watchdog != null) {
 	        watchdog.start(); // Start the monitoring thread
 	    }
+		ServerScheduler.startReportScheduler();
 	}
 
 	@Override
@@ -162,6 +165,7 @@ public class Server_Controller extends AbstractServer {
 		if (watchdog != null) {
 	        watchdog.stop(); // Stop the monitoring thread gracefully
 	    }
+		ServerScheduler.stopScheduler();
 	}
 
 	@Override

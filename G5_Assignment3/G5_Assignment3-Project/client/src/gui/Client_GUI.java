@@ -22,6 +22,7 @@ public class Client_GUI extends Application {
             Scene scene = new Scene(root);
             primaryStage.setTitle("Bistro - Connect to Server");
             primaryStage.setScene(scene);
+            primaryStage.centerOnScreen();
             primaryStage.show();
             
         } catch (Exception e) {

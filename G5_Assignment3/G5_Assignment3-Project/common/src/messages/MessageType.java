@@ -121,6 +121,13 @@ public enum MessageType {
     DELETE_TABLE_REQUEST,
     TABLE_OPERATION_SUCCESS,
     TABLE_OPERATION_FAILED,
+    
+    //---Report Managment---
+    REPORT_DATA_SUCCESS,
+    REPORT_ERROR,
+    GET_MONTHLY_REPORT,
+    GENERATE_NEW_REPORT,
+    DELETE_REPORT,
     //***************************************************//
 
     
@@ -136,6 +143,5 @@ public enum MessageType {
     ERROR_RESPONSE,         // Server sends an error message (Content=String)
     SUCCESS_RESPONSE,        // Server confirms successful operation
     
-    TEXT_MESSAGE,
     
 }

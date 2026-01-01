@@ -11,6 +11,8 @@
     /* Define the 'density' of the texture grid */
     -fx-background-size: 100% 100%, 20px 20px; 
     -fx-font-family: "Segoe UI", "Roboto", sans-serif;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
 }
 
 .page-header {
@@ -178,6 +180,78 @@
     -fx-border-color: #c8a165;
     -fx-text-fill: #c8a165;
 }
+
+/* --- General TabPane Styling --- */
+.tab-pane {
+    -fx-background-color: transparent;
+}
+
+.tab-pane .tab-header-area .tab-header-background {
+    -fx-background-color: transparent;
+    -fx-opacity: 0;
+}
+
+/* --- Individual Tab Styling --- */
+.tab-pane .tab {
+    -fx-background-color: #2D2D2D;
+    -fx-background-radius: 5 5 0 0;
+    -fx-padding: 8 15 8 15;
+    -fx-cursor: hand;
+    -fx-border-color: #3D3D3D;
+    -fx-border-width: 0 1 0 0;
+}
+.tab-pane:focused {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+}
+.tab-pane .tab .tab-label {
+    -fx-text-fill: #B0B0B0;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+/* --- Hover Effect --- */
+.tab-pane .tab:hover {
+    -fx-background-color: #3D3D3D;
+}
+
+.tab-pane .tab:hover .tab-label {
+    -fx-text-fill: white;
+}
+
+/* --- Selected Tab Styling --- */
+.tab-pane .tab:selected {
+    -fx-background-color: #383838;
+    -fx-border-color: #c69c6d; 
+    -fx-border-width: 0 0 3 0;
+}
+
+.tab-pane .tab:selected .tab-label {
+    -fx-text-fill: #c69c6d;
+}
+
+/* --- FOCUS RING REMOVAL (THE FIX) --- */
+.tab-pane .tab:focused, 
+.tab-pane .tab:selected:focused {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+.tab-pane .tab:focused .focus-indicator {
+    -fx-background-color: transparent; 
+    -fx-background-insets: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
+
+/* --- Content Area --- */
+.tab-pane .tab-content-area {
+    -fx-background-color: #1E1E1E;
+    -fx-border-color: #3D3D3D;
+    -fx-border-width: 0 0 0 0;
+    -fx-padding: 10;
+}
+
 
 .text-field {
     -fx-background-color: #111315; 

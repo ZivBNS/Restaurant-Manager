@@ -5,7 +5,6 @@
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
-<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
@@ -17,16 +16,15 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane prefHeight="600" prefWidth="1300" stylesheets="/Theme/application.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.ManageUsers_GUI">
+<BorderPane prefHeight="900" prefWidth="1250" stylesheets="/Theme/application.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.ManageUsers_GUI">
 
     <top>
-        <VBox spacing="8" BorderPane.alignment="CENTER">
+        <VBox alignment="CENTER" spacing="8" BorderPane.alignment="CENTER">
             <padding>
                 <Insets bottom="10" left="20" right="20" top="20" />
             </padding>
             <children>
                 <Label styleClass="header-title" text="Manage Users" />
-                <Separator opacity="0.35" prefWidth="340" />
             </children>
         </VBox>
     </top>
@@ -44,7 +42,7 @@
 
                 <HBox spacing="10">
                     <TextField fx:id="searchField" promptText="Search user..." HBox.hgrow="ALWAYS" />
-                    <Button onAction="#onRefresh" styleClass="button, btn-secondary" text="Refresh" />
+                    <Button onAction="#onRefresh" styleClass="button, btn-secondary" text="Refresh List" />
                 </HBox>
 
                 <TableView fx:id="usersTable" VBox.vgrow="ALWAYS">
@@ -58,30 +56,24 @@
                         <TableColumn fx:id="colIdentity" prefWidth="110" text="Identity" />
                     </columns>
                 </TableView>
-
-                <HBox spacing="10">
-                            
-                    <Label fx:id="statusMessageLabel" styleClass="error-label" text="" visible="false" />
-                   <Button fx:id="backBtn" onAction="#onBack" styleClass="button, btn-secondary" text="Back to Menu" />
-                </HBox>
             </VBox>
 
-            <VBox prefWidth="360" spacing="12" styleClass="card">
+            <VBox prefWidth="380" spacing="12" styleClass="card">
                 <padding>
-                    <Insets bottom="14" left="14" right="14" top="14" />
+                    <Insets bottom="20" left="20" right="20" top="20" />
                 </padding>
 
-                <Label styleClass="card-title" text="User Details" />
+                <Label styleClass="card-title" text="User Information" />
 
                 <GridPane hgap="10" vgap="10">
                     <columnConstraints>
-                        <ColumnConstraints />
+                        <ColumnConstraints prefWidth="100" />
                         <ColumnConstraints hgrow="ALWAYS" />
                     </columnConstraints>
                     
                     <children>
                         <Label styleClass="card-label" text="ID:" />
-                        <TextField fx:id="idField" editable="false" promptText="(auto)" GridPane.columnIndex="1" />
+                        <TextField fx:id="idField" editable="false" promptText="(Auto-Generated)" GridPane.columnIndex="1" />
     
                         <Label styleClass="card-label" text="First Name:" GridPane.rowIndex="1" />
                         <TextField fx:id="firstNameField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
@@ -99,9 +91,9 @@
                         <TextField fx:id="usernameField" GridPane.columnIndex="1" GridPane.rowIndex="5" />
     
                         <Label styleClass="card-label" text="Password:" GridPane.rowIndex="6" />
-                        <PasswordField fx:id="passwordField" promptText="Leave empty to keep current" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                        <PasswordField fx:id="passwordField" promptText="Enter to change" GridPane.columnIndex="1" GridPane.rowIndex="6" />
     
-                        <Label styleClass="card-label" text="Subscriber Code:" GridPane.rowIndex="7" />
+                        <Label styleClass="card-label" text="Sub Code:" GridPane.rowIndex="7" />
                         <TextField fx:id="subscriberCodeField" GridPane.columnIndex="1" GridPane.rowIndex="7" />
     
                         <Label styleClass="card-label" text="Identity:" GridPane.rowIndex="8" />
@@ -120,18 +112,36 @@
                </rowConstraints>
                 </GridPane>
 
-                <Label fx:id="formErrorLabel" styleClass="error-label" text="" visible="false" />
+                <Label fx:id="formErrorLabel" styleClass="error-label" visible="false" />
 
-                <HBox spacing="10">
-                    <Button fx:id="saveBtn" onAction="#onSave" styleClass="button, btn-primary" text="Save" />
-                    <Button onAction="#onClear" styleClass="button, btn-secondary" text="Clear" />
-                </HBox>
-                 <Button fx:id="deleteBtn" disable="true" onAction="#onDelete" styleClass="button, btn-danger" text="Delete" />
-                 <Button onAction="#onAddNew" styleClass="button, btn-primary" text="Add New" />
+                <GridPane hgap="10" vgap="10">
+                    <columnConstraints>
+                        <ColumnConstraints hgrow="ALWAYS" percentWidth="50" />
+                        <ColumnConstraints hgrow="ALWAYS" percentWidth="50" />
+                    </columnConstraints>
+                    <children>
+                        <Button maxWidth="Infinity" onAction="#onClear" prefHeight="45" styleClass="button, btn-secondary" text="Clear Form" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                        <Button maxWidth="Infinity" onAction="#onAddNew" prefHeight="45" styleClass="button, btn-primary" text="Add New" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                        <Button fx:id="saveBtn" maxWidth="Infinity" onAction="#onSave" prefHeight="45" styleClass="button, btn-primary" text="Save Changes" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                        <Button fx:id="deleteBtn" disable="true" maxWidth="Infinity" onAction="#onDelete" prefHeight="45" styleClass="button, btn-danger" text="Delete User" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                    </children>
+               <rowConstraints>
+                  <RowConstraints />
+                  <RowConstraints />
+               </rowConstraints>
+                </GridPane>
 
                 <Region VBox.vgrow="ALWAYS" />
             </VBox>
-
         </HBox>
     </center>
+
+    <bottom>
+        <HBox alignment="CENTER_LEFT">
+            <padding><Insets bottom="30" left="30" top="10" /></padding>
+            <children>
+                <Button fx:id="backBtn" onAction="#onBack" prefHeight="40.0" prefWidth="160.0" styleClass="button, btn-secondary" text="Back to Menu" />
+            </children>
+        </HBox>
+    </bottom>
 </BorderPane>
