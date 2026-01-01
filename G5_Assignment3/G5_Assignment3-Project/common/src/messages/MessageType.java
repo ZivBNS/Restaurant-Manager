@@ -84,7 +84,7 @@ public enum MessageType {
     CHECK_IN_FAIL,
     CHECK_IN_UNMATCH_CODE,
     CHECK_IN_NO_TABLE,
-    
+    CHECK_IN_FROM_WAITLIST_FAIL,
     
     // --- bill request ---
     BILL_REQUEST,

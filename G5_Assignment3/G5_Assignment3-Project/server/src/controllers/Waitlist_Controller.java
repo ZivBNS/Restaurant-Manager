@@ -22,7 +22,7 @@ import entities.Waitlist;
  */
 
 /*******************************************************************
- * waitlist states are: WAITING, NOTIFIED, COMPLETED, CANCELED
+ * waitlist states are: PWAITING, WAITING, NOTIFIED, COMPLETED, CANCELED
  *******************************************************************/
 public class Waitlist_Controller {
 
