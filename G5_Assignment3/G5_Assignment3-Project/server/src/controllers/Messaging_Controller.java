@@ -94,37 +94,6 @@ public class Messaging_Controller {
     //              TRIGGER: Table Released (Payment)
     // ====================================================================
 
-    public static void onTableReleased(int tableId, int capacity) {
-        System.out.println("-> [TIMER] [Event] Table " + tableId + " (" + capacity + " seats) is FREE. Checking Waitlist...");
-        
-        try {
-            // 1. מציאת הלקוח הראשון בתור
-            Waitlist candidate = waitlistRepository.findFirstMatch(capacity);
-            
-            if (candidate != null) {
-                System.out.println("-> Match Found! WaitlistID: " + candidate.getId());
-                
-                // 2. סימון הלקוח כ-NOTIFIED ועדכון זמן שליחת ההודעה לעכשיו
-                // נדרשת פונקציה: markAsNotified(int waitlistId)
-                waitlistRepository.markAsNotified(candidate.getId());
-                
-                // 3. שליחת ההודעה
-                sendNotificationToCustomer(candidate, tableId);
-                
-            } else {
-                System.out.println("-> [TIMER] No matching customers in Waitlist.");
-            }
-            
-        } catch (Exception e) {
-            System.err.println(" [TIMER] Error handling table release: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    private static void sendNotificationToCustomer(Waitlist w, int tableId) {
-    //    System.out.println(">>> SENDING MSG to ResID " + w.getReservation() + 
-    //                      ": 'Good news! Table " + tableId + " is ready. Please arrive within 15 minutes.'");
-    }
     
     public static void stopAllTasks() {
         if (scheduler != null && !scheduler.isShutdown()) {

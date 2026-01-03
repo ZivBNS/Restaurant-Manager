@@ -1,9 +1,12 @@
 package controllers;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import Data.Bill_Repository;
 import Data.Reservation_Repository;
+import Data.Table_Repository;
+import Data.Waitlist_Repository;
 import messages.Message;
 import messages.MessageType;
 import entities.Bill;
@@ -13,7 +16,10 @@ import entities.ReservationStatus;
 public class Payment_Controller {
 
     private static final Bill_Repository billRepo = Bill_Repository.getInstance();
-    private static Reservation_Repository reservationRepo = Reservation_Repository.getInstance();
+    private static final Reservation_Repository reservationRepo = Reservation_Repository.getInstance();
+    private static final Waitlist_Repository waitlistRepo = Waitlist_Repository.getInstance();
+    private static final Table_Repository tableRepository = Table_Repository.getInstance();
+
 
 
     /**
@@ -111,20 +117,20 @@ public class Payment_Controller {
 
 	private static Message billPayRequest(Message msg) {
         int billId = (int) msg.getContent();
-
         billRepo.markBillAsPaid(billId);
-
         int reservationId = billRepo.getReservationIdByBillId(billId);
-
-        if (reservationId != -1) {
-        	reservationRepo.markReservationAsCompleted(reservationId);
-        }
-        else return new Message(MessageType.BILL_PAYMENT_FAILED, null);
+        if (reservationId == -1) 
+            return new Message(MessageType.BILL_PAYMENT_FAILED, null);
+        Reservation r=reservationRepo.getById(reservationId);    	
+        reservationRepo.markReservationAsCompleted(reservationId);
+        LocalDateTime now= LocalDateTime.now();
+        if (tableRepository.findBestAvailableTable(now, now.plusHours(2), r.getNumberOfDiners())!=null)
+        	Waitlist_Controller.onTableReleased(r.getNumberOfDiners());      
         return new Message(MessageType.BILL_PAYMENT_SUCCESS, null);
 	}
 
 
-	private static Message getBillByReservationId(Message msg)             {
+	private static Message getBillByReservationId(Message msg) {
         Integer reservationId = (Integer) msg.getContent();
 
         if (reservationId == null || reservationId <= 0) {

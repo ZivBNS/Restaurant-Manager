@@ -27,7 +27,7 @@ import entities.Waitlist;
 public class Waitlist_Controller {
 
     private static final Reservation_Repository reservationRepository = Reservation_Repository.getInstance();
-    private static final Waitlist_Repository WaitlistRepository = Waitlist_Repository.getInstance();
+    private static final Waitlist_Repository waitlistRepository = Waitlist_Repository.getInstance();
 
     public static Message handleMessage(Message msg) {
         switch (msg.getType()) {
@@ -41,7 +41,7 @@ public class Waitlist_Controller {
     
     private static Message joinWaitlist(Message msg) {
 		Reservation createResForWaitlist = (Reservation)msg.getContent();
-		if (WaitlistRepository.isCustomerAlreadyInWaitlist(createResForWaitlist.getPhone(), createResForWaitlist.getEmail())) {
+		if (waitlistRepository.isCustomerAlreadyInWaitlist(createResForWaitlist.getPhone(), createResForWaitlist.getEmail())) {
 	        return new Message(MessageType.WAITLIST_JOINED_FAILED, "You are already in the waitlist!");
 	    }
 		createResForWaitlist.setConfirmationCode(reservationRepository.getNextConfirmationCode());
@@ -49,7 +49,7 @@ public class Waitlist_Controller {
 		createResForWaitlist = reservationRepository.getLastReservationByContact(createResForWaitlist.getPhone(),createResForWaitlist.getEmail());
 		if (createResForWaitlist==null) return new Message(MessageType.WAITLIST_JOINED_FAILED, "System Error: Unable to join Waitlist at this time.\\nPlease try again later.");
 		Waitlist newWaitlist = new Waitlist(createResForWaitlist.getId());
-		if (!WaitlistRepository.set(newWaitlist)) {
+		if (!waitlistRepository.set(newWaitlist)) {
 			reservationRepository.deleteById(createResForWaitlist.getId());
 			return new Message(MessageType.WAITLIST_JOINED_FAILED, "System Error: Unable to join Waitlist at this time.\\nPlease try again later.");
 		}
@@ -69,13 +69,13 @@ public class Waitlist_Controller {
         boolean waitlistExists = false;
         boolean iswaitlistCanceled = false;
         //waitlist states are: WAITING, NOTIFIED, COMPLETED, CANCELED
-        Waitlist w = WaitlistRepository.getByReservationId(r.getId());
+        Waitlist w = waitlistRepository.getByReservationId(r.getId());
         if (w!=null && (w.getStatus().equalsIgnoreCase("Completed") || w.getStatus().equalsIgnoreCase("Canceled"))) {
             return new Message(MessageType.RESERVATION_CANCEL_FAILED, "waitlist");
         }
         if (w != null) {
             waitlistExists = true;
-            iswaitlistCanceled = WaitlistRepository.cancelWaitlistById(w.getId());
+            iswaitlistCanceled = waitlistRepository.cancelWaitlistById(w.getId());
             if (!iswaitlistCanceled) {
                 return new Message(MessageType.WAITLIST_CANCELED_FAILED, "error");
             }
@@ -90,4 +90,29 @@ public class Waitlist_Controller {
         return new Message(MessageType.RESERVATION_CANCEL_FAILED, "error");
     }
     
+	
+	
+    public static void onTableReleased(int capacity) {
+        System.out.println("-> [WAITLIST_CONTROLLER] [Event] Table with " + " (" + capacity + " seats) is FREE. Checking Waitlist...");
+        
+        try {
+            Waitlist candidate = waitlistRepository.findFirstMatch(capacity);
+            
+            if (candidate != null) {
+                System.out.println("->[WAITLIST_CONTROLLER] Match Found! WaitlistID: " + candidate.getId());
+                
+                waitlistRepository.markAsNotified(candidate.getId());
+                
+                // 3. שליחת ההודעה
+                //sendNotificationToCustomer(candidate, tableId);
+                
+            } else {
+                System.out.println("-> [WAITLIST_CONTROLLER] No matching customers in Waitlist.");
+            }
+            
+        } catch (Exception e) {
+            System.err.println(" [TIMER] Error handling table release: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 }
