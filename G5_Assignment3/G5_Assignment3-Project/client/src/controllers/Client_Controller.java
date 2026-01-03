@@ -85,6 +85,19 @@ public class Client_Controller implements ChatIF {
 				}
 			}
 		});
+		
+		responseHandlers.put(MessageType.LOGIN_SUCCESS_EMP, new ResponseHandler() {
+			@Override
+			public void handle(Message msg) {
+				UserRecord userRecord = (UserRecord) msg.getContent();
+				User_Session.setLoggedInUser(userRecord);
+				if (Terminal_GUI.instance != null) {
+					Terminal_GUI.instance.handleMessageIfLoggedIn(userRecord);
+				} else if (MainScreen_GUI.instance != null) {
+					MainScreen_GUI.instance.onEmployeeLoginSuccess(userRecord);
+				}
+			}
+		});
 
 		responseHandlers.put(MessageType.LOGIN_FAILED_GUEST, new ResponseHandler() {
 			@Override
@@ -102,6 +115,15 @@ public class Client_Controller implements ChatIF {
 			public void handle(Message msg) {
 				if (MainScreen_GUI.instance != null) {
 					MainScreen_GUI.instance.onSubLoginFailure();
+				}
+			}
+		});
+		
+		responseHandlers.put(MessageType.LOGIN_FAILED_EMP, new ResponseHandler() {
+			@Override
+			public void handle(Message msg) {
+				if (MainScreen_GUI.instance != null) {
+					MainScreen_GUI.instance.onEmployeeLoginFailure();
 				}
 			}
 		});
@@ -682,6 +704,10 @@ public class Client_Controller implements ChatIF {
 	public void sendSubscriberLoginRequest(LoginData loginData) {
 		sendComplexObject(new Message(MessageType.LOGIN_REQUEST_SUB, loginData));
 	}
+	
+	public void sendEmployeeLoginRequest(LoginData loginData) {
+		sendComplexObject(new Message(MessageType.LOGIN_REQUEST_EMP, loginData));
+	}
 
 	public void sendGuestLoginRequest(LoginData loginData) {
 		sendComplexObject(new Message(MessageType.LOGIN_REQUEST_GUEST, loginData));
@@ -740,4 +766,6 @@ public class Client_Controller implements ChatIF {
 	public void sendGetUserDetailsRequest(int userId) {
 		sendComplexObject(new Message(MessageType.GET_USER_DETAILS, userId));
 	}
+
+
 }

@@ -12,6 +12,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
@@ -87,13 +89,11 @@ public class MainScreen_GUI {
             }
         });
 
-        // --- Employee Login Logic (Temporary Bypass) ---
+        // --- Employee Login Logic ---
         empSubmitBtn.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                // TODO: Add real validation (username/password) here later
-                System.out.println("Employee Login Clicked - Bypassing validation...");
-                openManagerDashboard();
+                onEmployeeLoginClicked(event);
             }
         });
     }
@@ -130,22 +130,7 @@ public class MainScreen_GUI {
         }
     }
 
-    private void openManagerDashboard() {
-        try {
-            // Note: Changed file name to Workers.fxml based on your previous code
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("Workers.fxml")); 
-            Parent root = loader.load();
-            Stage stage = (Stage) empSubmitBtn.getScene().getWindow();
-            Scene scene = new Scene(root);
-            stage.centerOnScreen();
-            stage.setScene(scene);
-            stage.show();
-            System.out.println("Switched to Manager Dashboard");
-        } catch (IOException e) {
-            System.out.println("Error loading Workers.fxml");
-            e.printStackTrace();
-        }
-    }
+
     
     // Logic for the Logout BUTTON (Navigates back to Connect screen)
     public void logout(ActionEvent event) {
@@ -199,26 +184,29 @@ public class MainScreen_GUI {
         ConnectToServer_GUI.clientController.sendGuestLoginRequest(loginData);
 
     }
+    /**
+     * Triggered when a subscriber clicks the login button.
+     * Handles authentication and navigation to the Subscriber Dashboard.
+     */
     @FXML
     void onSubscriberLoginClick(ActionEvent event) {
         String username = subUsernameField.getText().trim();
         String password = subPasswordField.getText();
 
         // 1. Basic Validation
-        if (username.isEmpty() || password.isEmpty() ||username.length()>=20 || password.length()>=20) {
+        if (!checkFieldsValid(username,password)) {
             subErrorLabel.setText("Please enter valid username and password.");
             subErrorLabel.setVisible(true);
             return;
         }
         
-        
-        if (ConnectToServer_GUI.clientController == null) {
+        if (!checkConnectionToServer()) {
             subErrorLabel.setText("Not connected to server. Please reconnect.");
             subErrorLabel.setVisible(true);
             return;
         }
         stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        stage.centerOnScreen();
+        //stage.centerOnScreen();
 
         LoginData loginData = new LoginData(username, password);
         ConnectToServer_GUI.clientController.sendSubscriberLoginRequest(loginData);
@@ -227,9 +215,67 @@ public class MainScreen_GUI {
     }
     
     /**
-     * Triggered when a subscriber clicks the login button.
-     * Handles authentication and navigation to the Subscriber Dashboard.
+     * Triggered when an Employee clicks the login button.
+     * Handles authentication and navigation to the Employee Dashboard.
      */
+    private void onEmployeeLoginClicked(ActionEvent event){
+    	String username = empUserField.getText().trim();
+        String password = empPassField.getText();
+
+        // 1. Basic Validation
+        if (!checkFieldsValid(username,password)) {
+        	//add error msg
+            return;
+        }
+        
+        if (!checkConnectionToServer()) {
+        	//add error msg
+            return;
+        }
+        stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        LoginData loginData = new LoginData(username, password);
+        ConnectToServer_GUI.clientController.sendEmployeeLoginRequest(loginData);
+        
+    }
+    
+    private boolean checkFieldsValid(String username, String password) {
+        if (username.isEmpty() || password.isEmpty() ||username.length()>=20 || password.length()>=20) {
+            return false;
+        }
+		return true;
+    }
+    
+    private boolean checkConnectionToServer() {
+        if (ConnectToServer_GUI.clientController == null) {
+            return false;
+        }
+		return true;
+    }
+    
+    
+    public void onEmployeeLoginSuccess(UserRecord user) {
+        try {
+            // Note: Changed file name to Workers.fxml based on your previous code
+        	User_Session.setLoggedInUser(user);
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("Workers.fxml")); 
+            Parent root = loader.load();
+            Stage stage = (Stage) empSubmitBtn.getScene().getWindow();
+            Scene scene = new Scene(root);
+            stage.centerOnScreen();
+            stage.setScene(scene);
+            stage.show();
+            System.out.println("Switched to Manager Dashboard");
+        } catch (IOException e) {
+            System.out.println("Error loading Workers.fxml");
+            e.printStackTrace();
+        }
+    }
+    
+    public void onEmployeeLoginFailure() {
+    	showLoginError();
+    }
+    
+  
     public void onSubLoginSuccess(UserRecord user) {
     	try {
         	
@@ -256,8 +302,7 @@ public class MainScreen_GUI {
     } 
     
     public void onSubLoginFailure() {
-    	subErrorLabel.setText("Invalid username or password.");
-        subErrorLabel.setVisible(true);
+    	showLoginError();
     }
     
     public void onGuestLoginSuccess() {
@@ -292,5 +337,14 @@ public class MainScreen_GUI {
     	
     	casualErrorLabel.setText(errorMsg);
     	casualErrorLabel.setVisible(true);
+    }
+    
+    private void showLoginError() {
+    	Alert alert = new Alert(AlertType.ERROR);
+        alert.setTitle("Login Failed");
+        alert.setHeaderText("Authentication Error");
+        alert.setContentText("Invalid username or password.");
+
+        alert.showAndWait(); 
     }
 }

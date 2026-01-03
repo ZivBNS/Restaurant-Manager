@@ -11,6 +11,24 @@ public class Login_Controller {
 	private static final User_Repository userRepository = User_Repository.getInstance();
 
 
+    public static Message handleEmployeeLogin(LoginData data) {
+
+
+        if (data == null || data.getUsername() == null || data.getPassword() == null) {
+            return new Message(MessageType.LOGIN_FAILED_EMP, "Invalid Credentials");
+        }
+        String username = data.getUsername();
+        String password = data.getPassword();
+
+    	System.out.println("[Login_Controller] Recieved login request from employee: "+username);
+        UserRecord user = userRepository.getEmpByUsername(username, password);
+
+        if (user != null) {
+            return new Message(MessageType.LOGIN_SUCCESS_EMP, user);
+        } else {
+        	return new Message(MessageType.LOGIN_FAILED_EMP, "Invalid username or password.");
+        }
+    }
     
     public static Message handleSubLogin(LoginData data) {
 

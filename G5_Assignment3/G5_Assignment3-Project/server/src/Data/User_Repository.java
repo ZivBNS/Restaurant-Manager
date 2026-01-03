@@ -51,6 +51,25 @@ public class User_Repository {
         return null;
     }
 	
+	public UserRecord getEmpByUsername(String username, String password) { 
+        PooledConnection pConn = null;
+        try {
+            pConn = db.getConnection();
+            try (PreparedStatement pstmt = pConn.getConnection().prepareStatement("SELECT * FROM users WHERE Username = ? AND Password = ?"
+            		+ " AND Identity = ?")) {
+                pstmt.setString(1, username);
+                pstmt.setString(2, password);
+                pstmt.setString(3, "Employee");
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    if (rs.next()) {
+                        return mapRowToUser(rs);
+                    }
+                }
+            }
+        } catch (SQLException e) { e.printStackTrace(); } finally { if (pConn != null) db.releaseConnection(pConn); }
+        return null;
+    } 
+	
 	public boolean getByEmailOrPhone(String email, int phone) {
         PooledConnection pConn = null;
         

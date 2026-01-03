@@ -170,6 +170,9 @@ public class Init_All {
     private static void initUsers(Connection con, Statement stmt) {
         String[] firstNames = { "Oshri", "Dor", "Daniel", "Ziv", "John", "Jennifer", "Michael", "Linda", "William", "Elizabeth", "David", "Barbara", "Richard", "Susan", "Joseph", "Jessica", "Thomas", "Sarah", "Charles", "Karen" };
         String[] lastNames = { "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin" };
+        String[] EmployeeFirstNames = { "workerName1" };
+        String[] EmployeeLastNames = { "lastName1" };
+        
         int subCode = 100000;
         char userChar = 'a';
         try {
@@ -179,6 +182,12 @@ public class Init_All {
                 stmt.executeUpdate(sql);
             }
             System.out.println("Inserted 20 subscribers.");
+            for (int i = 0; i < EmployeeFirstNames.length; i++) {
+                String sql = String.format("INSERT INTO Users (FirstName, LastName, Phone, Email, Username, Password, subscriberCode, Identity) VALUES ('%s', '%s', '050%d', '%s', '%s', '1', %d, 'Employee')",
+                		EmployeeFirstNames[i], EmployeeLastNames[i], (1000000 + i), EmployeeFirstNames[i].toLowerCase() + "@mail.com", "1", subCode++);
+                stmt.executeUpdate(sql);
+            }
+            System.out.println("Inserted Employees.");
         } catch (SQLException e) {
             e.printStackTrace();
         }

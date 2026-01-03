@@ -38,7 +38,7 @@ public class Server_Controller extends AbstractServer {
 		Command loginCmd = new LoginCommand();
 		commands.put(MessageType.LOGIN_REQUEST_SUB, loginCmd);
 		commands.put(MessageType.LOGIN_REQUEST_GUEST, loginCmd);
-
+		commands.put(MessageType.LOGIN_REQUEST_EMP, loginCmd);
 		
 		// --- check in ---
 		Command ckInCmd = new CheckInCommand();

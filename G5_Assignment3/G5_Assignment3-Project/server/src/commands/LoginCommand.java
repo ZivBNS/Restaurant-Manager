@@ -16,8 +16,10 @@ public class LoginCommand implements Command {
                 return Login_Controller.handleSubLogin(data);
             } else if (msg.getType() == MessageType.LOGIN_REQUEST_GUEST) {
                 return Login_Controller.handleGuestLogin(data);
+            } else if (msg.getType() == MessageType.LOGIN_REQUEST_EMP) {
+            	return Login_Controller.handleEmployeeLogin(data);
             }
         }
-        return new Message(MessageType.LOGIN_FAILED_SUB, "Invalid Login Data");
+        return new Message(MessageType.ERROR_RESPONSE, "Invalid Login Data");
     }
 }
