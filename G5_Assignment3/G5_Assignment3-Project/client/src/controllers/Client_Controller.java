@@ -293,6 +293,7 @@ public class Client_Controller implements ChatIF {
 		            System.out.println("[CLIENT DEBUG] Displaying Final Bill: " + b.getTotalAmount());
 		            Platform.runLater(() -> BillPayment_GUI.instance.displayBill(b));
 		        }
+		        else if (Terminal_GUI.instance!=null) Terminal_GUI.instance.onGetBillSuccess(b);
 		    }
 		});
 
@@ -773,7 +774,6 @@ public class Client_Controller implements ChatIF {
 
 	public void sendPayBillRequest(Bill currentBillToPay) {
 		sendComplexObject(new Message(MessageType.BILL_PAYMENT_REQUEST, currentBillToPay.getId()));
-
 	}
 	/**
 	 * Sends a request to fetch the report for a specific month and year.
