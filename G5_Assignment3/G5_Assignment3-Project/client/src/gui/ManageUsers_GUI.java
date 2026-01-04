@@ -40,7 +40,7 @@ public class ManageUsers_GUI {
     @FXML private TableColumn<UserRecord, Integer> colSubscriberCode;
     @FXML private TableColumn<UserRecord, String> colIdentity;
 
-    @FXML private TextField idField, firstNameField, lastNameField, phoneField, emailField, usernameField, subscriberCodeField;
+    @FXML private TextField idField, firstNameField, lastNameField, phoneField, emailField, usernameField;
     @FXML private PasswordField passwordField;
     @FXML private ComboBox<String> identityCombo;
     @FXML private Label formErrorLabel;
@@ -138,13 +138,6 @@ public class ManageUsers_GUI {
     @FXML private void onRefresh() { refreshData(); }
 
     @FXML
-    private void onAddNew() {
-        usersTable.getSelectionModel().clearSelection();
-        selectedUser = null;
-        clearForm();
-    }
-
-    @FXML
     private void onSave() {
         formErrorLabel.setVisible(false);
 
@@ -184,6 +177,7 @@ public class ManageUsers_GUI {
     @FXML
     private void onClear() {
         usersTable.getSelectionModel().clearSelection();
+        selectedUser = null;
         clearForm();
     }
 

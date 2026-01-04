@@ -202,12 +202,15 @@ public class User_Repository {
 		        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 		    """;
 		
+		String updateSql = "UPDATE users SET subscriberCode = ? WHERE id = ?";
+		
 		PooledConnection pConn = null;
 		
 		try {
             pConn = db.getConnection();
             
-            try (PreparedStatement ps = pConn.getConnection().prepareStatement(sql)) {
+            try (PreparedStatement ps = pConn.getConnection().prepareStatement(sql,
+            		Statement.RETURN_GENERATED_KEYS)) { //we get the generated ID here 
 
             	ps.setString(1, user.getFirstName());
                 ps.setString(2, user.getLastName());
@@ -215,17 +218,36 @@ public class User_Repository {
                 ps.setString(4, user.getEmail());
                 ps.setString(5, user.getUsername());
                 ps.setString(6, user.getPassword());
-
-                // subscriberCode can be NULL
-                if (user.getSubscriberCode() != null) {
-                    ps.setInt(7, user.getSubscriberCode());
-                } else {
-                    ps.setNull(7, Types.INTEGER);
-                }
-
+                ps.setNull(7, Types.INTEGER);
                 ps.setString(8, user.getIdentity());
+                
+                int affectedRows = ps.executeUpdate();
+                if (affectedRows != 1) {
+                    return false;
+                }
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        int generatedId = rs.getInt(1);
+                        int subscriberCode = (int) (100000 + generatedId);
+                        
+                        try (PreparedStatement ps2 = pConn.getConnection().prepareStatement(updateSql)) {
+                        	ps2.setInt(1, subscriberCode);
+                            ps2.setInt(2, generatedId);
 
-                return ps.executeUpdate() == 1; // true if exactly 1 row inserted
+                            int updated = ps2.executeUpdate();
+                            if (updated != 1) {
+                                return false;
+                            }
+                            return true;
+                        }
+                        
+                    } else {
+                        throw new SQLException("User inserted but no ID returned.");
+                    }
+                }
+               
+
+                
                 
             }
             
@@ -239,6 +261,24 @@ public class User_Repository {
 		return false;
 	}
 
+//	private void generateSubscriberCode(PreparedStatement ps) {
+//		int code;
+//		try (ResultSet rs = ps.getGeneratedKeys()) {
+//            if (rs.next()) {
+//                int generatedId = rs.getInt(1);
+//
+//                // ✅ THIS is the user's ID
+//                user.setId(generatedId);      // store it in the object
+//                pConn = db.getConnection();
+//                try (PreparedStatement ps2 = pConn.getConnection().prepareStatement(updateSql) {
+//                	
+//                }
+//                
+//            } else {
+//                throw new SQLException("User inserted but no ID returned.");
+//            }
+//        }
+//	}
 	
 	public boolean updateUser(UserRecord u) {
 	    PooledConnection pConn = null;

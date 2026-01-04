@@ -94,7 +94,7 @@
                         <PasswordField fx:id="passwordField" promptText="Enter to change" GridPane.columnIndex="1" GridPane.rowIndex="6" />
     
                         <Label styleClass="card-label" text="Sub Code:" GridPane.rowIndex="7" />
-                        <TextField fx:id="subscriberCodeField" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+                        <TextField fx:id="subscriberCodeField" editable="false" promptText="(Auto-Generated)" GridPane.columnIndex="1" GridPane.rowIndex="7" />
     
                         <Label styleClass="card-label" text="Identity:" GridPane.rowIndex="8" />
                         <ComboBox fx:id="identityCombo" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="8" />
@@ -121,7 +121,7 @@
                     </columnConstraints>
                     <children>
                         <Button maxWidth="Infinity" onAction="#onClear" prefHeight="45" styleClass="button, btn-secondary" text="Clear Form" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-                        <Button maxWidth="Infinity" onAction="#onAddNew" prefHeight="45" styleClass="button, btn-primary" text="Add New" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                        
                         <Button fx:id="saveBtn" maxWidth="Infinity" onAction="#onSave" prefHeight="45" styleClass="button, btn-primary" text="Save Changes" GridPane.columnIndex="0" GridPane.rowIndex="1" />
                         <Button fx:id="deleteBtn" disable="true" maxWidth="Infinity" onAction="#onDelete" prefHeight="45" styleClass="button, btn-danger" text="Delete User" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                     </children>
