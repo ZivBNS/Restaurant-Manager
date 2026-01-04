@@ -18,6 +18,7 @@
                 <Label fx:id="welcomeLabel" styleClass="header-title" text="Welcome Back, Subscriber!" />
                 <Label styleClass="card-label" text="Bistro Member Dashboard" />
                 <Separator maxWidth="300" opacity="0.35" />
+                <Label fx:id="IDLabel" styleClass="card-label" text="" />
             </children>
         </VBox>
     </top>
@@ -37,6 +38,8 @@
                         <Button maxWidth="Infinity" onAction="#onNewReservation" prefHeight="45" styleClass="button, btn-secondary" text="New Reservation" />
                         
                         <Button maxWidth="Infinity" onAction="#onManageReservations" prefHeight="45" styleClass="button, btn-secondary" text="Manage My Reservations" />
+                        
+                        <Button maxWidth="Infinity" onAction="#onShowBarcode" prefHeight="45" styleClass="button, btn-secondary" text="Show Barcode" />
                         
                         <Button maxWidth="Infinity" onAction="#onUpdateProfile" prefHeight="45" styleClass="button, btn-secondary" text="Update Personal Details" />
                         

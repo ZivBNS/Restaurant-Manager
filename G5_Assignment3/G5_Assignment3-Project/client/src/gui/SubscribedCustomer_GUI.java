@@ -16,6 +16,8 @@ import javafx.stage.Stage;
 public class SubscribedCustomer_GUI {
 
     @FXML private Label welcomeLabel;
+    
+    @FXML private Label IDLabel;
     /**
      * Called automatically when the FXML is loaded.
      */
@@ -24,6 +26,7 @@ public class SubscribedCustomer_GUI {
         UserRecord user = User_Session.getLoggedInUser();
         if (user != null) {
             welcomeLabel.setText("Welcome Back, " + user.getFirstName() + "!");
+            IDLabel.setText("User ID : " + Integer.toString(user.getId()));
         }
     }
 
@@ -42,6 +45,11 @@ public class SubscribedCustomer_GUI {
     @FXML 
     void onUpdateProfile(ActionEvent event) {
     	loadScreen(event, "/gui/UpdateProfile.fxml", "Personal Details");
+    }
+    
+    @FXML
+    private void onShowBarcode(ActionEvent event) {
+    	loadScreen(event, "/gui/BarcodeView.fxml", "Subscriber Barcode");
     }
 
    /* @FXML
