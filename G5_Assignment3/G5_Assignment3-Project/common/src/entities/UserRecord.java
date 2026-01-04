@@ -8,7 +8,7 @@ public class UserRecord implements User{
     private String email;
     private String username;
     private String password;
-    private String identity;        // "Subscriber", "Worker", "Manager", etc.
+    private String identity;        // "Subscriber", "Worker", "Manager"
     private Integer subscriberCode; // nullable
 
     public UserRecord(int id, String firstName, String lastName, String phone,

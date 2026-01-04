@@ -38,7 +38,7 @@
     
                 <Button fx:id="btnManageUsers" maxHeight="Infinity" maxWidth="Infinity" styleClass="button, btn-secondary" text="Manage Users" />
     
-                <Button fx:id="btnReports" maxHeight="Infinity" maxWidth="Infinity" styleClass="button, btn-primary" text="View Reports" />
+                <Button fx:id="btnReports" visible="false" maxHeight="Infinity" maxWidth="Infinity" styleClass="button, btn-primary" text="View Reports" />
     
                 <Button fx:id="btnManageOrders" maxHeight="Infinity" maxWidth="Infinity" styleClass="button, btn-secondary" text="Manage Reservations" />
     

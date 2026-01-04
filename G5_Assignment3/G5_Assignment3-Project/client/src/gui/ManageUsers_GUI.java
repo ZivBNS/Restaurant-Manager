@@ -140,7 +140,7 @@ public class ManageUsers_GUI {
     @FXML
     private void onSave() {
         formErrorLabel.setVisible(false);
-
+        clearAllFieldStyles();
         String fName = firstNameField.getText().trim();
         String lName = lastNameField.getText().trim();
         String user = usernameField.getText().trim();
@@ -151,10 +151,51 @@ public class ManageUsers_GUI {
             showError("First Name, Last Name, and Username are required.");
             return;
         }
+        
+
+        if (!isValidName(firstNameField.getText())) {
+            showError("Invalid first name");
+            markInvalid(firstNameField);
+            return;
+        }
+
+        if (!isValidName(lastNameField.getText())) {
+            showError("Invalid last name");
+            markInvalid(lastNameField);
+            return;
+        }
+
+        if (!isValidPhone(phoneField.getText())) {
+            showError("Invalid phone number");
+            markInvalid(phoneField);
+            return;
+        }
+
+        if (!isValidEmail(emailField.getText())) {
+            showError("Invalid email address");
+            markInvalid(emailField);
+            return;
+        }
+
+        if (!isValidUsername(usernameField.getText())) {
+            showError("Invalid username");
+            markInvalid(usernameField);
+            return;
+        }
+        
+        if(role == null) {
+        	showError("Role is required for a user.");
+        	//markInvalid(passwordField);
+        }
 
         if (selectedUser == null) {
             // Addition Mode
-            if (pass.isEmpty()) { showError("Password required for new user."); return; }
+            if (pass.isEmpty()) 
+            { 
+            	showError("Password required for a user.");
+            	markInvalid(passwordField);
+            	return; 
+            }
             UserRecord newUser = new UserRecord(0, fName, lName, phoneField.getText(), emailField.getText(), user, pass, role, null);
             ConnectToServer_GUI.clientController.sendAddUserRequest(newUser);
         } else {
@@ -163,6 +204,7 @@ public class ManageUsers_GUI {
             UserRecord updated = new UserRecord(selectedUser.getId(), fName, lName, phoneField.getText(), emailField.getText(), user, finalPass, role, selectedUser.getSubscriberCode());
             ConnectToServer_GUI.clientController.sendEditUserRequest(updated);
         }
+        
     }
 
     @FXML
@@ -178,6 +220,7 @@ public class ManageUsers_GUI {
     private void onClear() {
         usersTable.getSelectionModel().clearSelection();
         selectedUser = null;
+        clearAllFieldStyles();
         clearForm();
     }
 
@@ -218,5 +261,41 @@ public class ManageUsers_GUI {
     private void showError(String msg) {
         formErrorLabel.setText(msg);
         formErrorLabel.setVisible(true);
+    }
+    
+    private boolean isValidEmail(String email) {
+        return email != null &&
+               email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
+    }
+    
+    private boolean isValidName(String name) {
+        return name != null &&
+               !name.trim().isEmpty() &&
+               name.matches("[A-Za-z ]+");
+    }
+    
+    private boolean isValidPhone(String phone) {
+        return phone != null &&
+               phone.matches("\\d{9,10}");
+    }
+    
+    private void markInvalid(TextField field) {
+        field.setStyle("-fx-border-color: red;");
+    }
+
+    private void clearAllFieldStyles() {
+        firstNameField.setStyle("");
+        lastNameField.setStyle("");
+        phoneField.setStyle("");
+        emailField.setStyle("");
+        usernameField.setStyle("");
+        passwordField.setStyle("");
+    }
+    
+    private boolean isValidUsername(String username) {
+        return username != null &&
+               !username.trim().isEmpty() &&
+               username.length() >= 4 &&
+               !username.contains(" ");
     }
 }

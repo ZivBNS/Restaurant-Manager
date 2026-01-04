@@ -26,7 +26,7 @@ public class SubscribedCustomer_GUI {
         UserRecord user = User_Session.getLoggedInUser();
         if (user != null) {
             welcomeLabel.setText("Welcome Back, " + user.getFirstName() + "!");
-            IDLabel.setText("User ID : " + Integer.toString(user.getId()));
+            IDLabel.setText("Subscriber Code : " + Integer.toString(user.getSubscriberCode()));
         }
     }
 

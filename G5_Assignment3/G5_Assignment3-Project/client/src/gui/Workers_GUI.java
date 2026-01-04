@@ -22,17 +22,17 @@ public class Workers_GUI {
     @FXML private Button btnManageWaitlist;
     @FXML private Button btnReports;
 
-    private boolean isCurrentUserAdmin = true; 
-
     @FXML
     public void initialize() {
         System.out.println("Manager Dashboard Initialized.");
 
-        // --- Permission Logic ---
-        if (!isCurrentUserAdmin) {
-            btnReports.setVisible(false);
-            btnReports.setManaged(false); 
+        // --- Permission logic for reports button ---
+
+        if(User_Session.getLoggedInUser().getIdentity() == "Manager") {
+        	btnReports.setVisible(true);
+            btnReports.setManaged(true);
         }
+        
 
         // --- Event Handlers ---
 
@@ -182,14 +182,14 @@ public class Workers_GUI {
         });
     }
     
-    public void setAdminPermission(boolean isAdmin) {
-        this.isCurrentUserAdmin = isAdmin;
-        if (!isAdmin) {
-            btnReports.setVisible(false);
-            btnReports.setManaged(false);
-        } else {
-            btnReports.setVisible(true);
-            btnReports.setManaged(true);
-        }
-    }
+//    public void setAdminPermission(boolean isAdmin) {
+//        this.isCurrentUserAdmin = isAdmin;
+//        if (!isAdmin) {
+//            btnReports.setVisible(false);
+//            btnReports.setManaged(false);
+//        } else {
+//            btnReports.setVisible(true);
+//            btnReports.setManaged(true);
+//        }
+//    }
 }
