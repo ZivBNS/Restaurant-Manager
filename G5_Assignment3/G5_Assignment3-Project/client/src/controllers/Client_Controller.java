@@ -263,19 +263,37 @@ public class Client_Controller implements ChatIF {
 			}
 		});
 
-		responseHandlers.put(MessageType.RETURN_BILL_BY_RESERVATION_ID, new ResponseHandler() {
-			@Override
-			public void handle(Message msg) {
+		responseHandlers.put(MessageType.RETURN_BILL_BY_RESERVATION_ID, msg -> {
+		    Bill b = (Bill) msg.getContent();
 
-				System.out.println("CLIENT: received bill = " + msg.getContent());
-				Bill bill = (Bill) msg.getContent();
+		    if (b != null) {
+		        // בדיקה: אם הסכום הוא 0 או קטן מ-1, נבצע הגרלה וחישוב
+		    	if (b.getTotalAmount() <= 0) {
+		    	    // 1. הגרלת מחיר מלא (לפני הנחה)
+		    	    double baseAmount = 100 + (Math.random() * 400); 
+		    	    baseAmount = Math.round(baseAmount * 100.0) / 100.0;
+		    	    
+		    	    double discountPercent = 0;
+		    	    if (User_Session.getLoggedInUser() != null) {
+		    	        discountPercent = 15.0; // מנוי מקבל 15%
+		    	    }
 
-				if (BillPayment_GUI.instance != null) {
-					Platform.runLater(() -> BillPayment_GUI.instance.displayBill(bill));
-				} else if (Terminal_GUI.instance != null) {
-					Terminal_GUI.instance.onGetBillSuccess(bill);
-				}
-			}
+		    	    // 2. עדכון האובייקט - שים לב: אנחנו שומרים את המחיר המלא!
+		    	    b.setTotalAmount(baseAmount);
+		    	    b.setDiscountRate(discountPercent);
+		    	    b.setBillDetails("Dinner Service Selection");
+		    	    
+		    	    System.out.println("[CLIENT DEBUG] Base: " + baseAmount + ", Discount: " + discountPercent + "%");
+		    	    sendComplexObject(new Message(MessageType.CREATE_BILL, b));
+		    	    return; 
+		    	}
+
+		        // אם הגענו לכאן, הסכום כבר חזר מהשרת/DB - מציגים כפי שהוא
+		        if (BillPayment_GUI.instance != null) {
+		            System.out.println("[CLIENT DEBUG] Displaying Final Bill: " + b.getTotalAmount());
+		            Platform.runLater(() -> BillPayment_GUI.instance.displayBill(b));
+		        }
+		    }
 		});
 
 		responseHandlers.put(MessageType.BILL_REQUEST_FAILED, new ResponseHandler() {
@@ -640,18 +658,26 @@ public class Client_Controller implements ChatIF {
 		this.manageUsers_GUI = manageUsers_GUI;
 	}
 
-	public void sendGetReservationsRequest(Object identifier) {
-		try {
-			Message message;
-			if (identifier instanceof Subscribed_Customer) {
-				message = new Message(MessageType.GET_RESERVATIONS_BY_USER, identifier);
-			} else {
-				message = new Message(MessageType.GET_RESERVATIONS_BY_USER, (String) identifier);
-			}
-			sendComplexObject(message);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
+	public void sendGetReservationsRequest(Object user) {
+	    String identifier = null;
+
+	    // Check if the input is a UserRecord object (Subscriber login)
+	    if (user instanceof entities.UserRecord) {
+	        // Safely extract the phone string from the user object
+	        identifier = ((entities.UserRecord) user).getPhone(); 
+	    } 
+	    // Check if the input is already a String (Casual customer/Phone entry)
+	    else if (user instanceof String) {
+	        identifier = (String) user;
+	    } 
+
+	    // Send the request using the correct MessageType from your enum
+	    if (identifier != null) {
+	        System.out.println("[CLIENT] Sending GET_RESERVATIONS_BY_USER for: " + identifier);
+	        sendComplexObject(new Message(MessageType.GET_RESERVATIONS_BY_USER, identifier));
+	    } else {
+	        System.out.println("[ERROR] Request failed: Identifier (phone) could not be resolved");
+	    }
 	}
 
 	/**

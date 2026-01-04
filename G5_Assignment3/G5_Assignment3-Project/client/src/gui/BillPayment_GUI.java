@@ -29,32 +29,58 @@ public class BillPayment_GUI {
     @FXML private Label lblReservationId;
     @FXML private Label lblTotalAmount;
     @FXML private Label lblBillDetails;
+    @FXML private Label lblOriginalAmount;
+    @FXML private Label lblDiscountInfo;
 
 
     @FXML
     public void initialize() {
         instance = this;
 
-        String phone = User_Session.getCasualPhone();
+        String phoneToSend = User_Session.getActivePhone();
 
-        ConnectToServer_GUI.clientController.sendComplexObject(
-                new Message(MessageType.GET_LATEST_RESERVATION_BY_PHONE, phone)
-        );
+        if (phoneToSend != null) {
+            ConnectToServer_GUI.clientController.sendComplexObject(
+                new Message(MessageType.GET_LATEST_RESERVATION_BY_PHONE, phoneToSend)
+            );
+        } else {
+            System.out.println("DEBUG: No phone found for this session!");
+        }
     }
     
     public void displayBill(Bill bill) {
-
         if (bill == null) {
             showAlert("Error", "No bill found.");
             return;
         }
 
         currentBillId = bill.getId();
+        
+        double originalAmount = bill.getTotalAmount();
+        double discount = bill.getDiscountRate();
         expectedAmount = bill.calculateFinalAmount();
 
         lblReservationId.setText(String.valueOf(bill.getReservationId()));
-        lblTotalAmount.setText("₪" + expectedAmount);
         lblBillDetails.setText(bill.getBillDetails());
+
+        if (discount > 0) {
+            lblOriginalAmount.setText(String.format("Original Price: ₪%.2f", originalAmount));
+            lblOriginalAmount.setVisible(true);
+            lblOriginalAmount.setManaged(true);
+
+            lblDiscountInfo.setText(String.format("Member Discount Applied: %.0f%%", discount));
+            lblDiscountInfo.setVisible(true);
+            lblDiscountInfo.setManaged(true);
+
+            lblTotalAmount.setText(String.format("Total to Pay: ₪%.2f", expectedAmount));
+        } else {
+            lblOriginalAmount.setVisible(false);
+            lblOriginalAmount.setManaged(false);
+            lblDiscountInfo.setVisible(false);
+            lblDiscountInfo.setManaged(false);
+
+            lblTotalAmount.setText(String.format("Total to Pay: ₪%.2f", originalAmount));
+        }
 
         btnPay.setDisable("PAID".equalsIgnoreCase(bill.getStatus()));
     }

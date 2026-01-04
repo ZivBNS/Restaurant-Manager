@@ -13,6 +13,16 @@ public class User_Session {
 
     public static void setLoggedInUser(UserRecord user) { loggedInUser = user; }
     public static UserRecord getLoggedInUser() { return loggedInUser; }
+    
+    /**
+     * Checks if the user is a Subscriber.
+     * Uses class name comparison to avoid inheritance type errors.
+     */
+    public static boolean isSubscriber() {
+        if (loggedInUser == null) return false;
+        // בדיקה אם המחרוזת של סוג המשתמש מכילה את המילה "SUB"
+        return loggedInUser.toString().toUpperCase().contains("SUB");
+    }
 
     public static void setCasualData(String phone, String email) {
         casualPhone = phone;
@@ -21,6 +31,16 @@ public class User_Session {
 
     public static String getCasualPhone() { return casualPhone; }
     public static String getCasualEmail() { return casualEmail; }
+    
+ // בתוך מחלקת User_Session
+    public static String getActivePhone() {
+        // אם מחובר מנוי, ניקח את הטלפון מהפרופיל שלו
+        if (loggedInUser != null) {
+            return loggedInUser.getPhone(); // וודא שב-UserRecord יש getPhone()
+        }
+        // אם לא, ניקח את הטלפון שהוזן ידנית
+        return casualPhone;
+    }
 
     /**
      * Clears session data upon logout or disconnection.

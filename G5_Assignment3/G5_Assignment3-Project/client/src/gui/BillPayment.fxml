@@ -42,12 +42,22 @@
                             </children>
                         </HBox>
 
-                        <HBox alignment="CENTER_LEFT" spacing="10">
+                        <VBox spacing="4">
                             <children>
-                                <Label styleClass="card-label" text="Amount to Pay:" />
-                                <Label fx:id="lblTotalAmount" style="-fx-text-fill: #d4a358; -fx-font-size: 18px; -fx-font-weight: bold;" />
+                                <HBox alignment="CENTER_LEFT" spacing="10">
+                                    <children>
+                                        <Label styleClass="card-label" text="Amount to Pay:" />
+                                        <VBox spacing="2">
+                                            <children>
+                                                <Label fx:id="lblOriginalAmount" managed="false" visible="false" style="-fx-text-fill: #999999; -fx-font-size: 13px; -fx-strikethrough: true;" />
+                                                <Label fx:id="lblDiscountInfo" managed="false" visible="false" style="-fx-text-fill: #2ecc71; -fx-font-size: 12px; -fx-font-weight: bold;" />
+                                                <Label fx:id="lblTotalAmount" style="-fx-text-fill: #d4a358; -fx-font-size: 20px; -fx-font-weight: bold;" />
+                                            </children>
+                                        </VBox>
+                                    </children>
+                                </HBox>
                             </children>
-                        </HBox>
+                        </VBox>
 
                         <VBox alignment="CENTER_LEFT" spacing="6">
                             <children>

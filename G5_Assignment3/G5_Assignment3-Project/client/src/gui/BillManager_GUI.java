@@ -70,9 +70,13 @@ public class BillManager_GUI {
             // לצורך הפשטות, אני מניח שיש בנאי מתאים או שיוצרים אובייקט זמני
             // שים לב: ב-DB נדרש אובייקט Reservation, אבל כאן יש לנו רק ID.
             // בשרת תצטרך למצוא את ההזמנה לפי ה-ID.
+            double discount = 0;
+            if (!discountField.getText().isEmpty()) {
+                discount = Double.parseDouble(discountField.getText());
+            }
             
             // נשלח אובייקט מיוחד או שנעטוף ב-Bill דמי
-            Bill newBill = new Bill(resId, resId, details, amount, "Unpaid"); 
+            Bill newBill = new Bill(resId, resId, details, amount, "Unpaid", discount);
             // (הנחתי שהוספת בנאי כזה ל-Bill, אם לא - צריך להוסיף ב-entities.Bill)
 
             ConnectToServer_GUI.clientController.sendComplexObject(

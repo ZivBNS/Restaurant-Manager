@@ -1,5 +1,7 @@
 package controllers;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -74,46 +76,37 @@ public class Payment_Controller {
 
 
 	private static Message createBill(Message msg) {
-        Bill tempBill = (Bill) msg.getContent();
-        int inputCode = tempBill.getReservationId(); 
+	    Bill tempBill = (Bill) msg.getContent();
+	    int inputCode = tempBill.getReservationId(); 
 
-        System.out.println("SERVER: Trying to create bill for code: " + inputCode);
+	    System.out.println("[SERVER DEBUG] Received Discount from Client: " + tempBill.getDiscountRate());
 
-        Reservation res = reservationRepo.getByConfirmationCode(inputCode);
+	    Reservation res = reservationRepo.getByConfirmationCode(inputCode);
+	    if (res == null) res = reservationRepo.getById(inputCode);
+	    if (res == null) return new Message(MessageType.ERROR_RESPONSE, "Order not found!");
 
-        if (res == null) {
-            res = reservationRepo.getById(inputCode);
-        }
+	    Bill existingBill = billRepo.getBillByReservationId(res.getId());
+	    
+	    if (existingBill != null) {
+	        // קריטי: מעדכנים את האובייקט שיישלח ל-Repository
+	        existingBill.setTotalAmount(tempBill.getTotalAmount());
+	        existingBill.setBillDetails(tempBill.getBillDetails());
+	        existingBill.setDiscountRate(tempBill.getDiscountRate()); // השורה הזו הייתה חסרה!
+	        existingBill.setStatus("Unpaid");
 
-        if (res == null) {
-            return new Message(MessageType.ERROR_RESPONSE, 
-                "Order not found! Code/ID " + inputCode + " does not exist.");
-        }
+	        boolean updated = billRepo.updateBillData(existingBill);
+	        return updated ? new Message(MessageType.RETURN_BILL_BY_RESERVATION_ID, existingBill) 
+	                       : new Message(MessageType.ERROR_RESPONSE, "Failed to update MySQL.");
+	    }
 
-        
-        Bill existingBill = billRepo.getBillByReservationId(res.getId());
-        if (existingBill != null) {
-            return new Message(MessageType.ERROR_RESPONSE, 
-                "A bill already exists for Reservation #" + res.getConfirmationCode());
-        }
+	    // יצירת חשבון חדש אם לא קיים
+	    Bill finalBill = new Bill(res.getId(), res.getId(), tempBill.getBillDetails(), 
+	                              tempBill.getTotalAmount(), "Unpaid", tempBill.getDiscountRate());
 
-        Bill finalBill = new Bill(
-            res.getId(), 
-            res.getId(), 
-            tempBill.getBillDetails(), 
-            tempBill.getTotalAmount(), 
-            "Unpaid"
-        );
-
-        boolean created = billRepo.set(finalBill);
-        
-        if (created) {
-            return new Message(MessageType.RETURN_ALL_BILLS, billRepo.getAllBills());
-        } else {
-            return new Message(MessageType.ERROR_RESPONSE, "Database Error: Failed to create bill.");
-        }
+	    boolean created = billRepo.set(finalBill);
+	    return created ? new Message(MessageType.RETURN_ALL_BILLS, billRepo.getAllBills()) 
+	                   : new Message(MessageType.ERROR_RESPONSE, "Database Error");
 	}
-
 
 	private static Message billPayRequest(Message msg) {
         int billId = (int) msg.getContent();

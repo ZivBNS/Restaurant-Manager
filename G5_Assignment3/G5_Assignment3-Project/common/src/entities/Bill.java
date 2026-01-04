@@ -29,12 +29,13 @@ public class Bill {
         if (isSubscriber) discountRate=UserDiscountRate;    
     }    
     
-    public Bill(int id, int reservationId, String billDetails, double totalAmount, String status) {
+    public Bill(int id, int reservationId, String billDetails, double totalAmount, String status, double discountRate) {
         this.id = id;
         this.reservationId = reservationId;
         this.totalAmount = totalAmount;
         this.status = status;
-        this.billDetails=billDetails;
+        this.billDetails = billDetails;
+        this.discountRate = discountRate; 
     }
     
 	public int getId() { return id; }
@@ -42,7 +43,8 @@ public class Bill {
 
 	//discount cal
     public double calculateFinalAmount() {
-            return this.totalAmount*(1-discountRate);
+        if (discountRate <= 0) return totalAmount;
+        return this.totalAmount * (1 - (discountRate / 100.0));
     }
 
     // --- Getters and Setters ---

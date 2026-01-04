@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.sql.Statement;
 
 import entities.Bill;
 
@@ -100,13 +101,14 @@ public class Bill_Repository implements Repository_Interface<Bill> {
             rs = ps.executeQuery();
 
             if (rs.next()) {
-                bill = new Bill(
-                    rs.getInt("ID"),
-                    rs.getInt("ReservationID"),
-                    rs.getString("BillDetails"),
-                    rs.getDouble("TotalAmount"),
-                    rs.getString("Status")
-                );
+            	bill = new Bill(
+                        rs.getInt("ID"),
+                        rs.getInt("ReservationID"),
+                        rs.getString("BillDetails"),
+                        rs.getDouble("TotalAmount"),
+                        rs.getString("Status"),
+                        rs.getDouble("DiscountPercentage") 
+                    );
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -141,12 +143,13 @@ public class Bill_Repository implements Repository_Interface<Bill> {
             rs = stmt.executeQuery(query);
 
             while (rs.next()) {
-                Bill b = new Bill(
-                    rs.getInt("ID"),
-                    rs.getInt("ReservationID"),
-                    rs.getString("BillDetails"),
-                    rs.getDouble("TotalAmount"),
-                    rs.getString("Status")
+            	Bill b = new Bill(
+                        rs.getInt("ID"),
+                        rs.getInt("ReservationID"),
+                        rs.getString("BillDetails"),
+                        rs.getDouble("TotalAmount"),
+                        rs.getString("Status"),
+                        rs.getDouble("DiscountPercentage") 
                 );
                 list.add(b);
             }
@@ -175,11 +178,12 @@ public class Bill_Repository implements Repository_Interface<Bill> {
 
             if (rs.next()) {
                 bill = new Bill(
-                        rs.getInt("id"),
-                        rs.getInt("reservationId"),
-                        rs.getString("billDetails"),
-                        rs.getDouble("totalAmount"),
-                        rs.getString("status")
+                    rs.getInt("ID"),
+                    rs.getInt("ReservationID"),
+                    rs.getString("BillDetails"),
+                    rs.getDouble("TotalAmount"),
+                    rs.getString("Status"),
+                    rs.getDouble("DiscountPercentage") 
                 );
             }
 
@@ -238,6 +242,33 @@ public class Bill_Repository implements Repository_Interface<Bill> {
     
     public boolean createBill(Bill bill) {
         return set(bill);
+    }
+    
+    public boolean updateBillData(Bill bill) {
+        // בניית השאילתה - וודא ששם העמודה DiscountPercentage מדויק
+        String sql = "UPDATE bills SET " +
+                     "TotalAmount = " + bill.getTotalAmount() + ", " +
+                     "BillDetails = '" + bill.getBillDetails() + "', " +
+                     "DiscountPercentage = " + bill.getDiscountRate() + ", " +
+                     "Status = '" + bill.getStatus() + "' " +
+                     "WHERE ID = " + bill.getId() + ";";
+        
+        System.out.println("[SQL DEBUG] Executing Query: " + sql);
+        
+        PooledConnection pConn = null;
+        Statement stmt = null;
+        try {
+            pConn = db.getConnection();
+            stmt = pConn.getConnection().createStatement();
+            int affectedRows = stmt.executeUpdate(sql);
+            return affectedRows > 0; 
+        } catch (SQLException e) {
+            System.out.println("[SQL ERROR] " + e.getMessage());
+            return false;
+        } finally {
+            try { if (stmt != null) stmt.close(); } catch (SQLException e) {}
+            if (pConn != null) db.releaseConnection(pConn);
+        }
     }
 }
 
