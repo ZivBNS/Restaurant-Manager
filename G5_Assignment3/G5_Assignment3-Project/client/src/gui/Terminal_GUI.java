@@ -471,7 +471,7 @@ public class Terminal_GUI {
     public void onGetBillSuccess(Bill bill) {
         Platform.runLater(() -> {
             this.currentBillToPay = bill;
-            double total = bill.calculateFinalAmount()+10;
+            double total = bill.calculateFinalAmount()+10*(bill.getReservationId()%10);
 
             payBillCodeField.setVisible(false);
             payBillCodeField.setManaged(false);

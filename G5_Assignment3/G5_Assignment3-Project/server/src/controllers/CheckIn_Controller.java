@@ -45,6 +45,7 @@ public class CheckIn_Controller {
 		if (!reservationRepository.updateReservationForCheckIn(confCode, tableID, ReservationStatus.ACTIVE)) {
 			return new Message(MessageType.CHECK_IN_FAIL,"update");
 			}
+		
 		rt=tableRepository.getById(tableID);
 		if (rt==null) return new Message(MessageType.CHECK_IN_FAIL,"update");
 		boolean isBillCreated = createBillWhenCheckedInSuccesfully(reservation.getId(),reservation.getUserId()!=null);
