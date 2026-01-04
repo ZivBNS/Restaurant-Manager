@@ -1,7 +1,6 @@
 package gui;
 
 
-import java.io.IOException;
 import java.io.InputStream;
 
 import javafx.event.ActionEvent;
@@ -42,11 +41,7 @@ public class Barcode_GUI {
         errorLabel.setVisible(false);
     }
 
-    @FXML
-    private void onBackClicked() {
-        Stage stage = (Stage) barcodeImage.getScene().getWindow();
-        stage.close();
-    }
+
     
     @FXML
     private void onBackClicked(ActionEvent event) {
@@ -56,6 +51,8 @@ public class Barcode_GUI {
             Parent root = FXMLLoader.load(getClass().getResource(screen));
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
+            stage.centerOnScreen();
+
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -7,19 +7,20 @@
 
 <VBox spacing="20"
       alignment="CENTER"
-      prefWidth="300"
-      prefHeight="400"
+      prefWidth="400"
+      prefHeight="500"
       xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
-      fx:controller="gui.Barcode_GUI">
+      fx:controller="gui.Barcode_GUI"
+      stylesheets="/Theme/application.css">
 
     <ImageView fx:id="barcodeImage"
-               fitWidth="200"
+               fitWidth="300"
                preserveRatio="true"/>
                
     <Label fx:id="errorLabel"
 		       textFill="red"
 		       visible="false"/>
 
-    <Button text="Back" onAction="#onBackClicked"/>
+    <Button text="Back" onAction="#onBackClicked" styleClass="button, btn-secondary"/>
 </VBox>

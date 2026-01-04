@@ -53,6 +53,7 @@ public class Server_Controller extends AbstractServer {
 		commands.put(MessageType.GET_RESERVATIONS_BY_USER, resCmd);
 		commands.put(MessageType.UPDATE_RESERVATION_REQUEST, resCmd);
 		commands.put(MessageType.GET_ALL_PENDING_RESERVATIONS, resCmd);
+        commands.put(MessageType.GET_ALL_PENDING_AND_ACTIVE_RESERVATIONS, resCmd);
 		commands.put(MessageType.ADMIN_UPDATE_RESERVATION, resCmd);
 		commands.put(MessageType.GET_LATEST_RESERVATION_BY_PHONE, resCmd);
 
