@@ -151,6 +151,16 @@ public class Client_Controller implements ChatIF {
 				}
 			}
 		});
+		responseHandlers.put(MessageType.GET_ALL_PENDING_AND_ACTIVE_RESERVATIONS, new ResponseHandler() {
+		    @Override
+		    public void handle(Message msg) {
+		        List<Reservation> list = (List<Reservation>) msg.getContent();
+		        
+		        if (ManageOrders_GUI.instance != null) {
+		            ManageOrders_GUI.instance.updateAdminUI(list);
+		        }
+		    }
+		});
 
 		// -----------------------------------------------------------
 		// Check in and out Actions
@@ -659,25 +669,40 @@ public class Client_Controller implements ChatIF {
 		this.manageUsers_GUI = manageUsers_GUI;
 	}
 
+	/**
+	 * Resolves the user identifier (Phone or Email) and sends the request to the server.
+	 * This version supports login via Email by falling back to the email field if phone is missing.
+	 */
 	public void sendGetReservationsRequest(Object user) {
 	    String identifier = null;
 
-	    // Check if the input is a UserRecord object (Subscriber login)
+	    if (user == null) {
+	        System.err.println("[Client_Controller] sendGetReservationsRequest: Received a NULL object.");
+	        return;
+	    }
+
+	    // Case 1: The user is a logged-in Subscriber (UserRecord)
 	    if (user instanceof entities.UserRecord) {
-	        // Safely extract the phone string from the user object
-	        identifier = ((entities.UserRecord) user).getPhone(); 
+	        entities.UserRecord record = (entities.UserRecord) user;
+	        // Priority 1: Phone
+	        identifier = record.getPhone();
+	        
+	        // Priority 2: Email (if phone is missing)
+	        if (identifier == null || identifier.trim().isEmpty()) {
+	            identifier = record.getEmail();
+	        }
 	    } 
-	    // Check if the input is already a String (Casual customer/Phone entry)
+	    // Case 2: The user is a Casual Customer (identified by a String from User_Session)
 	    else if (user instanceof String) {
 	        identifier = (String) user;
-	    } 
+	    }
 
-	    // Send the request using the correct MessageType from your enum
-	    if (identifier != null) {
-	        System.out.println("[CLIENT] Sending GET_RESERVATIONS_BY_USER for: " + identifier);
+	    // Validation and Sending
+	    if (identifier != null && !identifier.trim().isEmpty()) {
+	        System.out.println("[Client_Controller] Fetching reservations for identifier: " + identifier);
 	        sendComplexObject(new Message(MessageType.GET_RESERVATIONS_BY_USER, identifier));
 	    } else {
-	        System.out.println("[ERROR] Request failed: Identifier (phone) could not be resolved");
+	        System.err.println("[Client_Controller] Request failed: No identifier (Phone or Email) could be resolved.");
 	    }
 	}
 
@@ -712,6 +737,9 @@ public class Client_Controller implements ChatIF {
 
 	public void sendGetAllPendingReservationsRequest() {
 		sendComplexObject(new Message(MessageType.GET_ALL_PENDING_RESERVATIONS, null));
+	}
+	public void sendGetAllPendingAndActiveReservationsRequest() {
+		sendComplexObject(new Message(MessageType.GET_ALL_PENDING_AND_ACTIVE_RESERVATIONS, null));
 	}
 
 	public void sendComplexObject(Object obj) {

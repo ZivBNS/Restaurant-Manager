@@ -12,10 +12,11 @@
       stylesheets="/Theme/application.css"
       xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
-      fx:controller="gui.Barcode_GUI">
+      fx:controller="gui.Barcode_GUI"
+      stylesheets="/Theme/application.css">
 
     <ImageView fx:id="barcodeImage"
-               fitWidth="200"
+               fitWidth="300"
                preserveRatio="true"/>
                
     <Label fx:id="errorLabel"

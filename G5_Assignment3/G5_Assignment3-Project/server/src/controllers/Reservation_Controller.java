@@ -33,6 +33,7 @@ public class Reservation_Controller {
             case CANCEL_RESERVATION: return cancelReservation(msg);
             case CANCEL_RESERVATION_BY_CODE: return cancelReservationByCode(msg);
             case GET_ALL_PENDING_RESERVATIONS: return fetchAllPending(msg);
+            case GET_ALL_PENDING_AND_ACTIVE_RESERVATIONS: return fetchAllPendingAndActive(msg);
             case ADMIN_UPDATE_RESERVATION: return processAdminUpdate(msg);
             case GET_LATEST_RESERVATION_BY_PHONE: return getLatestReservationById(msg);
             default: return null;
@@ -256,6 +257,9 @@ public class Reservation_Controller {
 
     private static Message fetchAllPending(Message msg) {
         return new Message(MessageType.RETURN_ALL_PENDING_RESERVATIONS, reservationRepository.getAllPendingReservations());
+    }
+    private static Message fetchAllPendingAndActive(Message msg) {
+        return new Message(MessageType.GET_ALL_PENDING_AND_ACTIVE_RESERVATIONS, reservationRepository.getPendingAndActiveReservations());
     }
 
     private static Message processAdminUpdate(Message msg) {

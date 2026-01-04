@@ -321,29 +321,61 @@ public class ViewReservations_GUI {
 		alert.showAndWait();
 	}
 
+	/**
+	 * Restricts the DatePicker to allow selection only from today's date
+	 * up until exactly one month in the future. Applies dark-mode styling 
+	 * to disabled cells to maintain visual consistency with the theme.
+	 */
 	private void restrictDatePickerRange() {
-		final LocalDate minDate = LocalDate.now();
-		final LocalDate maxDate = LocalDate.now().plusMonths(1);
-		editDatePicker.setDayCellFactory(new Callback<DatePicker, DateCell>() {
-			@Override
-			public DateCell call(final DatePicker datePicker) {
-				return new DateCell() {
-					@Override
-					public void updateItem(LocalDate item, boolean empty) {
-						super.updateItem(item, empty);
-						if (item != null && (item.isBefore(minDate) || item.isAfter(maxDate))) {
-							setDisable(true);
-							setStyle("-fx-background-color: #eeeeee;");
-						}
-					}
-				};
-			}
-		});
+	    final LocalDate minDate = LocalDate.now();
+	    final LocalDate maxDate = LocalDate.now().plusMonths(1);
+
+	    editDatePicker.setDayCellFactory(new Callback<DatePicker, DateCell>() {
+	        @Override
+	        public DateCell call(final DatePicker datePicker) {
+	            return new DateCell() {
+	                @Override
+	                public void updateItem(LocalDate item, boolean empty) {
+	                    super.updateItem(item, empty);
+	                    
+	                    // Logic: Disable and style dates outside the [Today, Today+1Month] range
+	                    if (item != null && (item.isBefore(minDate) || item.isAfter(maxDate))) {
+	                        setDisable(true);
+	                        setStyle("-fx-background-color: #4a4a4a; " +
+	                                 "-fx-control-inner-background: #4a4a4a; " +
+	                                 "-fx-text-fill: white;");
+	                    } else {
+	                        // Ensure enabled dates have white text for readability against dark background
+	                        setStyle("-fx-text-fill: white;");
+	                    }
+	                }
+	            };
+	        }
+	    });
 	}
 
 	private void refreshTableData() {
-		Object id = (User_Session.getLoggedInUser() != null) ? User_Session.getLoggedInUser() : User_Session.getCasualPhone();
-		ConnectToServer_GUI.clientController.sendGetReservationsRequest(id);
+	    Object id = null;
+
+	    if (User_Session.getLoggedInUser() != null) {
+	        // Subscriber is logged in
+	        id = User_Session.getLoggedInUser();
+	    } else {
+	        // Casual customer: try phone, then fallback to email if implemented in your User_Session
+	        id = User_Session.getCasualPhone(); 
+	        
+	        if (id == null) {
+	            id = User_Session.getCasualEmail();
+	        }
+	        
+	    }
+
+	    if (id == null) {
+	        System.err.println("[ViewReservations] Error: No identifier found in session.");
+	        return;
+	    }
+
+	    ConnectToServer_GUI.clientController.sendGetReservationsRequest(id);
 	}
 
 	@FXML

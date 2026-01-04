@@ -11,7 +11,11 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
 <BorderPane prefHeight="900.0" prefWidth="1250.0" stylesheets="/Theme/application.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.ManageOrders_GUI">
@@ -108,15 +112,29 @@
 
                 <Separator opacity="0.2" />
 
-                <VBox spacing="10">
-                    <HBox spacing="10">
-                        <Button maxWidth="Infinity" onAction="#onClearClicked" styleClass="button, btn-secondary" text="Clear Form" HBox.hgrow="ALWAYS" />
-						<Button fx:id="btnAdd" maxWidth="Infinity" onAction="#onAddClicked" styleClass="button, btn-primary" text="Create Order" HBox.hgrow="ALWAYS" />                    </HBox>
-                    <HBox spacing="10">
-                        <Button fx:id="btnUpdate" disable="true" maxWidth="Infinity" onAction="#onUpdateClicked" styleClass="button" text="Update Selected" HBox.hgrow="ALWAYS" />
-                        <Button fx:id="btnCancel" disable="true" maxWidth="Infinity" onAction="#onDeleteClicked" styleClass="button, btn-danger" text="Cancel Order" HBox.hgrow="ALWAYS" />
-                    </HBox>
-                </VBox>
+                <GridPane hgap="10" vgap="10">
+                    <columnConstraints>
+                        <ColumnConstraints hgrow="ALWAYS" percentWidth="50" />
+                        <ColumnConstraints hgrow="ALWAYS" percentWidth="50" />
+                    </columnConstraints>
+                    <children>
+                        <Button maxWidth="Infinity" prefHeight="45.0" onAction="#onClearClicked" 
+                                styleClass="button, btn-secondary" text="Clear Form" 
+                                GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                        
+                        <Button fx:id="btnAdd" maxWidth="Infinity" prefHeight="45.0" onAction="#onAddClicked" 
+                                styleClass="button, btn-primary" text="Create Order" 
+                                GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                        <Button fx:id="btnUpdate" disable="true" maxWidth="Infinity" prefHeight="45.0" 
+                                onAction="#onUpdateClicked" styleClass="button" text="Update Selected" 
+                                GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                        
+                        <Button fx:id="btnCancel" disable="true" maxWidth="Infinity" prefHeight="45.0" 
+                                onAction="#onDeleteClicked" styleClass="button, btn-danger" text="Cancel Order" 
+                                GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                    </children>
+                </GridPane>
             </VBox>
         </HBox>
     </center>
@@ -127,4 +145,5 @@
             <Button onAction="#onBackClicked" styleClass="button, btn-secondary" text="Back to Menu" />
         </HBox>
     </bottom>
+
 </BorderPane>

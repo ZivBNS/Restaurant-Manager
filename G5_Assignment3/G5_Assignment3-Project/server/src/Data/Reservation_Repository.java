@@ -283,7 +283,13 @@ public class Reservation_Repository {
 		return results;
 	}
 
-	public List<Reservation> getAllPendingReservations() { /* Patterned pool fetch... */
+	/**
+	 * Retrieves all reservations with 'Pending' status. Used by admin staff to view
+	 * new reservation requests.
+	 * 
+	 * @return List of pending reservations.
+	 */
+	public List<Reservation> getAllPendingReservations() {
 		List<Reservation> results = new ArrayList<>();
 		PooledConnection pConn = null;
 		try {
@@ -300,7 +306,41 @@ public class Reservation_Repository {
 		}
 		return results;
 	}
-
+	/**
+	 * Retrieves all reservations that are either in 'Pending' or 'Active' status.
+	 * This is used by the server to monitor current and upcoming restaurant activity.
+	 * * @return A list of Reservation objects with Pending or Active status.
+	 */
+	public List<Reservation> getPendingAndActiveReservations() {
+	    List<Reservation> results = new ArrayList<>();
+	    PooledConnection pConn = null;
+	    
+	    // SQL query using IN operator to fetch both statuses efficiently
+	    String sql = "SELECT * FROM reservations WHERE Status IN ('Pending', 'Active')";
+	    
+	    try {
+	        pConn = db.getConnection();
+	        // Using try-with-resources for Statement and ResultSet to ensure they are closed
+	        try (Statement stmt = pConn.getConnection().createStatement();
+	             ResultSet rs = stmt.executeQuery(sql)) {
+	            
+	            while (rs.next()) {
+	                // Map the current row to a Reservation entity
+	                results.add(extractReservationFromResultSet(rs));
+	            }
+	        }
+	    } catch (SQLException e) {
+	        // Standard error logging for the repository layer
+	        System.err.println("[Reservation Repository] Error fetching pending/active reservations: " + e.getMessage());
+	        e.printStackTrace();
+	    } finally {
+	        // Ensure the connection is returned to the pool regardless of success or failure
+	        if (pConn != null) {
+	            db.releaseConnection(pConn);
+	        }
+	    }
+	    return results;
+	}
 	/**
 	 * Hard deletes a reservation from the database. RESERVED FOR ADMIN USE ONLY.
 	 * * @param id The reservation ID to delete.
@@ -372,6 +412,14 @@ public class Reservation_Repository {
 		}
 	}
 
+	/**
+	 * Updates only the status of a specific reservation by its confirmation code.
+	 * Used for cancellations, check-ins, and completions.
+	 * 
+	 * @param confCode  The unique confirmation code of the reservation.
+	 * @param newStatus The new status enum value.
+	 * @return true if the update was successful.
+	 */
 	public boolean updateStatusByConfirmationCode(int confCode, ReservationStatus newStatus) {
 		String sql = "UPDATE Reservations SET Status = '" + newStatus.toString() + "' WHERE ConfirmationCode = "
 				+ confCode;
@@ -394,6 +442,12 @@ public class Reservation_Repository {
 		}
 	}
 
+	/**
+	 * Retrieves the status of a reservation by its confirmation code.
+	 * 
+	 * @param confCode The unique confirmation code of the reservation.
+	 * @return The status string or null if not found.
+	 */
 	public String getStatusByConfirmationCode(int confCode) {
 		String sql = "SELECT Status FROM Reservations WHERE ConfirmationCode = " + confCode;
 		PooledConnection pConn = null;
@@ -417,6 +471,12 @@ public class Reservation_Repository {
 		}
 	}
 
+	/**
+	 * Retrieves the latest active reservation for a given phone number.
+	 * 
+	 * @param phone The phone number to search for.
+	 * @return The latest active Reservation or null if none found.
+	 */
 	public Reservation getLatestReservationByPhone(String phone) {
 
 		String sql = "SELECT ID, Phone, ReservationStartTime, NumberOfDiners, TableID, Status " + "FROM reservations "
