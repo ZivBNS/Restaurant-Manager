@@ -56,10 +56,11 @@ public class User_Repository {
         try {
             pConn = db.getConnection();
             try (PreparedStatement pstmt = pConn.getConnection().prepareStatement("SELECT * FROM users WHERE Username = ? AND Password = ?"
-            		+ " AND Identity = ?")) {
+            		+ " AND (Identity = ? OR Identity = ?)")) {
                 pstmt.setString(1, username);
                 pstmt.setString(2, password);
                 pstmt.setString(3, "Employee");
+                pstmt.setString(4, "Manager");
                 try (ResultSet rs = pstmt.executeQuery()) {
                     if (rs.next()) {
                         return mapRowToUser(rs);
