@@ -24,7 +24,12 @@ public class UserRecord implements User{
         this.subscriberCode = subscriberCode;
     }
 
-    public int getId() { return id; }
+    public UserRecord(String phone, String email) {
+    	this.phone=phone;
+    	this.email=email;
+    }
+
+	public int getId() { return id; }
     public String getFirstName() { return firstName; }
     public String getLastName() { return lastName; }
     public String getPhone() { return phone; }

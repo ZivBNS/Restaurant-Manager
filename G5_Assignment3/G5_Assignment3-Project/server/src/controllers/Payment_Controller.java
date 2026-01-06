@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import Data.Bill_Repository;
 import Data.Reservation_Repository;
 import Data.Table_Repository;
-import Data.Waitlist_Repository;
 import messages.Message;
 import messages.MessageType;
 import entities.Bill;
@@ -15,7 +14,6 @@ public class Payment_Controller {
 
     private static final Bill_Repository billRepo = Bill_Repository.getInstance();
     private static final Reservation_Repository reservationRepo = Reservation_Repository.getInstance();
-    private static final Waitlist_Repository waitlistRepo = Waitlist_Repository.getInstance();
     private static final Table_Repository tableRepository = Table_Repository.getInstance();
 
 
@@ -76,9 +74,7 @@ public class Payment_Controller {
 	    int inputCode = tempBill.getReservationId(); 
 
 	    System.out.println("[SERVER DEBUG] Received Discount from Client: " + tempBill.getDiscountRate());
-
-	    Reservation res = reservationRepo.getByConfirmationCode(inputCode);
-	    if (res == null) res = reservationRepo.getById(inputCode);
+	    Reservation res = reservationRepo.getById(inputCode);
 	    if (res == null) return new Message(MessageType.ERROR_RESPONSE, "Order not found!");
 
 	    Bill existingBill = billRepo.getBillByReservationId(res.getId());
@@ -109,11 +105,14 @@ public class Payment_Controller {
         billRepo.markBillAsPaid(billId);
         int reservationId = billRepo.getReservationIdByBillId(billId);
         if (reservationId == -1) 
-            return new Message(MessageType.BILL_PAYMENT_FAILED, null);
-        Reservation r=reservationRepo.getById(reservationId);    	
+            return new Message(MessageType.BILL_PAYMENT_FAILED, "There is no open reservation");
+        Reservation r=reservationRepo.getById(reservationId); 
+        int dinersFreed=r.getNumberOfDiners();
         reservationRepo.markReservationAsCompleted(reservationId);
         LocalDateTime now= LocalDateTime.now();
-        if (tableRepository.findBestAvailableTable(now, now.plusHours(2), r.getNumberOfDiners())!=null)
+		int roundedMinutes = (now.getMinute() / 30) * 30; //make the time round(example- from 10:10-12:10 to 10:00-12:00)
+		LocalDateTime newArrivalTime = now.withMinute(roundedMinutes).withSecond(0).withNano(0);
+        if (tableRepository.findBestAvailableTable(now, newArrivalTime.plusHours(2), dinersFreed) !=null)
         	Waitlist_Controller.onTableReleased(r.getNumberOfDiners());      
         return new Message(MessageType.BILL_PAYMENT_SUCCESS, null);
 	}

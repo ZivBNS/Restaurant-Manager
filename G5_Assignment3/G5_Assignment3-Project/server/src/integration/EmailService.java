@@ -143,6 +143,7 @@ public class EmailService {
         });
         emailThread.start();
     }
+    
     /** Helper to centralize SMTP configuration. */
     private static Session createSession() {
         Properties props = new Properties();
@@ -160,4 +161,79 @@ public class EmailService {
             }
         });
     }
+    /**
+     * Sends an urgent email notification to a customer on the waitlist, informing them that a table has become available.
+     * The email includes the confirmation code for check-in and warns that the reservation will expire if they do not arrive within 15 minutes.
+     */
+    public static void sendTableReadyNotification(final Reservation res) {
+        if (res == null || res.getEmail() == null || res.getEmail().isEmpty()) return;
+
+        Thread emailThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Thread.currentThread().setContextClassLoader(EmailService.class.getClassLoader());
+                try {
+                    Session session = createSession(); 
+                    MimeMessage message = new MimeMessage(session);
+                    
+                    message.setFrom(new InternetAddress(FROM_EMAIL, "Bistro Restaurant"));
+                    message.setRecipients(javax.mail.Message.RecipientType.TO, InternetAddress.parse(res.getEmail()));
+                    
+                    message.setSubject("Your Table is Ready!");
+
+                    String content = "Hello,\n\n" +
+                                     "Great news! A table has just opened up for you at Bistro.\n\n" +
+                                     "*** IMPORTANT ***\n" +
+                                     "We are holding this table for you for the next 15 MINUTES.\n" +
+                                     "Please arrive promptly. If you do not check in within this time frame, the system will automatically release the table to the next person in line.\n\n" +
+                                     "INSTRUCTIONS:\n" +
+                                     "When you arrive, please go to the terminal, select 'Check-In', and enter your confirmation code.\n\n" +
+                                     "YOUR CODE IS: " + res.getConfirmationCode() + "\n\n" +
+                                     "We look forward to seeing you!\n" +
+                                     "The Bistro Team";
+                                     
+                    message.setText(content);
+                    Transport.send(message);
+                    System.out.println("EmailService: Table Ready notification sent to " + res.getEmail());
+
+                } catch (Exception e) {
+                    System.err.println("EmailService Error: " + e.getMessage());
+                }
+            }
+        });
+        emailThread.start();
+    }
+
+	public static void sendForgotCodeNotification(String email,int confirmationCode) {
+        Thread emailThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Thread.currentThread().setContextClassLoader(EmailService.class.getClassLoader());
+                try {
+                    Session session = createSession(); 
+                    MimeMessage message = new MimeMessage(session);
+                    
+                    message.setFrom(new InternetAddress(FROM_EMAIL, "Bistro Restaurant"));
+                    message.setRecipients(javax.mail.Message.RecipientType.TO, InternetAddress.parse(email));
+                    
+                    message.setSubject("Confirmation Code Reminder");
+
+                    String content = "Hello,\n\n" +
+                                     "The Email will help you to restore your code\n"+
+                    				 "Your code is: " + confirmationCode + "\n\n" +
+                                     "We hope you are enjoying our service,\n" +
+                                     "The Bistro Team";
+                                     
+                    message.setText(content);
+                    Transport.send(message);
+                    System.out.println("EmailService: Table Ready notification sent to " + email);
+
+                } catch (Exception e) {
+                    System.err.println("EmailService Error: " + e.getMessage());
+                }
+            }
+        });
+        emailThread.start();
+    }		
+
 }

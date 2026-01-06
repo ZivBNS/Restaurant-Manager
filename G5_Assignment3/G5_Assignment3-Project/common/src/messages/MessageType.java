@@ -29,6 +29,7 @@ public enum MessageType {
     RESERVATION_FAILED_NO_TABLE,
     RESERVATION_FAILED_NO_TABLE_FULLY_BOOKED,
     RESERVATION_FAILED,
+    RESERVATION_FAILED_ALREADY_BOOKED,
     RESERVATION_CONFIRMED,
     RESERVATION_CANCELED,
     RESERVATION_CANCEL_FAILED,
@@ -76,11 +77,9 @@ public enum MessageType {
     // --- restaurant waitlist management ---
     WAITLIST_JOINED_SUCCESS,
     WAITLIST_JOINED_FAILED,
-    WAITLIST_TABLE_READY,
-    CANCEL_WAITLIST,
     CANCEL_WAITLIST_AND_RESERVATION_BY_CODE,
-    WAITLIST_CANCELED,
-    WAITLIST_CANCELED_FAILED,    
+    CANCEL_WAITLIST_AND_RESERVATION_FAILED, 
+    WAITLIST_AND_RESERVATION_CANCELED, 
     
     // ---check in and out messages ---
     RESERVATION_CHECK_IN,
@@ -135,7 +134,10 @@ public enum MessageType {
     GENERATE_NEW_REPORT,
     DELETE_REPORT,
     //***************************************************//
-
+    //---forgot Code---
+    FORGOT_CODE,
+    FORGOT_CODE_FOUND,
+    FORGOT_CODE_NOT_FOUND,
     
     // --- Restaurant Management and Status ---
     GET_TABLES_STATUS,      // Client requests current status of all tables
@@ -147,7 +149,7 @@ public enum MessageType {
     
     // --- System Responses ---
     ERROR_RESPONSE,         // Server sends an error message (Content=String)
-    SUCCESS_RESPONSE,        // Server confirms successful operation
+    SUCCESS_RESPONSE,       // Server confirms successful operation
     
     
 }

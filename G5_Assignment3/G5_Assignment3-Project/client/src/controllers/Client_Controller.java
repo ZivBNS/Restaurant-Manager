@@ -1,6 +1,7 @@
 package controllers;
 
 import java.io.*;
+
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -116,6 +117,7 @@ public class Client_Controller implements ChatIF {
 				if (MainScreen_GUI.instance != null) {
 					MainScreen_GUI.instance.onSubLoginFailure();
 				}
+				else if (Terminal_GUI.instance!=null) Terminal_GUI.instance.handleMessageIfLoggedIn(null);
 			}
 		});
 		
@@ -364,12 +366,9 @@ public class Client_Controller implements ChatIF {
 					refreshUserReservations();
 				} else if (ManageOrders_GUI.instance != null) {
 					ManageOrders_GUI.instance.refreshAdminData();
-				} else if (Terminal_GUI.instance != null) {
-					Terminal_GUI.instance.onCancellationResponse("approved r");
 				}
 			}
 		});
-
 		responseHandlers.put(MessageType.RESERVATION_CANCEL_FAILED, new ResponseHandler() {
 			@Override
 			public void handle(Message msg) {
@@ -377,9 +376,6 @@ public class Client_Controller implements ChatIF {
 					refreshUserReservations();
 				} else if (ManageOrders_GUI.instance != null) {
 					ManageOrders_GUI.instance.refreshAdminData();
-				} else if (Terminal_GUI.instance != null) {
-
-					Terminal_GUI.instance.onCancellationResponse((String) msg.getContent());
 				}
 			}
 		});
@@ -533,22 +529,25 @@ public class Client_Controller implements ChatIF {
 				}
 			}
 		});
-
-		responseHandlers.put(MessageType.WAITLIST_CANCELED_FAILED, new ResponseHandler() {
+		// -----------------------------------------------------------
+		// Waitlist
+		// -----------------------------------------------------------
+		
+		responseHandlers.put(MessageType.WAITLIST_AND_RESERVATION_CANCELED, new ResponseHandler() {
 			@Override
 			public void handle(Message msg) {
 				if (Terminal_GUI.instance != null)
-					Terminal_GUI.instance.onCancellationResponse((String) msg.getContent());
+					Terminal_GUI.instance.onCancellationResponse((String) msg.getContent(), true);
 			}
 		});
-
-		responseHandlers.put(MessageType.WAITLIST_CANCELED, new ResponseHandler() {
+		responseHandlers.put(MessageType.CANCEL_WAITLIST_AND_RESERVATION_FAILED, new ResponseHandler() {
 			@Override
 			public void handle(Message msg) {
 				if (Terminal_GUI.instance != null)
-					Terminal_GUI.instance.onCancellationResponse("approved w");
+					Terminal_GUI.instance.onCancellationResponse((String) msg.getContent(), false);
 			}
-		});
+		});		
+		
 		responseHandlers.put(MessageType.WAITLIST_JOINED_FAILED, new ResponseHandler() {
 			@Override
 			public void handle(Message msg) {
@@ -562,6 +561,23 @@ public class Client_Controller implements ChatIF {
 			public void handle(Message msg) {
 				if (Terminal_GUI.instance != null)
 					Terminal_GUI.instance.onJoinWaitlistSucceedResponse((int) msg.getContent());
+			}
+		});
+		// -----------------------------------------------------------
+		// Forgot code(in terminal)
+		// -----------------------------------------------------------
+		responseHandlers.put(MessageType.FORGOT_CODE_NOT_FOUND, new ResponseHandler() {
+			@Override
+			public void handle(Message msg) {
+				if (Terminal_GUI.instance != null)
+					Terminal_GUI.instance.onForgotCodeHandle((String) msg.getContent(),false);
+			}
+		});
+		responseHandlers.put(MessageType.FORGOT_CODE_FOUND, new ResponseHandler() {
+			@Override
+			public void handle(Message msg) {
+				if (Terminal_GUI.instance != null)
+					Terminal_GUI.instance.onForgotCodeHandle((String) msg.getContent(),true);
 			}
 		});
 	}
@@ -819,6 +835,10 @@ public class Client_Controller implements ChatIF {
 	 */
 	public void sendGetUserDetailsRequest(int userId) {
 		sendComplexObject(new Message(MessageType.GET_USER_DETAILS, userId));
+	}
+
+	public void sendRecoverCodesRequest(String phone, String email) {
+		sendComplexObject(new Message(MessageType.FORGOT_CODE,new UserRecord(phone,email)));		
 	}
 
 

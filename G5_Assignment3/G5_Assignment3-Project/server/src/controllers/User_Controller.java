@@ -1,10 +1,14 @@
 package controllers;
 
+import Data.Reservation_Repository;
 import Data.User_Repository;
+import entities.Reservation;
 import entities.UserRecord;
+import integration.EmailService;
 import messages.Message;
 import messages.MessageType;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public class User_Controller {
@@ -21,7 +25,8 @@ public class User_Controller {
     public Message handle(Message msg) {
         try {
             return switch (msg.getType()) {
-
+            	case MessageType.FORGOT_CODE -> forgotCodeLogic((UserRecord) msg.getContent());
+            	
                 case MessageType.GET_ALL_USERS_REQUEST -> handleGetAll();
 
                 case MessageType.ADD_USER_REQUEST -> handleAdd((UserRecord) msg.getContent());
@@ -44,7 +49,22 @@ public class User_Controller {
         }
     }
 
-    private Message handleGetAll() {
+    //for the terminal, is case someone click on forgot my cod and put details
+    private Message forgotCodeLogic(UserRecord userRecord) {
+    	String phone=userRecord.getPhone();
+    	String email = userRecord.getEmail();
+		Reservation res = Reservation_Repository.getInstance().getClosestReservationByContact(phone, email);
+    	if (res==null) return new Message(MessageType.FORGOT_CODE_NOT_FOUND,"The confirmation code for reservation with this record is not found!");  	
+    	if (!res.getOrderStartTime().toLocalDate().equals(LocalDate.now()))
+    		return new Message(MessageType.FORGOT_CODE_NOT_FOUND,"There is no reservation for today with this confirmation code");
+    	System.out.println("USER CONTROLLER - forgot Code Logic - messaging number: "+ phone + "with reminder that the code is: "+res.getConfirmationCode());
+		System.out.println("NOTE that the reservation is: "+res.toString());
+		EmailService.sendForgotCodeNotification(email,res.getConfirmationCode());
+
+    	return new Message(MessageType.FORGOT_CODE_FOUND, "We have sent the confirmation code through email and phone.\nYour confirmation code is: "+res.getConfirmationCode());
+	}
+
+	private Message handleGetAll() {
         List<UserRecord> users = repo.getAllSubscribedCustomers();
         return new Message(MessageType.GET_ALL_USERS_RESPONSE, users);
     }

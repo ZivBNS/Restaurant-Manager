@@ -9,7 +9,6 @@
       alignment="CENTER"
       prefHeight="650.0"
       prefWidth="500.0"
-      stylesheets="/Theme/application.css"
       xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="gui.Barcode_GUI"

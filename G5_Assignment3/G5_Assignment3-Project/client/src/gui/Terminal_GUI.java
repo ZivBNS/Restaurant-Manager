@@ -52,7 +52,7 @@ public class Terminal_GUI {
     @FXML private VBox forgotCodeView;
     @FXML private TextField forgotPhoneField, forgotEmailField;
     @FXML private Button btnSubmitForgot, btnCloseForgot;
-    @FXML private ListView<String> lvReservations;
+    @FXML private Label forgotStatusLabel;
 
     @FXML
     public void initialize() {
@@ -163,6 +163,32 @@ public class Terminal_GUI {
 
         btnSubmitCheckIn.setOnAction(event -> submitCheckIn(checkInCodeField, checkInStatusLabel));
         btnSubmitInstant.setOnAction(event -> handleInstantBookingSubmit());
+        btnSubmitForgot.setOnAction(event -> {
+        	forgotPhoneField.setStyle("");
+            forgotEmailField.setStyle("");
+            if (forgotStatusLabel != null) {
+                forgotStatusLabel.setVisible(false);
+            }
+        	String phone = forgotPhoneField.getText().trim();
+            String email = forgotEmailField.getText().trim();
+
+            if (phone.isEmpty() || email.isEmpty()) {
+                if (phone.isEmpty()) {
+                    forgotPhoneField.setStyle("-fx-border-color: #e74c3c; -fx-border-width: 2; -fx-border-radius: 5;");
+                }
+                if (email.isEmpty()) {
+                    forgotEmailField.setStyle("-fx-border-color: #e74c3c; -fx-border-width: 2; -fx-border-radius: 5;");
+                }
+                
+            	if (forgotStatusLabel != null) {
+                    forgotStatusLabel.setText("Both Phone and Email are required!");
+                    forgotStatusLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;"); // טקסט אדום מודגש
+                    forgotStatusLabel.setVisible(true);
+                }
+                return;
+            }
+            ConnectToServer_GUI.clientController.sendRecoverCodesRequest(phone, email);
+            });
         
         btnGoToPayment.setOnAction(event -> {
         	if (currentBillToPay != null) {
@@ -170,7 +196,19 @@ public class Terminal_GUI {
         	}
         });
         
-        btnCloseForgot.setOnAction(event -> forgotCodeView.setVisible(false));
+        btnCloseForgot.setOnAction(event -> {
+            forgotCodeView.setVisible(false);
+            forgotPhoneField.clear();
+            forgotEmailField.clear();
+            forgotPhoneField.setStyle("");
+            forgotEmailField.setStyle("");
+            if (forgotStatusLabel != null) {
+                forgotStatusLabel.setVisible(false);
+            }
+            toggleForm(checkInForm);
+            highlightButton(btnCheckIn);
+        });
+        
         hlForgotCode.setOnAction(event -> handleForgotCodeClick());
         
         btnFetchBill.setOnAction(event -> {
@@ -337,24 +375,12 @@ public class Terminal_GUI {
         } catch (IOException e) { e.printStackTrace(); }
     }
 
-    public void onCancellationResponse(String response) {
-    	if (response==null|| response.equals("error")) {
-    		cancelStatusLabel.setText("Operation failed or wrong code");
-    		cancelStatusLabel.setStyle("-fx-text-fill: #e74c3c;");
-    	}
-    	else if (response.equals("approved r")) {
-            cancelStatusLabel.setText("Your Reservation is canceled");
-            cancelStatusLabel.setStyle("-fx-text-fill: #27ae60;");
-            cancelCodeField.clear(); 
-        } else if (response.equals("approved w")) {
-            cancelStatusLabel.setText("Your Waitlist is canceled");
-            cancelStatusLabel.setStyle("-fx-text-fill: #27ae60;");
-            cancelCodeField.clear(); 
-        }
-        else {
-            cancelStatusLabel.setText("The "+ response +" is not longer exist in the system");
-            cancelStatusLabel.setStyle("-fx-text-fill: #27ae60;");        	
-        }
+    public void onCancellationResponse(String response, boolean isCanceled) {
+		cancelStatusLabel.setText(response);
+		if (isCanceled) cancelStatusLabel.setStyle("-fx-text-fill: #e74c3c;");
+		else cancelStatusLabel.setStyle("-fx-text-fill: #27ae60;");
+
+        cancelCodeField.clear(); 
         cancelStatusLabel.setVisible(true);
     }
     
@@ -365,6 +391,7 @@ public class Terminal_GUI {
                 showTerminal(loggedInUser.getFirstName());
             } else {
                 welcomeErrorLabel.setText("Invalid username or password.");
+                welcomeErrorLabel.setStyle("-fx-text-fill: #e74c3c;");
                 welcomeErrorLabel.setVisible(true);
             }
         });
@@ -372,18 +399,29 @@ public class Terminal_GUI {
 
     public void onInstantReservationFailedResponse(String s) {
         Platform.runLater(() -> {
-            highlightButton(null);
-            
-            for (javafx.scene.Node node : instantForm.getChildren()) {
-                if (node != waitlistProposalBox) {
-                    node.setVisible(false);
-                    node.setManaged(false);
+            if (s == null) {
+                highlightButton(null);
+                
+                for (Node node : instantForm.getChildren()) {
+                    if (node != waitlistProposalBox) {
+                        node.setVisible(false);
+                        node.setManaged(false);
+                    }
+                }
+                if (waitlistProposalBox != null) {
+                    waitlistProposalBox.setVisible(true);
+                    waitlistProposalBox.setManaged(true);
                 }
             }
-            
-            if (waitlistProposalBox != null) {
-                waitlistProposalBox.setVisible(true);
-                waitlistProposalBox.setManaged(true);
+            else {
+	            instStatusLabel.setText(s);
+	            instStatusLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;"); // צבע אדום
+	            instStatusLabel.setVisible(true);
+	            instStatusLabel.setManaged(true);
+	            if (waitlistProposalBox != null) {
+	                waitlistProposalBox.setVisible(false);
+	                waitlistProposalBox.setManaged(false);
+	            }
             }
         });
     }
@@ -414,7 +452,7 @@ public class Terminal_GUI {
 
     public void onCheckInFailedResponse(String s) {
         Platform.runLater(() -> {
-            checkInStatusLabel.setText("Check-In FAILED");
+            checkInStatusLabel.setText(s);
             checkInStatusLabel.setStyle("-fx-text-fill: #e74c3c;");
             checkInStatusLabel.setVisible(true);
             checkInCodeField.clear();
@@ -471,23 +509,20 @@ public class Terminal_GUI {
     public void onGetBillSuccess(Bill bill) {
         Platform.runLater(() -> {
             this.currentBillToPay = bill;
-            double total = bill.calculateFinalAmount()+10*(bill.getReservationId()%10);
-
             payBillCodeField.setVisible(false);
             payBillCodeField.setManaged(false);
             btnFetchBill.setVisible(false);
             btnFetchBill.setManaged(false);
 
-            if (total == 0) {
+            if (bill.calculateFinalAmount() == 0) {
                 payBillStatusLabel.setText("No payment needed. Thanks for checking out.");
                 payBillStatusLabel.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold; -fx-font-size: 16px;");
                 payBillStatusLabel.setVisible(true);
                 billDetailsBox.setVisible(false); 
                 billDetailsBox.setManaged(false);
             } else {
-            	bill.setBillDetails("Pancakes - 4$");
-                String details = (bill.getBillDetails() == null) ? "" : bill.getBillDetails();
-                payBillStatusLabel.setText(details + "\nSitting - 3$\nTips - 3$" + "\n\nTotal to Pay: " + total + "$");
+            	if(bill.getBillDetails()==null||bill.getBillDetails().isEmpty()) bill.setBillDetails("Pancakes - 4$");
+                payBillStatusLabel.setText(bill.getBillDetails() + "\nSitting - 3$\nTips - 3$" + "\n\nTotal to Pay: " + bill.calculateFinalAmount()+6 + "$");
                 payBillStatusLabel.setStyle("-fx-text-fill: #2c3e50; -fx-font-size: 14px;");
                 payBillStatusLabel.setVisible(true);
                 
@@ -540,4 +575,16 @@ public class Terminal_GUI {
             }
         });
     }
+
+	public void onForgotCodeHandle(String response, boolean isFound) {
+	    Platform.runLater(() -> {
+	        forgotStatusLabel.setText(response);
+	        forgotStatusLabel.setVisible(true);
+	        forgotStatusLabel.setManaged(true);
+	        if (isFound) forgotStatusLabel.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold; -fx-font-size: 14px;");
+	        else forgotStatusLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold; -fx-font-size: 14px;");
+            forgotPhoneField.clear();
+            forgotEmailField.clear();
+	    });
+	}
 }

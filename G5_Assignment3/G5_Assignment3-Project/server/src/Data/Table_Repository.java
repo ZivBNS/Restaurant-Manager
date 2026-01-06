@@ -338,62 +338,8 @@ public class Table_Repository implements Repository_Interface<Restaurant_Table> 
      * @param excludeId ID to ignore (used for updates).
      * @return A list of populated Reservation objects.
      */
-    private List<Reservation> getOverlappingReservationsList(LocalDateTime start, LocalDateTime end, Integer excludeId) {
-        List<Reservation> conflicts = new ArrayList<Reservation>();
-        
-        StringBuilder sql = new StringBuilder();
-        // Updated SQL: Added CreationTime to the selection
-        sql.append("SELECT ID, NumberOfDiners, ReservationStartTime, ConfirmationCode, CreationTime ");
-        sql.append("FROM reservations ");
-        sql.append("WHERE Status IN ('Pending', 'Active') ");
-        sql.append("AND (ReservationStartTime < ? AND ReservationEndTime > ?) ");
-        
-        if (excludeId != null) {
-            sql.append("AND ID != ?");
-        }
-
-        PooledConnection pConn = null;
-        try {
-            pConn = db.getConnection();
-            try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(sql.toString())) {
-                pstmt.setTimestamp(1, Timestamp.valueOf(end));
-                pstmt.setTimestamp(2, Timestamp.valueOf(start));
-                
-                if (excludeId != null) {
-                    pstmt.setInt(3, excludeId);
-                }
-
-                try (ResultSet rs = pstmt.executeQuery()) {
-                    while (rs.next()) {
-                        Reservation r = new Reservation();
-                        r.setId(rs.getInt("ID"));
-                        r.setNumberOfDiners(rs.getInt("NumberOfDiners"));
-                        r.setConfirmationCode(rs.getInt("ConfirmationCode"));
-                        
-                        // Map the StartTime
-                        Timestamp startTime = rs.getTimestamp("ReservationStartTime");
-                        if (startTime != null) {
-                            r.setOrderStartTime(startTime.toLocalDateTime());
-                        }
-
-                        // CRITICAL FIX: Map the CreationTime from the database
-                        Timestamp creationTime = rs.getTimestamp("CreationTime");
-                        if (creationTime != null) {
-                            r.setCreationTime(creationTime.toLocalDateTime());
-                        }
-                        
-                        conflicts.add(r);
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("DB Error while fetching overlapping reservations: " + e.getMessage());
-        } finally {
-            if (pConn != null) {
-                db.releaseConnection(pConn);
-            }
-        }
-        return conflicts;
+    public List<Reservation> getOverlappingReservationsList(LocalDateTime start, LocalDateTime end, Integer excludeId) {
+    	return Reservation_Repository.getInstance().getOverlappingReservationsList(start, end, excludeId);
     }
 
     public Integer findBestAvailableTable(LocalDateTime start, LocalDateTime end, int guests) {

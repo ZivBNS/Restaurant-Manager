@@ -1,6 +1,5 @@
 package Data;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -10,8 +9,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import entities.Reservation;
 import entities.Waitlist;
+import entities.WaitlistStatus;
 /*******************************************************************
  * waitlist states are: PWAITING, WAITING, NOTIFIED, COMPLETED, CANCELED
  *******************************************************************/
@@ -19,7 +18,6 @@ public class Waitlist_Repository implements Repository_Interface<Waitlist> {
     
     private DB_Controller db = DB_Controller.getInstance();
     private static Waitlist_Repository waitlistRepositoryInstance = new Waitlist_Repository();
-    private List<Waitlist> activeWaitlist = new ArrayList<>();
 
     private Waitlist_Repository(){
     }
@@ -30,13 +28,13 @@ public class Waitlist_Repository implements Repository_Interface<Waitlist> {
 
     @Override
     public void init() {
-        String sql = "SELECT ID, ReservationID, Status, creationTime, TableFreedTime " +
+    	/*   String sql = "SELECT ID, ReservationID, Status, creationTime, TableFreedTime " +
                      "FROM Waitlist " +
-                     "WHERE TableFreedTime IS NULL AND Status = 'WAITING' " +
+                     "WHERE TableFreedTime IS NULL AND Status = '"+WaitlistStatus.WAITING.toString() +"' " +
                      "ORDER BY ID ASC";
 
         PooledConnection pConn = null;
-        try {
+       try {
             pConn = db.getConnection();
             Connection conn = pConn.getConnection();
 
@@ -45,26 +43,14 @@ public class Waitlist_Repository implements Repository_Interface<Waitlist> {
 
                 activeWaitlist.clear();
                 while (rs.next()) {
-                    int id = rs.getInt("ID");
-                    int resId = rs.getInt("ReservationID");
-                    String status = rs.getString("Status");
-                    LocalDateTime creationTime = rs.getTimestamp("creationTime").toLocalDateTime();
-                    
-                    LocalDateTime freedTime = null;
-                    Timestamp freedTimestamp = rs.getTimestamp("TableFreedTime");
-                    if (freedTimestamp != null) {
-                        freedTime = freedTimestamp.toLocalDateTime();
-                    }
-
-                    Waitlist waitEntry = new Waitlist(id, resId, status, creationTime, freedTime);
-                    activeWaitlist.add(waitEntry);
+                    activeWaitlist.add(extractWaitlistFromResultSet(rs));
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
             if (pConn != null) db.releaseConnection(pConn);
-        }
+        }*/
     }
     
     @Override
@@ -120,7 +106,6 @@ public class Waitlist_Repository implements Repository_Interface<Waitlist> {
         PooledConnection pConn = null;
         try {
             pConn = db.getConnection();
-            pConn.getConnection().setAutoCommit(true);
             try (Statement stmt = pConn.getConnection().createStatement()) {
                 return stmt.executeUpdate(sql) > 0;
             }
@@ -141,10 +126,7 @@ public class Waitlist_Repository implements Repository_Interface<Waitlist> {
             try (Statement stmt = pConn.getConnection().createStatement();
                  ResultSet rs = stmt.executeQuery(sql)) {
                 if (rs.next()) {
-                    LocalDateTime creation = rs.getTimestamp("creationTime").toLocalDateTime();
-                    LocalDateTime freed = (rs.getTimestamp("TableFreedTime") != null) ? 
-                                           rs.getTimestamp("TableFreedTime").toLocalDateTime() : null;
-                    return new Waitlist(rs.getInt("ID"), rs.getInt("ReservationID"), rs.getString("Status"), creation, freed);
+                    return extractWaitlistFromResultSet(rs);
                 }
             }
         } catch (SQLException e) {
@@ -155,13 +137,9 @@ public class Waitlist_Repository implements Repository_Interface<Waitlist> {
         return null;
     }
 
-    public List<Waitlist> getWaitlistToday() {
-        return activeWaitlist;
-    }
-
-    public void setWaitlistToday(List<Waitlist> waitlistToday) {
+   /* public void setWaitlistToday(List<Waitlist> waitlistToday) {
         this.activeWaitlist = waitlistToday;
-    }
+    }*/
 
     public Waitlist getByReservationId(int rid) {
         String sql = "SELECT * FROM Waitlist WHERE ReservationID = " + rid;
@@ -171,10 +149,7 @@ public class Waitlist_Repository implements Repository_Interface<Waitlist> {
             try (Statement stmt = pConn.getConnection().createStatement();
                  ResultSet rs = stmt.executeQuery(sql)) {
                 if (rs.next()) {
-                    LocalDateTime creation = rs.getTimestamp("creationTime").toLocalDateTime();
-                    LocalDateTime freed = (rs.getTimestamp("TableFreedTime") != null) ? 
-                                           rs.getTimestamp("TableFreedTime").toLocalDateTime() : null;
-                    return new Waitlist(rs.getInt("ID"), rs.getInt("ReservationID"), rs.getString("Status"), creation, freed);
+                	return extractWaitlistFromResultSet(rs);
                 }
             }
         } catch (SQLException e) {
@@ -187,7 +162,7 @@ public class Waitlist_Repository implements Repository_Interface<Waitlist> {
     
 
     public boolean cancelWaitlistById(int waitlistId) {
-        String query = "UPDATE Waitlist SET Status = 'CANCELED' WHERE ID = ?";
+        String query = "UPDATE Waitlist SET Status = '"+WaitlistStatus.CANCELED.toString() +"' WHERE ID = ?";
         
         PooledConnection pConn = null;
         PreparedStatement stmt = null;
@@ -220,7 +195,7 @@ public class Waitlist_Repository implements Repository_Interface<Waitlist> {
     public boolean isCustomerAlreadyInWaitlist(String phone, String email) {
         String query = "SELECT w.ID FROM waitlist w " +
                        "JOIN reservations r ON w.ReservationID = r.ID " +
-                       "WHERE w.Status = 'WAITING' AND " +
+                       "WHERE w.Status = '"+WaitlistStatus.WAITING.toString()+"' AND " +
                        "(" +
                            "(r.Phone = ? AND ? IS NOT NULL AND ? <> '') OR " +
                            "(r.Email = ? AND ? IS NOT NULL AND ? <> '')" +
@@ -273,8 +248,8 @@ public class Waitlist_Repository implements Repository_Interface<Waitlist> {
             pConn = db.getConnection();
             pstmt = pConn.getConnection().prepareStatement(query);
             
-            pstmt.setString(1, newStatus);      // הסטטוס החדש (למשל "EXPIRED" או "CANCELED")
-            pstmt.setInt(2, reservationId);     // ה-ID של ההזמנה
+            pstmt.setString(1, newStatus);    
+            pstmt.setInt(2, reservationId);
 
             int rowsAffected = pstmt.executeUpdate();
             return rowsAffected > 0;
@@ -291,7 +266,7 @@ public class Waitlist_Repository implements Repository_Interface<Waitlist> {
 
     //FOR TIMER
     public void markAsNotified(int waitlistId) {
-        String query = "UPDATE waitlist SET Status = 'NOTIFIED', TableFreedTime = NOW() WHERE ID = ?";
+        String query = "UPDATE waitlist SET Status = '" + WaitlistStatus.NOTIFIED.toString() + "', TableFreedTime = NOW() WHERE ID = ?";
         try {
             PooledConnection pConn = db.getConnection();
             PreparedStatement pstmt = pConn.getConnection().prepareStatement(query);
@@ -304,46 +279,17 @@ public class Waitlist_Repository implements Repository_Interface<Waitlist> {
         }
     }
     
-    public List<Waitlist> getExpiredNotifiedCustomers(int minutes) {
-        List<Waitlist> expired = new ArrayList<>();
-        String query = "SELECT * FROM waitlist WHERE Status = 'NOTIFIED' AND TableFreedTime < DATE_SUB(NOW(), INTERVAL ? MINUTE)";
-        
-        PooledConnection pConn = null;
-        PreparedStatement pstmt = null;
-
-        try {
-            pConn = db.getConnection();
-            pstmt = pConn.getConnection().prepareStatement(query);
-            pstmt.setInt(1, minutes);
-
-            try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    LocalDateTime creation = rs.getTimestamp("creationTime").toLocalDateTime();
-                    LocalDateTime freed = (rs.getTimestamp("TableFreedTime") != null) ? rs.getTimestamp("TableFreedTime").toLocalDateTime() : null;                
-                    Waitlist w = new Waitlist(rs.getInt("ID"), rs.getInt("ReservationID"),rs.getString("status"),creation,freed); 
-                    expired.add(w);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            try { if (pstmt != null) pstmt.close(); } catch (SQLException e) {}
-            if (pConn != null) db.releaseConnection(pConn);
-        }
-        return expired;
-    }
-    
     //FOR TIMER / order finish
     public Waitlist findFirstMatch(int tableCapacity) {
         String queryPriority = "SELECT w.* FROM waitlist w " +
                        "JOIN reservations r ON w.ReservationID = r.ID " +
-                       "WHERE w.Status = 'PWAITING' " +
+                       "WHERE w.Status = '" + WaitlistStatus.PWAITING.toString() + "' " +
                        "AND r.NumberOfDiners <= ? " +
                        "ORDER BY w.creationTime ASC " +
                        "LIMIT 1";
         String query = "SELECT w.* FROM waitlist w " +
                 "JOIN reservations r ON w.ReservationID = r.ID " +
-                "WHERE w.Status = 'WAITING' " +
+                "WHERE w.Status = '" + WaitlistStatus.WAITING.toString() + "' " +
                 "AND r.NumberOfDiners <= ? " +
                 "ORDER BY w.creationTime ASC " +
                 "LIMIT 1";
@@ -386,5 +332,30 @@ public class Waitlist_Repository implements Repository_Interface<Waitlist> {
                 rs.getTimestamp("TableFreedTime") != null ? rs.getTimestamp("TableFreedTime").toLocalDateTime() : null
             );
 
+    }
+
+    public List<Waitlist> getExpiredNotifiedWaitlists(int minutes) {
+        List<Waitlist> expiredList = new ArrayList<>();
+                String query = "SELECT * FROM waitlist WHERE Status = ? AND TableFreedTime < DATE_SUB(NOW(), INTERVAL ? MINUTE)";
+        PooledConnection pConn = null;
+        try {
+            pConn = db.getConnection();
+            try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(query)) {                
+                pstmt.setString(1, WaitlistStatus.NOTIFIED.toString());
+                pstmt.setInt(2, minutes);
+
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    while (rs.next()) {
+                        expiredList.add(extractWaitlistFromResultSet(rs));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            if (pConn != null)
+                db.releaseConnection(pConn);
+        }
+        return expiredList;
     }
 }

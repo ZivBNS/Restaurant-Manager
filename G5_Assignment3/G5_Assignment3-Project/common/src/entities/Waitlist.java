@@ -28,6 +28,7 @@ public class Waitlist {
         this.tableFreedTime = null;
     }
     
+    
     // --- Getters and Setters ---
 
     public int getId() {

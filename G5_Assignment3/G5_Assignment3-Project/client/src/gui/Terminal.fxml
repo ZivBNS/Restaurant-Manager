@@ -146,24 +146,26 @@
                            </children>
                         </VBox>
 
-                        <VBox fx:id="forgotCodeView" alignment="TOP_CENTER" spacing="10.0" style="-fx-background-color: white;" visible="false">
-                           <children>
-                              <HBox alignment="TOP_RIGHT">
-                                 <children>
-                                    <Button fx:id="btnCloseForgot" style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;" text="X" />
-                                 </children>
-                              </HBox>
-                              <Label text="Retrieve My Codes" textFill="#2c3e50"><font><Font name="Segoe UI Bold" size="16.0" /></font></Label>
-                              <VBox alignment="CENTER" spacing="10.0">
-                                 <children>
-                                    <TextField fx:id="forgotPhoneField" maxWidth="200.0" promptText="Enter Phone" />
-                                    <TextField fx:id="forgotEmailField" maxWidth="200.0" promptText="Enter Email" />
-                                    <Button fx:id="btnSubmitForgot" style="-fx-cursor: hand;" text="Find Reservations" />
-                                 </children>
-                              </VBox>
-                              <ListView fx:id="lvReservations" prefHeight="150.0" />
-                           </children>
-                        </VBox>
+						<VBox fx:id="forgotCodeView" alignment="TOP_CENTER" spacing="10.0" style="-fx-background-color: white;" visible="false">
+						   <children>
+						      <HBox alignment="TOP_RIGHT">
+						         <children>
+						            <Button fx:id="btnCloseForgot" style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;" text="X" />
+						         </children>
+						      </HBox>
+						      <Label text="Retrieve My Codes" textFill="#2c3e50"><font><Font name="Segoe UI Bold" size="16.0" /></font></Label>
+						      <VBox alignment="CENTER" spacing="10.0">
+						         <children>
+						            <TextField fx:id="forgotPhoneField" maxWidth="200.0" promptText="Enter Phone" />
+						            <TextField fx:id="forgotEmailField" maxWidth="200.0" promptText="Enter Email" />
+						            <Button fx:id="btnSubmitForgot" style="-fx-cursor: hand;" text="Find Reservations" />
+						            
+						            <Label fx:id="forgotStatusLabel" visible="false" wrapText="true" textAlignment="CENTER" maxWidth="250.0"/>
+						            
+						         </children>
+						      </VBox>
+						   </children>
+						</VBox>
                      </children>
                   </StackPane>
                </children>

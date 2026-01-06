@@ -49,13 +49,12 @@ public class Reservation_Controller {
     
 	private static Message createInstantReservation(Message msg) {
 		Message createInstantReservation = createReservation(msg);
-		String errorMsg = "no slot available";
 		if (createInstantReservation.getType().equals(MessageType.RESERVATION_CONFIRMED)) {
 			return new Message(MessageType.INSTANT_RESERVATION_SUCCESS,createInstantReservation.getContent());			
-		}
-		if (createInstantReservation.getType().equals(MessageType.RESERVATION_FAILED))
-			return new Message(MessageType.INSTANT_RESERVATION_FAILED,createInstantReservation.getContent());
-		return new Message(MessageType.INSTANT_RESERVATION_FAILED,errorMsg);
+		}	
+		if (createInstantReservation.getType().equals(MessageType.RESERVATION_FAILED_NO_TABLE) || createInstantReservation.getType().equals(MessageType.RESERVATION_FAILED_NO_TABLE_FULLY_BOOKED))
+			return new Message(MessageType.INSTANT_RESERVATION_FAILED,null);
+		return new Message(MessageType.INSTANT_RESERVATION_FAILED,createInstantReservation.getContent());
 	}
 
 
@@ -72,23 +71,27 @@ public class Reservation_Controller {
                 System.err.println("[Error] Message content is NOT a Reservation object.");
                 return new Message(MessageType.RESERVATION_FAILED, "Invalid data format received.");
             }
-
+     
             Reservation reservation = (Reservation) msg.getContent();
             
-            // 2. Subscriber Logic Check
             // If the reservation has a UserID, treat it as a Subscriber booking.
-            if (reservation.getUserId() != null) {
-                System.out.println("[Reservation_Controller] Processing reservation for Subscriber ID: " + reservation.getUserId());
-                // Here you could add specific logic for subscribers, e.g., fetching special discounts 
-                // or verifying the user exists in the Users table if necessary.
-            } else {
-                System.out.println("[Reservation_Controller] Processing reservation for Casual Customer.");
-            }
 
-            // 3. Time Slot Calculation
+            // 2. Time Slot Calculation
             LocalDateTime startTime = reservation.getOrderStartTime();
             // Default dining duration is 2 hours
             LocalDateTime endTime = startTime.plusHours(2);
+            
+            // 3. must check: if the person invite more orders to the same time - result: block him
+            List<Reservation> checkReservations = tableRepository.getOverlappingReservationsList(startTime, endTime, null);
+            for (Reservation r:checkReservations) {
+                boolean sameUserId = (r.getUserId() != null && reservation.getUserId() != null && r.getUserId().equals(reservation.getUserId()));
+                boolean sameEmail = (r.getEmail() != null && reservation.getEmail() != null && r.getEmail().equalsIgnoreCase(reservation.getEmail()));                
+                boolean samePhone = (r.getPhone() != null && reservation.getPhone() != null && r.getPhone().equals(reservation.getPhone()));
+                if (sameUserId || sameEmail || samePhone) {
+                     return new Message(MessageType.RESERVATION_FAILED_ALREADY_BOOKED , "You already has a reservation at this time.\nPlease try inserting the correct code or cancel the previous order to start new one");
+                }
+            }
+            
             
             // 4. Capacity Check
             // Check availability for requested time using the Table Repository
@@ -103,7 +106,6 @@ public class Reservation_Controller {
                     System.out.println("[Reservation_Controller] No alternative slots found for today.");
                     return new Message(MessageType.RESERVATION_FAILED_NO_TABLE_FULLY_BOOKED, null);
                 }
-                
                 System.out.println("[Reservation_Controller] Suggesting alternative: " + suggestedTime);
                 return new Message(MessageType.RESERVATION_FAILED_NO_TABLE, suggestedTime);
             }

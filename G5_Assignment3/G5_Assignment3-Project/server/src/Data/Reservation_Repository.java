@@ -169,7 +169,6 @@ public class Reservation_Repository {
 				db.releaseConnection(pConn);
 			}
 		}
-
 	}
 
 	public boolean updateReservationForCheckOut(int confCode, LocalDateTime actualFinishTime) {
@@ -426,7 +425,6 @@ public class Reservation_Repository {
 		PooledConnection pConn = null;
 		try {
 			pConn = db.getConnection();
-			pConn.getConnection().setAutoCommit(true);
 			Statement stmt = pConn.getConnection().createStatement();
 			int x = stmt.executeUpdate(sql);
 			if (x == 0)
@@ -623,17 +621,19 @@ public class Reservation_Repository {
 	 * 
 	 * @return List of overdue reservations.
 	 */
-	public List<Reservation> getExpiredActiveReservations() {
+	public List<Reservation> getExpiredActiveReservations(boolean isNotified) { //is notified halpes to find what reservations to mark as completed in watchdog
 		List<Reservation> expiredList = new ArrayList<>();
 		// Query: Status=ACTIVE, Time Passed, Not Reminded Yet
 		String sql = "SELECT * FROM reservations WHERE Status = 'ACTIVE' "
 				+ "AND ReservationEndTime < ? AND RemindedDeparture = 0";
-
+		if (isNotified) sql = "SELECT * FROM reservations WHERE Status = 'ACTIVE' "
+				+ "AND ReservationEndTime < ? AND RemindedDeparture = 1";
 		PooledConnection pConn = null;
 		try {
 			pConn = db.getConnection();
 			try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(sql)) {
-				pstmt.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+				if (!isNotified) pstmt.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+				else pstmt.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now().minusMinutes(15)));
 				try (ResultSet rs = pstmt.executeQuery()) {
 					while (rs.next())
 						expiredList.add(extractReservationFromResultSet(rs));
@@ -708,87 +708,6 @@ public class Reservation_Repository {
 		}
 	}
 
-	// for waitlist controller:
-	public Reservation getLastReservationByContact(String phone, String email) {
-		String query = "SELECT * FROM Reservations WHERE (Phone = ? OR Email = ?) ORDER BY ID DESC LIMIT 1";
-
-		PooledConnection pConn = null;
-		PreparedStatement pstmt = null;
-		Reservation reservation = null;
-
-		try {
-			pConn = db.getConnection();
-			pstmt = pConn.getConnection().prepareStatement(query);
-
-			pstmt.setString(1, phone);
-			pstmt.setString(2, email);
-
-			try (ResultSet rs = pstmt.executeQuery()) {
-				if (rs.next()) {
-
-					int id = rs.getInt("ID");
-
-					int uId = rs.getInt("UserID");
-					Integer userId = rs.wasNull() ? null : uId;
-
-					int tId = rs.getInt("TableID");
-					Integer tableId = rs.wasNull() ? null : tId;
-
-					String resPhone = rs.getString("Phone");
-					String resEmail = rs.getString("Email");
-
-					java.sql.Timestamp startTs = rs.getTimestamp("ReservationStartTime");
-					LocalDateTime orderStartTime = (startTs != null) ? startTs.toLocalDateTime() : null;
-
-					java.sql.Timestamp endTs = rs.getTimestamp("ReservationEndTime");
-					LocalDateTime orderEndTime = (endTs != null) ? endTs.toLocalDateTime() : null;
-
-					java.sql.Timestamp arrTs = rs.getTimestamp("ActualArrivalTime");
-					LocalDateTime actualArrivalTime = (arrTs != null) ? arrTs.toLocalDateTime() : null;
-
-					java.sql.Timestamp depTs = rs.getTimestamp("ActualDepartureTime");
-					LocalDateTime actualDepartureTime = (depTs != null) ? depTs.toLocalDateTime() : null;
-
-					int diners = rs.getInt("NumberOfDiners");
-					int code = rs.getInt("ConfirmationCode");
-					String status = rs.getString("Status");
-
-					java.sql.Timestamp createTs = rs.getTimestamp("CreationTime");
-					LocalDateTime creationTime = (createTs != null) ? createTs.toLocalDateTime() : null;
-
-					boolean remindedPre = false;
-					try {
-						remindedPre = rs.getBoolean("RemindedPreArrival");
-					} catch (SQLException e) {
-					}
-
-					boolean remindedDep = false;
-					try {
-						remindedDep = rs.getBoolean("RemindedDeparture");
-					} catch (SQLException e) {
-					}
-
-					reservation = new Reservation(id, userId, tableId, resPhone, resEmail, orderStartTime, orderEndTime,
-							actualArrivalTime, actualDepartureTime, diners, code, status, creationTime, remindedPre,
-							remindedDep);
-				}
-			}
-		} catch (SQLException e) {
-			System.err.println(e.getMessage());
-			e.printStackTrace();
-		} finally {
-			try {
-				if (pstmt != null)
-					pstmt.close();
-			} catch (SQLException e) {
-			}
-			if (pConn != null)
-				db.releaseConnection(pConn);
-		}
-
-		return reservation;
-	}
-
 	// FOR TIMER
 	public List<Reservation> getOverstayingReservations(int hours) {
 		List<Reservation> lateReservations = new ArrayList<>();
@@ -829,7 +748,7 @@ public class Reservation_Repository {
 		return lateReservations;
 	}
 
-	// FOR TIMER
+	// FOR TIMER-WATCHDOG uses it
 	public List<Reservation> getNoShowCandidates(int minutes) {
 		List<Reservation> noShowReservations = new ArrayList<>();
 
@@ -868,5 +787,79 @@ public class Reservation_Repository {
 
 		return noShowReservations;
 	}
+	
+	
+    public List<Reservation> getOverlappingReservationsList(LocalDateTime start, LocalDateTime end, Integer excludeId) {
+        List<Reservation> conflicts = new ArrayList<Reservation>();
+        
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT * ");
+        sql.append("FROM reservations ");
+        sql.append("WHERE Status IN ('Pending', 'Active') ");
+        sql.append("AND (ReservationStartTime < ? AND ReservationEndTime > ?) ");
+        
+        if (excludeId != null) {
+            sql.append("AND ID != ?");
+        }
 
+        PooledConnection pConn = null;
+        try {
+            pConn = db.getConnection();
+            try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(sql.toString())) {
+                pstmt.setTimestamp(1, Timestamp.valueOf(end));
+                pstmt.setTimestamp(2, Timestamp.valueOf(start));
+                
+                if (excludeId != null) {
+                    pstmt.setInt(3, excludeId);
+                }
+
+                ResultSet rs = pstmt.executeQuery();
+                while (rs.next())
+                	conflicts.add(extractReservationFromResultSet(rs));                    	
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("DB Error while fetching overlapping reservations: " + e.getMessage());
+        } finally {
+            if (pConn != null) {
+                db.releaseConnection(pConn);
+            }
+        }
+        return conflicts;
+    }
+    
+    //for forgot the cod logic(found in user controller- used by terminal)
+    public Reservation getClosestReservationByContact(String phone, String email) {
+
+        String sql = "SELECT * FROM reservations "
+                   + "WHERE (Phone = ? OR Email = ?) " 
+                   + "AND Status IN ('ACTIVE', 'PENDING') "
+                   + "ORDER BY "
+                   + "  CASE WHEN Status = 'ACTIVE' THEN 1 ELSE 2 END ASC, " 
+                   + "  ABS(TIMESTAMPDIFF(SECOND, ReservationStartTime, NOW())) ASC "
+                   + "LIMIT 1";
+
+        PooledConnection pConn = null;
+
+        try {
+            pConn = db.getConnection();
+            Connection conn = pConn.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, phone);
+            ps.setString(2, email);
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return extractReservationFromResultSet(rs);
+            }
+        } catch (SQLException e) {
+            System.out.println("getClosestReservationByContact ERROR: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            if (pConn != null)
+                db.releaseConnection(pConn);
+        }
+
+        return null;
+    }
 }
