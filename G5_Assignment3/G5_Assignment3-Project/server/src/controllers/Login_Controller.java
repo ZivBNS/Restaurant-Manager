@@ -50,11 +50,11 @@ public class Login_Controller {
     }
     
     public static Message handleGuestLogin(LoginData data) {
-        if (data == null || (data.getEmail() == null && data.getPhoneNumber() == 0)) {
+        if (data == null || (data.getEmail() == null && data.getPhoneNumber().isEmpty())) {
             return new Message(MessageType.LOGIN_FAILED_GUEST, "Invalid Credentials");
         }
         String email = data.getEmail(); 
-        int phone = data.getPhoneNumber(); 
+        String phone = data.getPhoneNumber(); 
 
     	System.out.println("[Login_Controller] Recieved login request from casual user: ");
         boolean userFound = userRepository.getByEmailOrPhone(email, phone);

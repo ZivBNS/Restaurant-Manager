@@ -28,9 +28,7 @@ public class Workers_GUI {
 
         // --- Permission logic for reports button ---
 
-        System.out.println(" LOGIN" + User_Session.getLoggedInUser().getIdentity());
         if(User_Session.getLoggedInUser().getIdentity().equals("Manager")) {
-        	System.out.println("MANAGER LOGIN");
         	btnReports.setVisible(true);
             btnReports.setManaged(true);
         }

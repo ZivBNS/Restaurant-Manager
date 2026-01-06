@@ -77,9 +77,9 @@ public class User_Controller {
             return new Message(MessageType.ADD_USER_RESPONSE_ERR, "Username already exists.");
         }
         
-        int phone = 0;
+        String phone = "";
         try {
-            phone = Integer.parseInt(u.getPhone());
+            phone = u.getPhone();
         } catch (NumberFormatException e) {
             System.out.println("Not a valid number");
         }

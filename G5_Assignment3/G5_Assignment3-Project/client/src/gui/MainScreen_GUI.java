@@ -160,26 +160,37 @@ public class MainScreen_GUI {
 
         if (contactInfo.isEmpty()) {
             System.out.println("Error: Please enter a phone or email.");
+            casualErrorLabel.setText("Please enter a phone or email.");
             casualErrorLabel.setVisible(true);
             return;
         }
         
         if (ConnectToServer_GUI.clientController == null) {
-            subErrorLabel.setText("Not connected to server. Please reconnect.");
-            subErrorLabel.setVisible(true);
+        	casualErrorLabel.setText("Not connected to server. Please reconnect.");
+            casualErrorLabel.setVisible(true);
             return;
         }
         LoginData loginData;
-        if (radioPhone.isSelected()) {
-        	int phone = Integer.parseInt(contactInfo);
-        	loginData = new LoginData(phone);	//if phone is selected
+        if (radioPhone.isSelected()) {	//if phone is selected
+        	if(!DataChecker.validateContactInfo(null, contactInfo)) {
+        		casualErrorLabel.setText("Please enter a valid phone.");
+                casualErrorLabel.setVisible(true);
+                return;
+        	}
+        	loginData = new LoginData();	
+        	loginData.setPhone(contactInfo);
         	User_Session.setCasualData(contactInfo, null);
 		}else
-		{
-			loginData = new LoginData(contactInfo);	//if email is selected
+		{	//if email is selected
+        	if(!DataChecker.validateContactInfo(contactInfo, null)) {
+        		casualErrorLabel.setText("Please enter a valid email.");
+                casualErrorLabel.setVisible(true);
+                return;
+        	}
+			loginData = new LoginData();	
+        	loginData.setEmail(contactInfo);
 			User_Session.setCasualData(null, contactInfo);
 		}
-        
         stage = (Stage) ((Node) event.getSource()).getScene().getWindow(); //save the stage
         ConnectToServer_GUI.clientController.sendGuestLoginRequest(loginData);
 

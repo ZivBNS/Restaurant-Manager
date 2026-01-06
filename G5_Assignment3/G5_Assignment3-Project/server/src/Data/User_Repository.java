@@ -71,18 +71,17 @@ public class User_Repository {
         return null;
     } 
 	
-	public boolean getByEmailOrPhone(String email, int phone) {
+	public boolean getByEmailOrPhone(String email, String phone) {
         PooledConnection pConn = null;
         
         boolean hasEmail = (email != null && !email.trim().isEmpty());
-        boolean hasPhone = (phone != 0);
+        boolean hasPhone = (phone != null && !phone.isEmpty());
+
         try {
             pConn = db.getConnection();
             String sql;
             
-            if (hasEmail && hasPhone) { //TODO: remove unneeded check
-                sql = "SELECT 1 FROM users WHERE Email = ? OR Phone = ? LIMIT 1";
-            } else if (hasEmail) {
+            if (hasEmail) {
                 sql = "SELECT 1 FROM users WHERE Email = ? LIMIT 1";
             } else {
                 sql = "SELECT 1 FROM users WHERE Phone = ? LIMIT 1";
@@ -90,8 +89,8 @@ public class User_Repository {
             
             try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(sql)) {
                 int idx = 1;
-                if (hasEmail) pstmt.setString(idx++, email.trim());
-                if (hasPhone) pstmt.setString(idx++, String.valueOf(phone));
+                if (hasEmail) pstmt.setString(idx, email.trim());
+                if (hasPhone) pstmt.setString(idx, String.valueOf(phone));
 
                 try (ResultSet rs = pstmt.executeQuery()) {
                     return rs.next();

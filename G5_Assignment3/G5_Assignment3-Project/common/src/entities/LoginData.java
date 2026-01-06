@@ -4,20 +4,23 @@ public class LoginData {
     private String username;
     private String password;
     private String email;
-    private int phoneNumber;
+    private String phoneNumber;
 
     public LoginData(String username, String password) {
         this.username = username;
         this.password = password;
     }
-    public LoginData(String email) {
+    public LoginData() {
+    }
+    public void setEmail(String email) {
     	this.email = email;
     }
-    public LoginData(int phoneNumber) {
-    	this.phoneNumber = phoneNumber;
+    public void setPhone(String phone) {
+    	this.phoneNumber = phone;
     }
+
     public String getUsername() { return username; }
     public String getPassword() { return password; }
     public String getEmail() { return email; }
-    public int getPhoneNumber() { return phoneNumber; }
+    public String getPhoneNumber() { return phoneNumber; }
 }
