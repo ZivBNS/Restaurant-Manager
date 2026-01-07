@@ -38,11 +38,14 @@ public class CheckIn_Controller {
         Reservation reservation=reservationRepository.getByConfirmationCode(confCode);
         if (reservation == null)
             return new Message(MessageType.CHECK_IN_FAIL, "The code is invalid, please try again");        
+        if (!reservation.getStatus().equalsIgnoreCase(ReservationStatus.ACTIVE.toString())) {
+            return new Message(MessageType.CHECK_IN_FAIL, "Your reservation is already in progress!");
+        }
         if (!reservation.getStatus().equalsIgnoreCase(ReservationStatus.PENDING.toString())) {
             return new Message(MessageType.CHECK_IN_FAIL, "Your reservation is no longer exist in the system, please try again");
         }
         if (reservation.getOrderStartTime().isBefore(now.withHour(0).withMinute(0).withSecond(0))) {
-            return new Message(MessageType.CHECK_IN_FAIL, "Your reservation is for another day\nPlease use another confirmation code or make new reservation");
+            return new Message(MessageType.CHECK_IN_FAIL, "Your reservation is for another day\nPlease use another confirmation code or make new reservation for check-in");
         }
         
         //step 2: block waitlist that not notified yet from enter the restaurant

@@ -79,6 +79,17 @@
                         <VBox fx:id="checkInForm" alignment="CENTER" spacing="15.0" visible="false">
                            <children>
                               <Label text="Enter Confirmation Code for Check-In" textFill="#2c3e50"><font><Font name="Segoe UI Bold" size="16.0" /></font></Label>
+                              <TableView fx:id="todayReservationsTable" maxWidth="550.0" prefHeight="150.0" visible="false" managed="false" style="-fx-background-color: transparent; -fx-base: white; -fx-control-inner-background: white; -fx-table-cell-border-color: transparent; -fx-table-header-border-color: transparent; -fx-padding: 0; -fx-background-insets: 0;">
+                                <columns>
+                                  <TableColumn fx:id="colCode" text="Code" />
+                                  <TableColumn fx:id="colDiners" text="Diners" />
+                                  <TableColumn fx:id="colStart" text="Start" />
+                                  <TableColumn fx:id="colEnd" text="End" />
+                                </columns>
+                                <columnResizePolicy>
+                                   <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                </columnResizePolicy>
+                              </TableView>
                               <TextField fx:id="checkInCodeField" maxWidth="250.0" promptText="e.g. 12345" />
                               <Button fx:id="btnSubmitCheckIn" style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-cursor: hand;" text="Complete Check-In" />
                               <Label fx:id="checkInStatusLabel" textAlignment="CENTER" wrapText="true" />

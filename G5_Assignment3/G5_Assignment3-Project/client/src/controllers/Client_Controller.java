@@ -6,6 +6,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,6 +82,10 @@ public class Client_Controller implements ChatIF {
 				if (Terminal_GUI.instance != null) {
 					// sub.setUserId(userRecord.getId());
 					Terminal_GUI.instance.handleMessageIfLoggedIn(userRecord);
+					if (userRecord!=null) {
+						int userId=userRecord.getId();
+						sendComplexObject(new Message(MessageType.GET_RESERVATIONS_BY_USER,userId));
+					}
 				} else if (MainScreen_GUI.instance != null) {
 					MainScreen_GUI.instance.onSubLoginSuccess(userRecord);
 				}
@@ -141,6 +146,8 @@ public class Client_Controller implements ChatIF {
 				if (ViewReservations_GUI.instance != null) {
 					ViewReservations_GUI.instance.updateTable(resList);
 				}
+				else if (Terminal_GUI.instance != null)
+					Terminal_GUI.instance.onDailyReservationsReceived(resList);				
 			}
 		});
 
@@ -841,5 +848,7 @@ public class Client_Controller implements ChatIF {
 		sendComplexObject(new Message(MessageType.FORGOT_CODE,new UserRecord(phone,email)));		
 	}
 
-
+	public void sendGetDailyReservationsRequest(int userId) {
+		sendComplexObject(new Message(MessageType.GET_RESERVATIONS_BY_USER,userId));
+	}
 }

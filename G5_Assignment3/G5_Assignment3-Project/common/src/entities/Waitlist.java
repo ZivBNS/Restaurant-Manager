@@ -23,7 +23,7 @@ public class Waitlist {
     //create new to insert to db
     public Waitlist(int reservationID) {
         this.reservationID = reservationID;
-        this.status = "WAITING";
+        this.status = WaitlistStatus.WAITING.toString();
         this.creationTime = LocalDateTime.now();
         this.tableFreedTime = null;
     }
@@ -76,15 +76,3 @@ public class Waitlist {
         return "Waitlist [ID=" + id + ", OrderID=" + (reservationID != -1 ? reservationID : "N/A") + ", Status=" + status + "]";
     }
 }
-
-
-
-
-/*
-
-    @Override
-    public String toString() {
-        return "WaitlistEntry [ID=" + waitlistId + ", Diners=" + numDiners + ", Status=" + status + "]";
-    }
-}
-*/

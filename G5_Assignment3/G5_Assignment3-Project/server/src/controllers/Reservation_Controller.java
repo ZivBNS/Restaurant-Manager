@@ -82,15 +82,15 @@ public class Reservation_Controller {
             LocalDateTime endTime = startTime.plusHours(2);
             
             // 3. must check: if the person invite more orders to the same time - result: block him
-            List<Reservation> checkReservations = tableRepository.getOverlappingReservationsList(startTime, endTime, null);
+            List<Reservation> checkReservations = tableRepository.getOverlappingReservationsList(startTime, endTime, reservation.getId());
             for (Reservation r:checkReservations) {
-                boolean sameUserId = (r.getUserId() != null && reservation.getUserId() != null && r.getUserId().equals(reservation.getUserId()));
-                boolean sameEmail = (r.getEmail() != null && reservation.getEmail() != null && r.getEmail().equalsIgnoreCase(reservation.getEmail()));                
-                boolean samePhone = (r.getPhone() != null && reservation.getPhone() != null && r.getPhone().equals(reservation.getPhone()));
-                if (sameUserId || sameEmail || samePhone) {
-                     return new Message(MessageType.RESERVATION_FAILED_ALREADY_BOOKED , "You already has a reservation at this time.\nPlease try inserting the correct code or cancel the previous order to start new one");
-                }
+                boolean sameUserId = (r.getUserId() != null && r.getUserId().equals(reservation.getUserId()));
+                boolean sameEmail = (r.getEmail() != null && !r.getEmail().isEmpty() && r.getEmail().equalsIgnoreCase(reservation.getEmail()));                
+                boolean samePhone = (r.getPhone() != null && !r.getPhone().isEmpty() && r.getPhone().equals(reservation.getPhone()));
+                if (sameUserId || sameEmail || samePhone)
+                	return new Message(MessageType.RESERVATION_FAILED_ALREADY_BOOKED, "It looks like you're already booked with us for this time!\nPlease use your existing confirmation code, or cancel the previous reservation to make a new one.");
             }
+            
             
             
             // 4. Capacity Check
@@ -226,7 +226,9 @@ public class Reservation_Controller {
     private static Message getReservationsByUser(Message msg) {
         try {
             List<Reservation> reservations;
-            if (msg.getContent() instanceof Subscribed_Customer) {
+            if (msg.getContent() instanceof Integer)
+                reservations = reservationRepository.getByUserId((int)msg.getContent());
+            else if (msg.getContent() instanceof Subscribed_Customer) {
                 reservations = reservationRepository.getByUserId(((Subscribed_Customer) msg.getContent()).getSubscriberCode());
             } else {
                 reservations = reservationRepository.getByContactInfo((String) msg.getContent());
