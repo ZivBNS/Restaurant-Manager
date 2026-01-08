@@ -28,8 +28,12 @@ public class Waitlist_Controller {
 
     public static Message handleMessage(Message msg) {
         switch (msg.getType()) {
-        	case CANCEL_WAITLIST_AND_RESERVATION_BY_CODE: return CancelWitlistAndReservationByCode(msg);
-        	case JOIN_WAITLIST: return joinWaitlist(msg);
+        	case CANCEL_WAITLIST_AND_RESERVATION_BY_CODE: 
+        		return CancelWitlistAndReservationByCode(msg);
+        	case JOIN_WAITLIST: 
+        		return joinWaitlist(msg);
+        	case GET_ALL_ACTIVE_WAITLISTS:
+        		return getAllActiveWaitlists();
 
             default: return null;
         }
@@ -121,4 +125,16 @@ public class Waitlist_Controller {
 		if (phone!=null && !phone.isEmpty()) System.out.println("WAITLIST CONTROLLER - messaging number: "+ phone + "with reminder");;
 
 	}
+	/**
+     * Fetches all active waitlist entries from the repository.
+     * These entries include aggregated data from both 'waitlist' and 'reservations' tables.
+     * * @return A Message object containing the list of active waitlist data maps.
+     */
+    private static Message getAllActiveWaitlists() {
+        // Fetch the list of maps from the repository
+        java.util.List<java.util.Map<String, Object>> activeList = waitlistRepository.getAllActiveWaitlists();
+        
+        // Return the data to the server controller to be sent to the client
+        return new Message(MessageType.RETURN_ALL_ACTIVE_WAITLISTS, activeList);
+    }
 }

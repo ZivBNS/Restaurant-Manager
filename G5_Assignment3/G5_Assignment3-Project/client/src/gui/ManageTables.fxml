@@ -9,10 +9,13 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane fx:id="manageTablesRoot" prefHeight="900.0" prefWidth="1250.0" stylesheets="/Theme/application.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.ManageTables_GUI">
+<BorderPane fx:id="manageTablesRoot" stylesheets="/Theme/application.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.ManageTables_GUI">
 
     <top>
         <VBox alignment="CENTER" spacing="10">
@@ -26,11 +29,21 @@
     </top>
 
     <center>
-        <HBox spacing="25">
+        <GridPane hgap="25.0">
             <padding><Insets bottom="20" left="25" right="25" top="10" /></padding>
+            
+            <columnConstraints>
+                <ColumnConstraints hgrow="ALWAYS" percentWidth="70.0" />
+                <ColumnConstraints hgrow="ALWAYS" percentWidth="30.0" minWidth="350.0" />
+            </columnConstraints>
+            
+            <rowConstraints>
+                <RowConstraints vgrow="ALWAYS" />
+            </rowConstraints>
+
             <children>
                 
-                <VBox spacing="10.0" styleClass="card" HBox.hgrow="ALWAYS">
+                <VBox spacing="10.0" styleClass="card" GridPane.columnIndex="0" GridPane.rowIndex="0">
                     <padding><Insets bottom="20" left="20" right="20" top="20" /></padding>
                     <children>
                         <Label styleClass="card-title" text="Restaurant Layout" />
@@ -47,7 +60,7 @@
                     </children>
                 </VBox>
 
-                <VBox prefWidth="350.0" spacing="15.0" styleClass="card">
+                <VBox spacing="15.0" styleClass="card" GridPane.columnIndex="1" GridPane.rowIndex="0">
                     <padding><Insets bottom="25" left="25" right="25" top="25" /></padding>
                     <children>
                         <Label styleClass="card-title" text="Table Details" />
@@ -70,7 +83,7 @@
                         <VBox spacing="8.0">
                             <children>
                                 <Label styleClass="card-label" text="Status" />
-                                <CheckBox fx:id="activeCheckBox" text="Table is Active" textFill="WHITE" style="-fx-cursor: hand;"/>
+                                <CheckBox fx:id="activeCheckBox" style="-fx-cursor: hand;" text="Table is Active" textFill="WHITE" />
                             </children>
                         </VBox>
 
@@ -78,19 +91,31 @@
                             <VBox.margin><Insets top="15.0" /></VBox.margin>
                         </Separator>
 
-                        <VBox spacing="12.0">
-                            <HBox spacing="10.0">
-                                <Button maxWidth="Infinity" onAction="#onSaveNewClicked" styleClass="button, btn-primary" text="Add New" HBox.hgrow="ALWAYS" />
-                                <Button maxWidth="Infinity" onAction="#onUpdateClicked" styleClass="button, btn-secondary" text="Update" HBox.hgrow="ALWAYS" />
-                            </HBox>
-                            <Button maxWidth="Infinity" onAction="#onClearClicked" styleClass="button" text="Clear Selection" />
-                            <Button maxWidth="Infinity" onAction="#onDeleteClicked" styleClass="button, btn-danger" text="Delete Table" />
-                        </VBox>
+                        <GridPane hgap="10.0" vgap="10.0">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+                                <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+                            </columnConstraints>
+                            <rowConstraints>
+                                <RowConstraints vgrow="SOMETIMES" />
+                                <RowConstraints vgrow="SOMETIMES" />
+                            </rowConstraints>
+                            <children>
+                                <Button maxWidth="Infinity" onAction="#onSaveNewClicked" prefHeight="45.0" styleClass="button, btn-primary" text="Add New" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                
+                                <Button maxWidth="Infinity" onAction="#onUpdateClicked" prefHeight="45.0" styleClass="button" text="Update" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                
+                                <Button maxWidth="Infinity" onAction="#onClearClicked" prefHeight="45.0" styleClass="button, btn-secondary" text="Clear Form" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                
+                                <Button maxWidth="Infinity" onAction="#onDeleteClicked" prefHeight="45.0" styleClass="button, btn-danger" text="Delete Table" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                            </children>
+                        </GridPane>
+
                     </children>
                 </VBox>
 
             </children>
-        </HBox>
+        </GridPane>
     </center>
 
     <bottom>

@@ -1,16 +1,21 @@
 package gui;
 
+import java.io.IOException;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
-import java.io.IOException;
 
+/**
+ * Controller for the Employee/Manager Dashboard.
+ * Manages navigation to various management modules and handles permissions.
+ */
 public class Workers_GUI {
 
     @FXML private BorderPane managerRoot;
@@ -22,174 +27,119 @@ public class Workers_GUI {
     @FXML private Button btnManageWaitlist;
     @FXML private Button btnReports;
 
+    /**
+     * Initializes the dashboard, sets up permissions, and assigns unified 
+     * navigation handlers to all management buttons.
+     */
     @FXML
     public void initialize() {
         System.out.println("Manager Dashboard Initialized.");
 
-        // --- Permission logic for reports button ---
-
-        if(User_Session.getLoggedInUser().getIdentity().equals("Manager")) {
-        	btnReports.setVisible(true);
+        // --- Permission Logic ---
+        // Only users with 'Manager' identity can see and access the Reports section
+        if (User_Session.getLoggedInUser().getIdentity().equals("Manager")) {
+            btnReports.setVisible(true);
             btnReports.setManaged(true);
         }
-        
 
-        // --- Event Handlers ---
+        // --- Event Handlers (Using Unified Navigation) ---
 
         btnManageOpeningHours.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                System.out.println("Go to: Opening & Special Hours Management Screen");
-                try {
-                    // Load the FXML for the Opening Hours management panel
-                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/ManageHours.fxml"));
-                    Parent root = loader.load();
-
-                    // Retrieve the current stage from the button and switch scenes
-                    Stage stage = (Stage) btnManageOpeningHours.getScene().getWindow();
-                    stage.setScene(new Scene(root));
-                    stage.centerOnScreen();
-                    stage.setTitle("Employee Dashboard - Opening Hours Management");
-                    stage.show();
-                    
-                } catch (IOException e) {
-                    System.err.println("Navigation Error: Failed to load ManageHours.fxml");
-                    e.printStackTrace();
-                }
+                navigateTo("/gui/ManageHours.fxml", "Bistro - Opening Hours Management", event);
             }
         });
 
         btnManageTables.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                System.out.println("Go to: Manage Tables Screen");
-
-                try {
-                    FXMLLoader loader = new FXMLLoader(
-                        getClass().getResource("/gui/ManageTables.fxml")
-                    );
-                    Parent root = loader.load();
-
-                    Stage stage = (Stage) btnManageTables.getScene().getWindow();
-                    stage.setScene(new Scene(root));
-                    stage.centerOnScreen();
-
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                navigateTo("/gui/ManageTables.fxml", "Bistro - Tables Management", event);
             }
         });
-
 
         btnManageUsers.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                System.out.println("Go to: Manage Users Screen");
-                try {
-                    // Load the FXML for the management panel
-                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/ManageUsers.fxml"));
-                    Parent root = loader.load();
-
-                    // Retrieve the current stage from the button and switch scenes
-                    Stage stage = (Stage) btnManageOrders.getScene().getWindow();
-                    stage.setScene(new Scene(root));
-                    stage.centerOnScreen();
-                    stage.setTitle("Employee Dashboard - User Management");
-                    stage.show();
-                    
-                } catch (IOException e) {
-                    System.err.println("Navigation Error: Failed to load ManageUsers.fxml");
-                    e.printStackTrace();
-                }
+                navigateTo("/gui/ManageUsers.fxml", "Bistro - User Management", event);
             }
         });
 
         btnReports.setOnAction(new EventHandler<ActionEvent>() {
-        	@Override
+            @Override
             public void handle(ActionEvent event) {
-                System.out.println("Go to: Manage Report Screen");
-                try {
-                    // Load the FXML for the management panel
-                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/reports.fxml"));
-                    Parent root = loader.load();
-
-                    // Retrieve the current stage from the button and switch scenes
-                    Stage stage = (Stage) btnManageOrders.getScene().getWindow();
-                    stage.setScene(new Scene(root));
-                    stage.centerOnScreen();
-                    stage.setTitle("Employee Dashboard - reports Management");
-                    stage.show();
-                    
-                } catch (IOException e) {
-                    System.err.println("Navigation Error: Failed to load reports.fxml");
-                    e.printStackTrace();
-                }
+                navigateTo("/gui/reports.fxml", "Bistro - Reports Management", event);
             }
         });
-        
+
         btnManageOrders.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                /**
-                 * Navigates the employee to the Order Management Dashboard.
-                 * Loads the ManageOrders.fxml created for administrative CRUD operations.
-                 */
-                System.out.println("Go to: Orders Management Dashboard");
-                try {
-                    // Load the FXML for the management panel
-                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/ManageOrders.fxml"));
-                    Parent root = loader.load();
-
-                    // Retrieve the current stage from the button and switch scenes
-                    Stage stage = (Stage) btnManageOrders.getScene().getWindow();
-                    stage.setScene(new Scene(root));
-                    stage.centerOnScreen();
-                    stage.setTitle("Employee Dashboard - Order Management");
-                    stage.show();
-                    
-                } catch (IOException e) {
-                    System.err.println("Navigation Error: Failed to load ManageOrders.fxml");
-                    e.printStackTrace();
-                }
+                navigateTo("/gui/ManageOrders.fxml", "Bistro - Reservation Management", event);
             }
         });
 
         btnManageWaitlist.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                System.out.println("Go to: Waitlist Screen");
+                navigateTo("/gui/ManageWaitlist.fxml", "Bistro - Waitlist Management", event);
             }
         });
 
-        // --- Logout Logic ---
+        // --- Logout Logic (Returns to standard window size) ---
         btnLogout.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
                 System.out.println("Logging out...");
                 try {
-                    //MainScreen
                     FXMLLoader loader = new FXMLLoader(getClass().getResource("MainScreen.fxml"));
                     Parent root = loader.load();
                     Stage stage = (Stage) btnLogout.getScene().getWindow();
+                    
+                    // Reset maximized state before returning to the main screen
+                    stage.setMaximized(false);
                     stage.setScene(new Scene(root));
                     stage.centerOnScreen();
-
+                    stage.setTitle("Bistro - Main");
                 } catch (IOException e) {
+                    System.err.println("Logout Error: Failed to load MainScreen.fxml");
                     e.printStackTrace();
                 }
             }
         });
     }
-    
-//    public void setAdminPermission(boolean isAdmin) {
-//        this.isCurrentUserAdmin = isAdmin;
-//        if (!isAdmin) {
-//            btnReports.setVisible(false);
-//            btnReports.setManaged(false);
-//        } else {
-//            btnReports.setVisible(true);
-//            btnReports.setManaged(true);
-//        }
-//    }
+
+    /**
+     * Unified navigation method to ensure consistent Full Screen (Maximized) behavior.
+     * This method handles loading FXML, setting the scene, and maximizing the stage.
+     * * @param fxmlPath The path to the FXML file.
+     * @param title    The title of the new window.
+     * @param event    The ActionEvent triggered by the button click.
+     */
+    private void navigateTo(String fxmlPath, String title, ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Parent root = loader.load();
+
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+
+            stage.setScene(new Scene(root));
+            stage.setTitle(title);
+
+            stage.setResizable(true);
+
+            if (stage.isMaximized()) {
+                stage.setMaximized(false);
+            }
+            stage.setMaximized(true);
+            
+            stage.show();
+
+            System.out.println("Navigated to: " + title);
+
+        } catch (IOException e) {
+            System.err.println("Navigation Error: Failed to load " + fxmlPath);
+            e.printStackTrace();
+        }
+    }
 }

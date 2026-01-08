@@ -1,0 +1,169 @@
+package gui;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
+import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.cell.MapValueFactory;
+import javafx.stage.Stage;
+import messages.Message;
+import messages.MessageType;
+
+/**
+ * Controller for the Waitlist Management Screen.
+ * Now includes functionality to cancel a selected waitlist entry.
+ */
+public class ManageWaitlist_GUI {
+
+    public static ManageWaitlist_GUI instance;
+
+    @FXML private TableView<Map<String, Object>> waitlistTable;
+    @FXML private TableColumn<Map, Integer> colConfCode;
+    @FXML private TableColumn<Map, Integer> colGuests;
+    @FXML private TableColumn<Map, String> colCreated;
+    @FXML private TableColumn<Map, String> colStatus;
+
+    private ObservableList<Map<String, Object>> masterData = FXCollections.observableArrayList();
+
+    @FXML
+    public void initialize() {
+        instance = this;
+        setupTableColumns();
+        refreshData();
+    }
+
+    private void setupTableColumns() {
+        colConfCode.setCellValueFactory(new MapValueFactory<>("confCode"));
+        colGuests.setCellValueFactory(new MapValueFactory<>("guests"));
+        colCreated.setCellValueFactory(new MapValueFactory<>("created"));
+        colStatus.setCellValueFactory(new MapValueFactory<>("status"));
+        
+        waitlistTable.setItems(masterData);
+    }
+
+    /**
+     * Handles the cancellation of a selected waitlist entry.
+     * Extracts the waitlist ID from the selected Map and sends a request to the server.
+     */
+    @FXML
+    void onCancelClicked(ActionEvent event) {
+        // 1. Get the selected item from the table
+        final Map<String, Object> selected = waitlistTable.getSelectionModel().getSelectedItem();
+        
+        if (selected == null) {
+            showWarning("Selection Error", "Please select a waitlist entry to cancel.");
+            return;
+        }
+
+        // 2. Extract the IDs needed for cancellation
+        final Integer waitlistId = (Integer) selected.get("waitlistId");
+        final Integer confCode = (Integer) selected.get("confCode");
+
+        // 3. Confirmation dialog
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, 
+            "Are you sure you want to cancel waitlist for order #" + confCode + "?", 
+            ButtonType.YES, ButtonType.NO);
+        
+        alert.showAndWait().ifPresent(new java.util.function.Consumer<ButtonType>() {
+            @Override
+            public void accept(ButtonType response) {
+                if (response == ButtonType.YES) {
+                    // Send message to server to cancel this specific waitlist entry
+                    // You can use a specific MessageType if you have one for canceling by ID
+                    Message msg = new Message(MessageType.CANCEL_WAITLIST_AND_RESERVATION_BY_CODE, confCode);
+                    ConnectToServer_GUI.clientController.sendComplexObject(msg);
+                }
+            }
+        });
+    }
+
+    private void refreshData() {
+        if (ConnectToServer_GUI.clientController != null) {
+            ConnectToServer_GUI.clientController.sendGetAllActiveWaitlistsRequest();
+        }
+    }
+
+    public void updateTable(final List<Map<String, Object>> list) {
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                masterData.setAll(list);
+            }
+        });
+    }
+
+    @FXML
+    void onRefreshClicked(ActionEvent event) {
+        refreshData();
+    }
+
+    @FXML
+    void onBackClicked(ActionEvent event) {
+        instance = null;
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("/gui/Workers.fxml"));
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.centerOnScreen();
+            stage.setTitle("Bistro - Worker Dashboard");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void showWarning(String title, String content) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+    /**
+     * Displays a success alert and refreshes the table data.
+     * Called by Client_Controller upon successful cancellation.
+     * @param message The success message from the server.
+     */
+    public void showSuccessAndRefresh(final String message) {
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                Alert alert = new Alert(Alert.AlertType.INFORMATION, message);
+                alert.setTitle("Success");
+                alert.setHeaderText(null);
+                alert.showAndWait();
+                
+                // Refresh the table to show the entry has been removed/updated
+                onRefreshClicked(null);
+            }
+        });
+    }
+
+    /**
+     * Displays an error alert if the cancellation fails.
+     * @param message The error message from the server.
+     */
+    public void showErrorAlert(final String message) {
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                Alert alert = new Alert(Alert.AlertType.ERROR, message);
+                alert.setTitle("Cancellation Failed");
+                alert.setHeaderText(null);
+                alert.showAndWait();
+            }
+        });
+    }
+}

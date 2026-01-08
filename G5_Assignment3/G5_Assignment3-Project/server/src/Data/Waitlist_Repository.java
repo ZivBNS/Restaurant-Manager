@@ -7,7 +7,9 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import entities.Waitlist;
 import entities.WaitlistStatus;
@@ -357,5 +359,53 @@ public class Waitlist_Repository implements Repository_Interface<Waitlist> {
                 db.releaseConnection(pConn);
         }
         return expiredList;
+    }
+    /**
+     * Retrieves all active waitlist entries (WAITING, PWAITING, NOTIFIED).
+     * Performs a JOIN with the Reservations table to get dining details.
+     * * @return A List of Maps, where each Map represents a row with keys:
+     * "confCode", "guests", "created", "status", "waitlistId".
+     */
+    public List<Map<String, Object>> getAllActiveWaitlists() {
+        List<Map<String, Object>> activeWaitlists = new ArrayList<>();
+        
+        // SQL JOIN Query: Combines Waitlist status/time with Reservation details (Code, Diners)
+        String sql = "SELECT r.ConfirmationCode, r.NumberOfDiners, w.creationTime, w.Status, w.ID " +
+                     "FROM waitlist w " +
+                     "JOIN reservations r ON w.ReservationID = r.ID " +
+                     "WHERE w.Status IN ('WAITING', 'PWAITING', 'NOTIFIED') " +
+                     "ORDER BY w.creationTime ASC";
+
+        PooledConnection pConn = null;
+        try {
+            pConn = db.getConnection();
+            // Use try-with-resources to ensure Statement and ResultSet are closed
+            try (Statement stmt = pConn.getConnection().createStatement();
+                 ResultSet rs = stmt.executeQuery(sql)) {
+
+                while (rs.next()) {
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("confCode", rs.getInt("ConfirmationCode"));
+                    row.put("guests", rs.getInt("NumberOfDiners"));
+                    
+                    // Convert Timestamp to String for easier display in GUI, or keep as LocalDateTime
+                    // Here we keep it as String for simplicity in the TableView MapValueFactory
+                    row.put("created", rs.getTimestamp("creationTime").toString());
+                    
+                    row.put("status", rs.getString("Status"));
+                    row.put("waitlistId", rs.getInt("ID"));
+                    
+                    activeWaitlists.add(row);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[Waitlist Repository] Error fetching active waitlists: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            if (pConn != null) {
+                db.releaseConnection(pConn);
+            }
+        }
+        return activeWaitlists;
     }
 }

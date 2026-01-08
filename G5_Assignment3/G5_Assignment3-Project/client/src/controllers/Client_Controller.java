@@ -545,11 +545,20 @@ public class Client_Controller implements ChatIF {
 			public void handle(Message msg) {
 				if (Terminal_GUI.instance != null)
 					Terminal_GUI.instance.onCancellationResponse((String) msg.getContent(), true);
+				
+				if (ManageWaitlist_GUI.instance != null) {
+		            ManageWaitlist_GUI.instance.showSuccessAndRefresh((String) msg.getContent());
+		        }
 			}
+			
 		});
 		responseHandlers.put(MessageType.CANCEL_WAITLIST_AND_RESERVATION_FAILED, new ResponseHandler() {
 			@Override
 			public void handle(Message msg) {
+				if (ManageWaitlist_GUI.instance != null) {
+		            ManageWaitlist_GUI.instance.showErrorAlert((String) msg.getContent());
+		        }
+				
 				if (Terminal_GUI.instance != null)
 					Terminal_GUI.instance.onCancellationResponse((String) msg.getContent(), false);
 			}
@@ -570,6 +579,17 @@ public class Client_Controller implements ChatIF {
 					Terminal_GUI.instance.onJoinWaitlistSucceedResponse((int) msg.getContent());
 			}
 		});
+		
+		responseHandlers.put(MessageType.RETURN_ALL_ACTIVE_WAITLISTS, new ResponseHandler() {
+	        @Override
+	        public void handle(Message msg) {
+	            List<Map<String, Object>> list = (List<Map<String, Object>>) msg.getContent();
+	            // Update the GUI if it is currently open
+	            if (gui.ManageWaitlist_GUI.instance != null) {
+	                gui.ManageWaitlist_GUI.instance.updateTable(list);
+	            }
+	        }
+	    });
 		// -----------------------------------------------------------
 		// Forgot code(in terminal)
 		// -----------------------------------------------------------
@@ -851,4 +871,10 @@ public class Client_Controller implements ChatIF {
 	public void sendGetDailyReservationsRequest(int userId) {
 		sendComplexObject(new Message(MessageType.GET_RESERVATIONS_BY_USER,userId));
 	}
+	/**
+     * Sends a request to the server to get all active waitlist entries.
+     */
+    public void sendGetAllActiveWaitlistsRequest() {
+        sendComplexObject(new Message(MessageType.GET_ALL_ACTIVE_WAITLISTS, null));
+    }
 }

@@ -89,7 +89,8 @@ public class Server_Controller extends AbstractServer {
 		Command WaitlistCmd = new WaitlistCommand();
 		commands.put(MessageType.CANCEL_WAITLIST_AND_RESERVATION_BY_CODE, WaitlistCmd);
 		commands.put(MessageType.JOIN_WAITLIST, WaitlistCmd);
-
+		commands.put(MessageType.GET_ALL_ACTIVE_WAITLISTS, WaitlistCmd);
+		
 		// --- Reporting ---
 		Command reportCmd = new ReportCommand();
 		commands.put(MessageType.GET_MONTHLY_REPORT, reportCmd);
