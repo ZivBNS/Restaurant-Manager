@@ -40,9 +40,7 @@ public class BillPayment_GUI {
         String phoneToSend = User_Session.getActivePhone();
 
         if (phoneToSend != null) {
-            ConnectToServer_GUI.clientController.sendComplexObject(
-                new Message(MessageType.GET_LATEST_RESERVATION_BY_PHONE, phoneToSend)
-            );
+        	ConnectToServer_GUI.clientController.sendGetLatestBillByPhoneRequest(phoneToSend);
         } else {
             System.out.println("DEBUG: No phone found for this session!");
         }
@@ -93,10 +91,7 @@ public class BillPayment_GUI {
             showAlert("Error", "No bill loaded.");
             return;
         }
-
-        ConnectToServer_GUI.clientController.sendComplexObject(
-            new Message(MessageType.BILL_PAYMENT_REQUEST, currentBillId)
-        );
+        ConnectToServer_GUI.clientController.sendBillPaymentRequest(currentBillId);
     }
 
     @FXML

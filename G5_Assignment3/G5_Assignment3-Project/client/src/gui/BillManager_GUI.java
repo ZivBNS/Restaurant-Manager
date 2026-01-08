@@ -48,9 +48,7 @@ public class BillManager_GUI {
     }
 
     private void refreshTable() {
-        ConnectToServer_GUI.clientController.sendComplexObject(
-            new Message(MessageType.GET_ALL_BILLS, null)
-        );
+    	ConnectToServer_GUI.clientController.sendGetAllBillsRequest();
     }
 
     // פונקציה שה-Client_Controller יקרא לה כשחוזרת תשובה מהשרת
@@ -78,10 +76,7 @@ public class BillManager_GUI {
             // נשלח אובייקט מיוחד או שנעטוף ב-Bill דמי
             Bill newBill = new Bill(resId, resId, details, amount, "Unpaid", discount);
             // (הנחתי שהוספת בנאי כזה ל-Bill, אם לא - צריך להוסיף ב-entities.Bill)
-
-            ConnectToServer_GUI.clientController.sendComplexObject(
-                new Message(MessageType.CREATE_BILL, newBill)
-            );
+            ConnectToServer_GUI.clientController.sendCreateBillRequest(newBill);
             
             clearFields();
 
@@ -94,9 +89,7 @@ public class BillManager_GUI {
     private void deleteBill(ActionEvent event) {
         Bill selected = table.getSelectionModel().getSelectedItem();
         if (selected != null) {
-            ConnectToServer_GUI.clientController.sendComplexObject(
-                new Message(MessageType.DELETE_BILL, selected.getId())
-            );
+        	ConnectToServer_GUI.clientController.sendDeleteBillRequest(selected.getId());
         } else {
             showAlert("Selection Error", "Select a bill to delete.");
         }
@@ -106,9 +99,7 @@ public class BillManager_GUI {
     private void markPaid(ActionEvent event) {
         Bill selected = table.getSelectionModel().getSelectedItem();
         if (selected != null) {
-            ConnectToServer_GUI.clientController.sendComplexObject(
-                new Message(MessageType.BILL_PAYMENT_REQUEST, selected.getId())
-            );
+        	ConnectToServer_GUI.clientController.sendMarkBillAsPaidRequest(selected.getId());
         }
     }
 

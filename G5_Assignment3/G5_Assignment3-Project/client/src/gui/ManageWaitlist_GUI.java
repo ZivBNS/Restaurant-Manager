@@ -87,8 +87,7 @@ public class ManageWaitlist_GUI {
                 if (response == ButtonType.YES) {
                     // Send message to server to cancel this specific waitlist entry
                     // You can use a specific MessageType if you have one for canceling by ID
-                    Message msg = new Message(MessageType.CANCEL_WAITLIST_AND_RESERVATION_BY_CODE, confCode);
-                    ConnectToServer_GUI.clientController.sendComplexObject(msg);
+                	ConnectToServer_GUI.clientController.sendCancelWaitlistRequest(confCode);
                 }
             }
         });

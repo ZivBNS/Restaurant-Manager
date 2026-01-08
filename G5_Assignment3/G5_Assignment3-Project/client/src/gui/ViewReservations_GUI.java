@@ -300,8 +300,7 @@ public class ViewReservations_GUI {
             selected.setNumberOfDiners(diners);
 
             // Send updated object to server via the pipeline
-            Message msg = new Message(MessageType.UPDATE_RESERVATION_REQUEST, selected);
-            ConnectToServer_GUI.clientController.sendComplexObject(msg);
+            ConnectToServer_GUI.clientController.sendUpdateReservationRequest(selected);
 
         } catch (Exception e) {
             showErrorAlert("System Error", "Failed to process update: " + e.getMessage());
@@ -462,8 +461,7 @@ public class ViewReservations_GUI {
             @Override
             public void accept(ButtonType r) {
                 if (r == ButtonType.OK) {
-                    Message msg = new Message(MessageType.CANCEL_RESERVATION , selected.getId());
-                    ConnectToServer_GUI.clientController.sendComplexObject(msg);
+                	ConnectToServer_GUI.clientController.sendCancelReservationRequest(selected.getId());
                 }
             }
         });
