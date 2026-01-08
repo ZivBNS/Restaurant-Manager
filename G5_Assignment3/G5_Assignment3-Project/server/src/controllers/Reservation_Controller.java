@@ -31,7 +31,6 @@ public class Reservation_Controller {
             case UPDATE_RESERVATION_REQUEST: return updateReservation(msg);
             case GET_RESERVATIONS_BY_USER: return getReservationsByUser(msg);
             case CANCEL_RESERVATION: return cancelReservation(msg);
-            case CANCEL_RESERVATION_BY_CODE: return cancelReservationByCode(msg);
             case GET_ALL_PENDING_RESERVATIONS: return fetchAllPending(msg);
             case GET_ALL_PENDING_AND_ACTIVE_RESERVATIONS: return fetchAllPendingAndActive(msg);
             case ADMIN_UPDATE_RESERVATION: return processAdminUpdate(msg);
@@ -92,8 +91,7 @@ public class Reservation_Controller {
                 	return new Message(MessageType.RESERVATION_FAILED_ALREADY_BOOKED, "It looks like you're already booked with us for this time!\nPlease use your existing confirmation code, or cancel the previous reservation to make a new one.");
             }
             
-            
-            
+
             // 4. Capacity Check
             // Check availability for requested time using the Table Repository
             if (!tableRepository.isCapacityAvailable(startTime, endTime, reservation.getNumberOfDiners(), null)) {
@@ -244,20 +242,6 @@ public class Reservation_Controller {
         int reservationId = (int) msg.getContent();
         boolean success = reservationRepository.updateStatusByID(reservationId, ReservationStatus.CANCELED);
         return new Message(success ? MessageType.RESERVATION_CANCELED : MessageType.RESERVATION_CANCEL_FAILED, reservationId);
-    }
-    private static Message cancelReservationByCode(Message msg) {
-        int ConfirmationCode = (int) msg.getContent();
-        Message succeed = new Message(MessageType.RESERVATION_CANCELED, ConfirmationCode);
-        Message notSucceed = new Message(MessageType.RESERVATION_CANCEL_FAILED, ConfirmationCode);
-        
-        Reservation r= reservationRepository.getByConfirmationCode(ConfirmationCode);
-        if (r==null || r.getStatus().equals(ReservationStatus.CANCELED.toString()) || r.getStatus().equals("CANCELED") || r.getStatus().equals(ReservationStatus.COMPLETED.toString()) ||r.getStatus().equals("COMPLETED"))
-        	return notSucceed;
-        //boolean WasInWaitlist= WaitlistRepository.cancelByReservationId(int r.getId());
-        boolean canceled = reservationRepository.updateStatusByConfirmationCode(ConfirmationCode, ReservationStatus.CANCELED);
-        
-        if (canceled) return succeed;
-        return notSucceed;
     }
 
     private static Message fetchAllPending(Message msg) {

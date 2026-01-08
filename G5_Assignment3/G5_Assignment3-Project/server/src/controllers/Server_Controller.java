@@ -49,7 +49,6 @@ public class Server_Controller extends AbstractServer {
 		commands.put(MessageType.CREATE_INSTANT_RESERVATION, resCmd);
 		commands.put(MessageType.CREATE_RESERVATION, resCmd);
 		commands.put(MessageType.CANCEL_RESERVATION, resCmd);
-		commands.put(MessageType.CANCEL_RESERVATION_BY_CODE, resCmd);
 		commands.put(MessageType.GET_RESERVATIONS_BY_USER, resCmd);
 		commands.put(MessageType.UPDATE_RESERVATION_REQUEST, resCmd);
 		commands.put(MessageType.GET_ALL_PENDING_RESERVATIONS, resCmd);
@@ -57,6 +56,7 @@ public class Server_Controller extends AbstractServer {
 		commands.put(MessageType.ADMIN_UPDATE_RESERVATION, resCmd);
 		commands.put(MessageType.GET_LATEST_RESERVATION_BY_PHONE, resCmd);
 		commands.put(MessageType.GET_RESERVATION_HISTORY, resCmd);
+		
 		// --- Tables ---
 		Command tableCmd = new TableCommand();
 		commands.put(MessageType.GET_ALL_TABLES, tableCmd);
@@ -74,10 +74,8 @@ public class Server_Controller extends AbstractServer {
 		commands.put(MessageType.UPDATE_USER_DETAILS_REQUEST, userCmd);
 		commands.put(MessageType.FORGOT_CODE, userCmd);		
 		
-		
 		// --- Payment & Bills ---
 		Command payCmd = new PaymentCommand();
-		commands.put(MessageType.GET_LATEST_BILL_BY_PHONE, payCmd);
 		commands.put(MessageType.BILL_REQUEST, payCmd);
 		commands.put(MessageType.GET_BILL_BY_RESERVATION_ID, payCmd);
 		commands.put(MessageType.BILL_PAYMENT_REQUEST, payCmd);
@@ -94,14 +92,12 @@ public class Server_Controller extends AbstractServer {
 		// --- Reporting ---
 		Command reportCmd = new ReportCommand();
 		commands.put(MessageType.GET_MONTHLY_REPORT, reportCmd);
-		commands.put(MessageType.GENERATE_NEW_REPORT, reportCmd);
-		commands.put(MessageType.DELETE_REPORT, reportCmd);
+		
 		// --- Opening Hours Management ---
 		Command ohCmd = new OpeningHoursCommand();
 		commands.put(MessageType.GET_OPENING_HOURS, ohCmd);
 		commands.put(MessageType.UPDATE_REGULAR_HOURS, ohCmd);
 		commands.put(MessageType.ADD_SPECIAL_HOUR, ohCmd);
-		commands.put(MessageType.DELETE_REGULAR_HOURS, ohCmd);
 		commands.put(MessageType.DELETE_SPECIAL_HOUR, ohCmd);
 
 		// LOGOUT is special, handle directly or via command that returns null

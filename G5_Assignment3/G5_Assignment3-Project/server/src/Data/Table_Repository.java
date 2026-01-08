@@ -456,11 +456,16 @@ public class Table_Repository implements Repository_Interface<Restaurant_Table> 
                 pstmt.setInt(1, tableNumber);
                 int affectedRows = pstmt.executeUpdate();
                 
-                // Debug logging to track execution in the server console
                 System.out.println("[Table_Repository] Attempting to delete Table #" + tableNumber);
                 System.out.println("[Table_Repository] Database affected rows: " + affectedRows);
                 
-                return affectedRows > 0;
+                boolean success = affectedRows > 0;
+                
+                if (success) {
+                    init(); // Reload tables from DB to Restaurant instance
+                }
+                
+                return success;
             }
         } catch (SQLException e) {
             System.err.println("[Table_Repository] SQL Error during deletion: " + e.getMessage());

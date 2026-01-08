@@ -100,16 +100,21 @@ public class AddReservation_GUI {
      * Configures the guests spinner with a range from 1 to the largest table capacity.
      */
     private void setupGuestsSpinner() {
-        int maxCapacity = 10; // Default fallback
+        int maxCapacity = 0;
         
         // Dynamically find the largest table capacity in the restaurant
         List<Restaurant_Table> tables = Restaurant.getInstance().getTables();
+        
         if (tables != null && !tables.isEmpty()) {
-            for (int i = 0; i < tables.size(); i++) {
-                if (tables.get(i).getSize() > maxCapacity) {
-                    maxCapacity = tables.get(i).getSize();
+            for (Restaurant_Table table : tables) {
+                if (table.getSize() > maxCapacity) {
+                    maxCapacity = table.getSize();
                 }
             }
+        }
+
+        if (maxCapacity == 0) {
+            maxCapacity = 10;
         }
 
         // Initialize factory with min=1, max=maxCapacity, initial=2
@@ -198,12 +203,36 @@ public class AddReservation_GUI {
                     boolean isMidnightCrossing = !close.isAfter(open);
 
                     if (selectedDate.equals(LocalDate.now())) {
-                        LocalTime bufferTime = roundToNext30Min(LocalTime.now().plusHours(1));
+                        LocalTime now = LocalTime.now();
+
+                        // 1. Check if we missed the last slot already (for standard shifts)
+                        if (!isMidnightCrossing && now.isAfter(lastSlot)) {
+                            timeCombo.setPromptText("Closed Today");
+                            return; // Stop here, list remains empty
+                        }
+
+                        LocalTime bufferTime = roundToNext30Min(now.plusHours(1));
                         boolean shouldSkipToBuffer = false;
+
                         if (isMidnightCrossing) {
-                            if (bufferTime.isAfter(open) || bufferTime.isBefore(close)) shouldSkipToBuffer = true;
+                            // Logic for shifts crossing midnight (e.g. 20:00 to 02:00)
+                            // If buffer is between open and midnight OR midnight and close
+                            if (bufferTime.isAfter(open) || bufferTime.isBefore(close)) {
+                                shouldSkipToBuffer = true;
+                            }
                         } else {
-                            if (bufferTime.isAfter(open)) shouldSkipToBuffer = true;
+                            // Logic for standard shifts (e.g. 08:00 to 23:00)
+                            
+                            // Check if buffer wrapped around to next day (e.g. now 23:30 -> buffer 00:30)
+                            // If buffer is smaller than 'now', we wrapped around -> definitely closed.
+                            if (bufferTime.isBefore(now)) {
+                                timeCombo.setPromptText("Closed Today");
+                                return;
+                            }
+
+                            if (bufferTime.isAfter(open)) {
+                                shouldSkipToBuffer = true;
+                            }
                         }
 
                         if (shouldSkipToBuffer) firstAvailable = bufferTime;
@@ -218,13 +247,17 @@ public class AddReservation_GUI {
 
                         if (isValidTime) {
                             timeCombo.getItems().add(String.format("%02d:%02d", t.getHour(), t.getMinute()));
-                        } else break; 
+                        } else {
+                            // If we haven't started adding items yet and isValid is false, just continue searching
+                            // But if we hit invalid time AFTER finding valid times (in standard shift), break.
+                            if (!isMidnightCrossing && !timeCombo.getItems().isEmpty()) break;
+                        }
                         
                         if (t.equals(lastSlot)) break;
                         t = t.plusMinutes(30);
                         safetyBreaker++;
                     }
-                    timeCombo.setPromptText(timeCombo.getItems().isEmpty() ? "No slots available / Closed Today" : "Select Time");
+                    timeCombo.setPromptText(timeCombo.getItems().isEmpty() ? "Closed Today" : "Select Time");
                 } else {
                     timeCombo.setPromptText("Closed Today");
                 }
@@ -333,7 +366,7 @@ public class AddReservation_GUI {
         if (suggested == null) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Fully Booked");
-            alert.setContentText("No available tables for the requested date.");
+            alert.setContentText("No available tables for the requested date. /n  Or too much guests/n Please try another date.");
             alert.showAndWait();
             return;
         }

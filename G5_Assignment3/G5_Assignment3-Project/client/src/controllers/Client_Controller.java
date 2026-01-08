@@ -891,4 +891,37 @@ public class Client_Controller implements ChatIF {
     public void sendGetReservationHistoryRequest(int userId) {
         sendComplexObject(new Message(MessageType.GET_RESERVATION_HISTORY, userId));
     }
+    
+    
+    //------Table Management -----
+    /**
+     * Sends a request to get all restaurant tables.
+     */
+    public void sendGetAllTablesRequest() {
+        sendComplexObject(new Message(MessageType.GET_ALL_TABLES, null));
+    }
+
+    /**
+     * Sends a request to add a new table.
+     * @param table The new table object to add.
+     */
+    public void sendAddTableRequest(Restaurant_Table table) {
+        sendComplexObject(new Message(MessageType.ADD_TABLE_REQUEST, table));
+    }
+
+    /**
+     * Sends a request to update an existing table.
+     * @param table The table object with updated details.
+     */
+    public void sendUpdateTableRequest(Restaurant_Table table) {
+        sendComplexObject(new Message(MessageType.UPDATE_TABLE_REQUEST, table));
+    }
+
+    /**
+     * Sends a request to delete a table by its number.
+     * @param tableNumber The number of the table to delete.
+     */
+    public void sendDeleteTableRequest(int tableNumber) {
+        sendComplexObject(new Message(MessageType.DELETE_TABLE_REQUEST, tableNumber));
+    }
 }

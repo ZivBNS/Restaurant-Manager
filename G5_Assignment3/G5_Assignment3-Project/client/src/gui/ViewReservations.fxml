@@ -83,7 +83,7 @@
                             <children>
                                 <Button onAction="#onBackClicked" styleClass="button, btn-secondary" text="Back" />
                                 <Button onAction="#onUpdateClicked" styleClass="button, btn-primary" text="Update" />
-                                <Button onAction="#onDeleteClicked" styleClass="button, btn-danger" text="Delete" />
+                                <Button onAction="#onDeleteClicked" styleClass="button, btn-danger" text="Cancel" />
                             </children>
                             <VBox.margin>
                                 <Insets top="10.0" />
@@ -101,9 +101,6 @@
             <padding>
                 <Insets bottom="15" top="10" />
             </padding>
-            <children>
-                <Label style="-fx-font-size: 10px; -fx-text-fill: #7f85a3;" text="Bistro Management System v1.0" />
-            </children>
         </VBox>
     </bottom>
 
