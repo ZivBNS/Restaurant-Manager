@@ -1,16 +1,10 @@
 package entities;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-/**
- * Represents a Reservation entity in the Bistro system. This class is
- * Serializable to allow transmission between Client and Server.
- */
-public class Reservation implements Serializable {
 
-	private static final long serialVersionUID = 1L;
+public class Reservation {
 
 	private int id;
 	private Integer userId;
@@ -27,7 +21,7 @@ public class Reservation implements Serializable {
 	private LocalDateTime creationTime;
 	private boolean remindedPreArrival;
 	private boolean remindedDeparture;
-
+	private Bill bill;
 	/**
 	 * Default constructor for serialization frameworks.
 	 */
@@ -240,7 +234,13 @@ public class Reservation implements Serializable {
 	public void setRemindedDeparture(boolean remindedDeparture) {
 		this.remindedDeparture = remindedDeparture;
 	}
+	public Bill getBill() {
+        return bill;
+    }
 
+    public void setBill(Bill bill) {
+        this.bill = bill;
+    }
 	@Override
 	public String toString() {
 		return "Reservation [id=" + id + ", userId=" + userId + ", tableId=" + tableId + ", phone=" + phone + ", email="

@@ -862,4 +862,55 @@ public class Reservation_Repository {
 
         return null;
     }
+    /**
+     * Retrieves only COMPLETED reservations for a specific subscriber ID,
+     * including the associated Bill.
+     */
+    public List<Reservation> getHistoryByUserId(int userId) {
+        List<Reservation> results = new ArrayList<>();
+        
+        String sql = "SELECT r.*, " +
+                     "b.ID AS BillID, b.TotalAmount, b.BillDetails, b.DiscountPercentage, b.Status AS BillStatus " +
+                     "FROM Reservations r " +
+                     "LEFT JOIN Bills b ON r.ID = b.ReservationID " +
+                     "WHERE r.UserID = ? AND r.Status = 'Completed' " +
+                     "ORDER BY r.ReservationStartTime DESC";
+        
+        PooledConnection pConn = null;
+        try {
+            pConn = db.getConnection();
+            try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(sql)) {
+                pstmt.setInt(1, userId);
+                
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    while (rs.next()) {
+                        Reservation res = extractReservationFromResultSet(rs);
+                        
+                        int billId = rs.getInt("BillID");
+                        if (billId > 0) {
+                            // (int id, int reservationId, String billDetails, double totalAmount, String status, double discountRate)
+                            entities.Bill bill = new entities.Bill(
+                                billId,                             // id
+                                res.getId(),                        // reservationId
+                                rs.getString("BillDetails"),        // billDetails
+                                rs.getDouble("TotalAmount"),        // totalAmount
+                                rs.getString("BillStatus"),         // status
+                                rs.getDouble("DiscountPercentage")  // discountRate
+                            );
+                            
+                            res.setBill(bill);
+                        }
+                        
+                        results.add(res);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            if (pConn != null)
+                db.releaseConnection(pConn);
+        }
+        return results;
+    }
 }

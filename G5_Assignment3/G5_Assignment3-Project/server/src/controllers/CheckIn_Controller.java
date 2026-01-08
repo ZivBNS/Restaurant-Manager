@@ -38,7 +38,7 @@ public class CheckIn_Controller {
         Reservation reservation=reservationRepository.getByConfirmationCode(confCode);
         if (reservation == null)
             return new Message(MessageType.CHECK_IN_FAIL, "The code is invalid, please try again");        
-        if (!reservation.getStatus().equalsIgnoreCase(ReservationStatus.ACTIVE.toString())) {
+        if (reservation.getStatus().equalsIgnoreCase(ReservationStatus.ACTIVE.toString())) {
             return new Message(MessageType.CHECK_IN_FAIL, "Your reservation is already in progress!");
         }
         if (!reservation.getStatus().equalsIgnoreCase(ReservationStatus.PENDING.toString())) {

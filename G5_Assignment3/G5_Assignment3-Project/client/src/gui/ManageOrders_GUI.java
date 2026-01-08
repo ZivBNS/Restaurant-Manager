@@ -16,6 +16,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -78,58 +79,85 @@ public class ManageOrders_GUI {
 	 * Initializes the controller. Sets up table columns, spinner, status dropdown,
 	 * and dark-themed component styling.
 	 */
-	@FXML
-	public void initialize() {
-		instance = this;
-		setupAdminTable();
-		restrictDatePickerRange();
-		setupUserIDListener();
-		setupComboBoxStyling();
+    @FXML
+    public void initialize() {
+        instance = this;
+        
+        // 1. Basic Setup
+        setupAdminTable();
+        restrictDatePickerRange();
+        setupUserIDListener();
+        setupComboBoxStyling();
 
-		// Initialize Status choices
-		cbStatus.getItems().addAll("Pending", "Active", "Completed", "No_show", "Canceled");
-		cbStatus.setValue("Pending");
-		cbStatus.setDisable(true); // Locked for new reservations by default
+        // --- SORTING LOGIC START ---
+        
+        // Wrap the ObservableList in a SortedList. 
+        // 'masterList' is the list where you add data from the server.
+        SortedList<Reservation> sortedData = new SortedList<>(masterData);
 
-		// Initialize Guests Spinner
-		SpinnerValueFactory<Integer> valueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 20, 2);
-		spGuests.setValueFactory(valueFactory);
+        // Bind the SortedList comparator to the TableView comparator.
+        // This ensures that clicking column headers sorts the data automatically.
+        sortedData.comparatorProperty().bind(adminTable.comparatorProperty());
 
-		// Fetch operational data from server
-		ConnectToServer_GUI.clientController.sendGetOpeningHoursRequest();
-		refreshAdminData();
+        // Set the sorted data into the TableView
+        adminTable.setItems(sortedData);
 
-		// Listener for table row selection
-		adminTable.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Reservation>() {
-			@Override
-			public void changed(ObservableValue<? extends Reservation> obs, Reservation oldV, Reservation newV) {
-				if (newV != null) {
-					populateForm(newV);
-					setEditMode(true);
-				}
-			}
-		});
+        // Define default sort order (by Status column)
+        colStatus.setSortType(TableColumn.SortType.ASCENDING);
+        adminTable.getSortOrder().add(colStatus);
+        
+        // --- SORTING LOGIC END ---
 
-		// Listener for DatePicker changes to reload time slots
-		datePicker.valueProperty().addListener(new ChangeListener<LocalDate>() {
-			@Override
-			public void changed(ObservableValue<? extends LocalDate> obs, LocalDate oldV, LocalDate newV) {
-				if (newV != null) {
-					loadDynamicHours(newV, null);
-				}
-			}
-		});
+        // 2. Initialize UI Components
+        
+        // Initialize Status choices
+        cbStatus.getItems().addAll("Pending", "Active", "Completed", "No_show", "Canceled");
+        cbStatus.setValue("Pending");
+        cbStatus.setDisable(true); // Locked for new reservations by default
 
-		// Listener to reset verification if UserID text is edited manually
-		txtUserID.textProperty().addListener(new ChangeListener<String>() {
-			@Override
-			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-				if (!newValue.equals(oldValue)) {
-					activeInternalUserId = null;
-				}
-			}
-		});
-	}
+        // Initialize Guests Spinner (1 to 20 guests, default 2)
+        SpinnerValueFactory<Integer> valueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 20, 2);
+        spGuests.setValueFactory(valueFactory);
+
+        // 3. Fetch Data
+        
+        // Fetch operational data and reservations from server
+        ConnectToServer_GUI.clientController.sendGetOpeningHoursRequest();
+        refreshAdminData();
+
+        // 4. Listeners (Using Anonymous Inner Classes)
+
+        // Listener for table row selection to populate the form
+        adminTable.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Reservation>() {
+            @Override
+            public void changed(ObservableValue<? extends Reservation> obs, Reservation oldV, Reservation newV) {
+                if (newV != null) {
+                    populateForm(newV);
+                    setEditMode(true);
+                }
+            }
+        });
+        
+        // Listener for DatePicker changes to reload time slots dynamically
+        datePicker.valueProperty().addListener(new ChangeListener<LocalDate>() {
+            @Override
+            public void changed(ObservableValue<? extends LocalDate> obs, LocalDate oldV, LocalDate newV) {
+                if (newV != null) {
+                    loadDynamicHours(newV, null);
+                }
+            }
+        });
+
+        // Listener to reset verification if UserID text is edited manually
+        txtUserID.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                if (!newValue.equals(oldValue)) {
+                    activeInternalUserId = null;
+                }
+            }
+        });
+    }
 
 	/**
 	 * Applies dark mode styling to the Time ComboBox cells to match AddReservation

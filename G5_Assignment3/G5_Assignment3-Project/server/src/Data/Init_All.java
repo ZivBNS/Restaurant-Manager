@@ -45,7 +45,8 @@ public class Init_All {
             initUsers(con, stmt);
             initReservations(con, stmt); 
             initWaitlists(con, stmt);    
-            initMonthlyReports(con, stmt); 
+            initMonthlyReports(con, stmt);
+            initBills(con, stmt);
             
             System.out.println("Initialization completed successfully.");
         } catch (SQLException e) {
@@ -163,7 +164,63 @@ public class Init_All {
             e.printStackTrace();
         }
     }
+    /**
+     * Generates bills for all 'Completed' reservations.
+     * Applies a 15% discount if the customer is a Subscriber.
+     */
+    private static void initBills(Connection con, Statement stmt) {
+        // Query to join Reservations with Users to identify subscribers for discount logic
+        String selectSql = "SELECT r.ID, u.Identity " +
+                           "FROM Reservations r " +
+                           "LEFT JOIN Users u ON r.UserID = u.ID " +
+                           "WHERE r.Status = 'Completed'";
 
+        String insertSql = "INSERT INTO Bills (ReservationID, TotalAmount, BillDetails, DiscountPercentage, Status) " +
+                           "VALUES (?, ?, ?, ?, ?)";
+
+        try (ResultSet rs = stmt.executeQuery(selectSql);
+             PreparedStatement ps = con.prepareStatement(insertSql)) {
+
+            int count = 0;
+            while (rs.next()) {
+                int resId = rs.getInt("ID");
+                String identity = rs.getString("Identity"); // 'Subscriber', 'Employee', etc.
+
+                // 1. Generate Random Total Amount (50.00 to 450.00)
+                double rawAmount = 50.0 + (Math.random() * 400.0);
+                double totalAmount = Math.round(rawAmount * 100.0) / 100.0;
+
+                // 2. Determine Discount (15% for Subscribers)
+                double discount = 0.0;
+                if ("Subscriber".equalsIgnoreCase(identity)) {
+                    discount = 15.0;
+                }
+
+                // 3. Generate Details based on price
+                String details;
+                if (totalAmount < 100) details = "Light Lunch Special + Drinks";
+                else if (totalAmount < 250) details = "Standard Dinner Service (2 Guests)";
+                else details = "Premium Chef's Special + Wine Bottle";
+
+                // 4. Set Values
+                ps.setInt(1, resId);
+                ps.setDouble(2, totalAmount);
+                ps.setString(3, details);
+                ps.setDouble(4, discount);
+                ps.setString(5, "Paid"); // Assuming completed reservations are paid
+
+                ps.addBatch();
+                count++;
+            }
+
+            ps.executeBatch();
+            System.out.println("Bills: Generated " + count + " bills for completed reservations.");
+
+        } catch (SQLException e) {
+            System.err.println("Error initializing bills: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
     /**
      * Initializes a set of dummy subscribers for the system.
      */

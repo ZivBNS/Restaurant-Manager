@@ -31,10 +31,14 @@ public class ManageWaitlist_GUI {
     public static ManageWaitlist_GUI instance;
 
     @FXML private TableView<Map<String, Object>> waitlistTable;
-    @FXML private TableColumn<Map, Integer> colConfCode;
-    @FXML private TableColumn<Map, Integer> colGuests;
-    @FXML private TableColumn<Map, String> colCreated;
-    @FXML private TableColumn<Map, String> colStatus;
+    @SuppressWarnings("rawtypes")
+	@FXML private TableColumn<Map, Integer> colConfCode;
+    @SuppressWarnings("rawtypes")
+	@FXML private TableColumn<Map, Integer> colGuests;
+    @SuppressWarnings("rawtypes")
+	@FXML private TableColumn<Map, String> colCreated;
+    @SuppressWarnings("rawtypes")
+	@FXML private TableColumn<Map, String> colStatus;
 
     private ObservableList<Map<String, Object>> masterData = FXCollections.observableArrayList();
 
@@ -69,7 +73,7 @@ public class ManageWaitlist_GUI {
         }
 
         // 2. Extract the IDs needed for cancellation
-        final Integer waitlistId = (Integer) selected.get("waitlistId");
+        //final Integer waitlistId = (Integer) selected.get("waitlistId");
         final Integer confCode = (Integer) selected.get("confCode");
 
         // 3. Confirmation dialog

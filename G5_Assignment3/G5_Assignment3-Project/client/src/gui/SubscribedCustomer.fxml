@@ -43,6 +43,8 @@
                         
                         <Button maxWidth="Infinity" onAction="#onUpdateProfile" prefHeight="45" styleClass="button, btn-secondary" text="Update Personal Details" />
                         
+                        <Button maxWidth="Infinity" onAction="#onOrderHistory" prefHeight="45" styleClass="button, btn-secondary" text="Order History" />
+                        
                         <Button maxWidth="Infinity" onAction="#onPayBill" prefHeight="45" styleClass="button, btn-secondary" text="Pay My Bill" />
 
                         <Separator opacity="0.3">

@@ -35,8 +35,8 @@
             <padding><Insets bottom="20" left="25" right="25" top="10" /></padding>
             
             <columnConstraints>
-                <ColumnConstraints hgrow="ALWAYS" percentWidth="30.0" minWidth="430.0" />
-                <ColumnConstraints hgrow="ALWAYS" percentWidth="70.0" />
+                <ColumnConstraints hgrow="ALWAYS" percentWidth="35.0" />
+                <ColumnConstraints hgrow="ALWAYS" percentWidth="65.0" />
             </columnConstraints>
             
             <rowConstraints>
@@ -45,25 +45,24 @@
 
             <children>
                 
-                <VBox spacing="15.0" styleClass="card" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                <VBox alignment="TOP_CENTER" spacing="15.0" styleClass="card" GridPane.columnIndex="0" GridPane.rowIndex="0">
                     <padding><Insets bottom="20" left="20" right="20" top="20" /></padding>
                     <children>
                         <Label styleClass="card-title" text="Weekly Schedule (Sun - Sat)" />
                         <Separator opacity="0.1" />
                         
-                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                        <HBox alignment="CENTER" spacing="12.0">
                             <children>
                                 <Label minWidth="100.0" prefWidth="100.0" styleClass="schedule-header-label" text="Day" />
                                 <Label minWidth="120.0" prefWidth="120.0" styleClass="schedule-header-label" text="Open" />
                                 <Label minWidth="120.0" prefWidth="120.0" styleClass="schedule-header-label" text="Close" />
                                 <Label styleClass="schedule-header-label" text="Active" />
                             </children>
-                            <padding><Insets left="5.0" /></padding>
                         </HBox>
 
                         <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: transparent;" vbarPolicy="NEVER" VBox.vgrow="ALWAYS">
                             <content>
-                                <VBox fx:id="vboxRegularHours" spacing="15.0" />
+                                <VBox fx:id="vboxRegularHours" alignment="TOP_CENTER" fillWidth="false" spacing="15.0" />
                             </content>
                         </ScrollPane>
 

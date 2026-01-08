@@ -36,6 +36,7 @@ public class Reservation_Controller {
             case GET_ALL_PENDING_AND_ACTIVE_RESERVATIONS: return fetchAllPendingAndActive(msg);
             case ADMIN_UPDATE_RESERVATION: return processAdminUpdate(msg);
             case GET_LATEST_RESERVATION_BY_PHONE: return getLatestReservationById(msg);
+            case GET_RESERVATION_HISTORY: return getReservationHistory(msg);
             default: return null;
         }
     }
@@ -272,5 +273,19 @@ public class Reservation_Controller {
         return reservationRepository.updateByEmployee(updatedRes) ? 
             new Message(MessageType.ADMIN_UPDATE_SUCCESS, null) : 
             new Message(MessageType.ERROR_RESPONSE, "Update failed.");
+    }
+    /**
+     * Handles the request to fetch reservation history for a user.
+     * * @param msg The message containing the User ID (Integer).
+     * @return A message containing the list of reservations.
+     */
+    private static Message getReservationHistory(Message msg) {
+        try {
+            int userId = (int) msg.getContent();
+            List<Reservation> history = reservationRepository.getHistoryByUserId(userId);
+            return new Message(MessageType.RETURN_RESERVATION_HISTORY, history);
+        } catch (Exception e) {
+            return new Message(MessageType.ERROR_RESPONSE, "Failed to fetch history: " + e.getMessage());
+        }
     }
 }

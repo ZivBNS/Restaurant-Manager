@@ -51,7 +51,11 @@ public class SubscribedCustomer_GUI {
     private void onShowBarcode(ActionEvent event) {
     	loadScreen(event, "/gui/BarcodeView.fxml", "Subscriber Barcode");
     }
-
+    
+    @FXML
+    void onOrderHistory(ActionEvent event) {
+        loadScreen(event, "/gui/OrderHistory.fxml", "My Order History");
+    }
    /* @FXML
     void onUpdateProfile(ActionEvent event) {
         try {

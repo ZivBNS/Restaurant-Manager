@@ -2,211 +2,303 @@ package gui;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.stage.Stage;
-import java.io.IOException;
-import java.util.List;
-import entities.Restaurant_Table;
+import javafx.util.Callback;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.event.ActionEvent;
+import java.util.List;
+import entities.Restaurant_Table;
 import messages.Message;
 import messages.MessageType;
 
+/**
+ * Controller class for the Manage Tables screen. Handles the creation, update,
+ * deletion, and viewing of restaurant tables.
+ */
 public class ManageTables_GUI {
 
-    @FXML private TableView<Restaurant_Table> tablesTable;
-    @FXML private TableColumn<Restaurant_Table, Integer> colTableNumber;
-    @FXML private TableColumn<Restaurant_Table, Integer> colTableSize;
-    @FXML private TableColumn<Restaurant_Table, String> colActive;
+	@FXML
+	private TableView<Restaurant_Table> tablesTable;
+	@FXML
+	private TableColumn<Restaurant_Table, Integer> colTableNumber;
+	@FXML
+	private TableColumn<Restaurant_Table, Integer> colTableSize;
+	@FXML
+	private TableColumn<Restaurant_Table, String> colActive;
 
-    @FXML private TextField tableNumberField;
-    @FXML private TextField tableSizeField;
-    @FXML private CheckBox activeCheckBox;
-    
-    public static ManageTables_GUI instance;
+	@FXML
+	private TextField tableNumberField;
+	@FXML
+	private TextField tableSizeField;
+	@FXML
+	private CheckBox activeCheckBox;
 
-    @FXML
-    public void initialize() {
-        instance = this;
+	public static ManageTables_GUI instance;
 
-        // הגדרת העמודות
-        colTableNumber.setCellValueFactory(data ->
-            new SimpleIntegerProperty(data.getValue().getTableNumber()).asObject()
-        );
+	/**
+	 * Initializes the controller class. Sets up the table columns, selection
+	 * listeners, and fetches initial data.
+	 */
+	@FXML
+	public void initialize() {
+		instance = this;
 
-        colTableSize.setCellValueFactory(data ->
-            new SimpleIntegerProperty(data.getValue().getSize()).asObject()
-        );
+		// --- Column Setup (Using Anonymous Inner Classes instead of Lambdas) ---
 
-        colActive.setCellValueFactory(data ->
-            new SimpleStringProperty(data.getValue().isActive() ? "Yes" : "No")
-        );
+		// Table Number Column
+		colTableNumber.setCellValueFactory(
+				new Callback<CellDataFeatures<Restaurant_Table, Integer>, ObservableValue<Integer>>() {
+					@Override
+					public ObservableValue<Integer> call(CellDataFeatures<Restaurant_Table, Integer> param) {
+						return new SimpleIntegerProperty(param.getValue().getTableNumber()).asObject();
+					}
+				});
 
-        // האזנה לבחירה בטבלה למילוי השדות
-        tablesTable.getSelectionModel().selectedItemProperty()
-            .addListener((obs, oldSelection, selected) -> {
-                if (selected != null) {
-                    tableNumberField.setText(String.valueOf(selected.getTableNumber()));
-                    tableSizeField.setText(String.valueOf(selected.getSize()));
-                    activeCheckBox.setSelected(selected.isActive());
-                }
-            });
-        
-        // טעינת נתונים מהשרת
-        ConnectToServer_GUI.clientController.sendComplexObject(
-                new Message(MessageType.GET_ALL_TABLES, null)
-        );
-    }
+		// Table Size Column
+		colTableSize.setCellValueFactory(
+				new Callback<CellDataFeatures<Restaurant_Table, Integer>, ObservableValue<Integer>>() {
+					@Override
+					public ObservableValue<Integer> call(CellDataFeatures<Restaurant_Table, Integer> param) {
+						return new SimpleIntegerProperty(param.getValue().getSize()).asObject();
+					}
+				});
 
-    /**
-     * מנקה את השדות ואת הבחירה בטבלה
-     */
-    @FXML
-    private void onClearClicked() {
-        tablesTable.getSelectionModel().clearSelection();
-        tableNumberField.clear();
-        tableSizeField.clear();
-        activeCheckBox.setSelected(false);
-    }
+		// Active Status Column
+		colActive.setCellValueFactory(
+				new Callback<CellDataFeatures<Restaurant_Table, String>, ObservableValue<String>>() {
+					@Override
+					public ObservableValue<String> call(CellDataFeatures<Restaurant_Table, String> param) {
+						return new SimpleStringProperty(param.getValue().isActive() ? "Yes" : "No");
+					}
+				});
 
-    @FXML
-    private void onSaveNewClicked() {
-        // --- Validation ---
-        if (tableNumberField.getText().isEmpty() || tableSizeField.getText().isEmpty()) {
-            showAlert("Please enter both table number and size.");
-            return;
-        }
+		// --- Table Selection Listener ---
+		tablesTable.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Restaurant_Table>() {
+			@Override
+			public void changed(ObservableValue<? extends Restaurant_Table> observable, Restaurant_Table oldValue,
+					Restaurant_Table newValue) {
+				if (newValue != null) {
+					tableNumberField.setText(String.valueOf(newValue.getTableNumber()));
+					tableSizeField.setText(String.valueOf(newValue.getSize()));
+					activeCheckBox.setSelected(newValue.isActive());
+				}
+			}
+		});
 
-        int tableNumber;
-        int tableSize;
-        try {
-            tableNumber = Integer.parseInt(tableNumberField.getText());
-            tableSize = Integer.parseInt(tableSizeField.getText());
-        } catch (NumberFormatException e) {
-            showAlert("Table number and size must be valid numbers.");
-            return;
-        }
-        
-        if ((tableNumber < 0) || (tableSize < 0)) {
-            showAlert("Table number and size cannot be negative.");
-            return;
-        }
+		// --- Initial Data Load ---
+		refreshData();
+	}
 
-        boolean active = activeCheckBox.isSelected();
+	/**
+	 * Sends a request to the server to get the current list of tables.
+	 */
+	private void refreshData() {
+		ConnectToServer_GUI.clientController.sendComplexObject(new Message(MessageType.GET_ALL_TABLES, null));
+	}
 
-        // --- Duplicate check (CLIENT SIDE) ---
-        boolean exists = tablesTable.getItems().stream()
-            .anyMatch(t -> t.getTableNumber() == tableNumber);
+	/**
+	 * Event handler for the Refresh button. Reloads data from the server and clears
+	 * the form.
+	 */
+	@FXML
+	private void onRefreshClicked() {
+		refreshData();
+		onClearClicked();
+	}
 
-        if (exists) {
-            showAlert("Table number " + tableNumber + " already exists.");
-            return;
-        }
+	/**
+	 * Clears all input fields and deselects any table from the TableView.
+	 */
+	@FXML
+	private void onClearClicked() {
+		tablesTable.getSelectionModel().clearSelection();
+		tableNumberField.clear();
+		tableSizeField.clear();
+		activeCheckBox.setSelected(false);
+	}
 
-        // --- Create and send ADD request ---
-        Restaurant_Table newTable = new Restaurant_Table(-1, tableNumber, tableSize, active);
+	/**
+	 * Handles the creation of a new table. Validates input, checks for duplicates
+	 * locally, and sends a request to the server.
+	 */
+	@FXML
+	private void onSaveNewClicked() {
+		// --- Validation ---
+		if (tableNumberField.getText().isEmpty() || tableSizeField.getText().isEmpty()) {
+			showAlert("Please enter both table number and size.");
+			return;
+		}
 
-        ConnectToServer_GUI.clientController.sendComplexObject(
-            new Message(MessageType.ADD_TABLE_REQUEST, newTable)
-        );
+		int tableNumber;
+		int tableSize;
+		try {
+			tableNumber = Integer.parseInt(tableNumberField.getText());
+			tableSize = Integer.parseInt(tableSizeField.getText());
+		} catch (NumberFormatException e) {
+			showAlert("Table number and size must be valid numbers.");
+			return;
+		}
 
-        onClearClicked();
-    }
+		if ((tableNumber < 0) || (tableSize < 0)) {
+			showAlert("Table number and size cannot be negative.");
+			return;
+		}
 
-    @FXML
-    private void onUpdateClicked() {
-        Restaurant_Table selected = tablesTable.getSelectionModel().getSelectedItem();
+		boolean active = activeCheckBox.isSelected();
 
-        if (selected == null) {
-            showAlert("Please select a table from the list to update.");
-            return;
-        }
+		// --- Duplicate check (CLIENT SIDE - Standard Loop) ---
+		boolean exists = false;
+		for (Restaurant_Table t : tablesTable.getItems()) {
+			if (t.getTableNumber() == tableNumber) {
+				exists = true;
+				break;
+			}
+		}
 
-        // --- Validation ---
-        int tableNumber;
-        int tableSize;
-        try {
-            tableNumber = Integer.parseInt(tableNumberField.getText());
-            tableSize = Integer.parseInt(tableSizeField.getText());
-        } catch (NumberFormatException e) {
-            showAlert("Values must be numbers.");
-            return;
-        }
+		if (exists) {
+			showAlert("Table number " + tableNumber + " already exists.");
+			return;
+		}
 
-        boolean active = activeCheckBox.isSelected();
+		// --- Create Object and Send Request ---
+		Restaurant_Table newTable = new Restaurant_Table(-1, tableNumber, tableSize, active);
 
-        // --- Duplicate check (CLIENT SIDE) ---
-        // מוודא שאנחנו לא משנים מספר שולחן למספר שכבר קיים אצל שולחן אחר
-        boolean existsForOther = tablesTable.getItems().stream()
-            .anyMatch(t -> t.getTableNumber() == tableNumber && t.getId() != selected.getId());
+		ConnectToServer_GUI.clientController.sendComplexObject(new Message(MessageType.ADD_TABLE_REQUEST, newTable));
 
-        if (existsForOther) {
-            showAlert("Table number " + tableNumber + " is already taken by another table.");
-            return;
-        }
+		onClearClicked();
+		refreshData();
+	}
 
-        // --- Update object ---
-        selected.setTableNumber(tableNumber);
-        selected.setTableSize(tableSize);
-        selected.setActive(active);
+	/**
+	 * Handles the update of an existing table. Validates input and ensures table
+	 * number uniqueness.
+	 */
+	@FXML
+	private void onUpdateClicked() {
+		Restaurant_Table selected = tablesTable.getSelectionModel().getSelectedItem();
 
-        // --- Send UPDATE request ---
-        ConnectToServer_GUI.clientController.sendComplexObject(
-            new Message(MessageType.UPDATE_TABLE_REQUEST, selected)
-        );
+		if (selected == null) {
+			showAlert("Please select a table from the list to update.");
+			return;
+		}
 
-        onClearClicked();
-    }
+		// --- Validation ---
+		int tableNumber;
+		int tableSize;
+		try {
+			tableNumber = Integer.parseInt(tableNumberField.getText());
+			tableSize = Integer.parseInt(tableSizeField.getText());
+		} catch (NumberFormatException e) {
+			showAlert("Values must be numbers.");
+			return;
+		}
 
-    @FXML
-    private void onDeleteClicked() {
-        Restaurant_Table selected = tablesTable.getSelectionModel().getSelectedItem();
+		boolean active = activeCheckBox.isSelected();
 
-        if (selected == null) {
-            showAlert("Please select a table to delete.");
-            return;
-        }
+		// --- Duplicate check (CLIENT SIDE - Standard Loop) ---
+		// Ensure we don't accidentally assign a Table Number that belongs to ANOTHER
+		// table
+		boolean existsForOther = false;
+		for (Restaurant_Table t : tablesTable.getItems()) {
+			if (t.getTableNumber() == tableNumber && t.getId() != selected.getId()) {
+				existsForOther = true;
+				break;
+			}
+		}
 
-        int tableNumber = selected.getTableNumber();
+		if (existsForOther) {
+			showAlert("Table number " + tableNumber + " is already taken by another table.");
+			return;
+		}
 
-        // אופציונלי: דיאלוג אישור מחיקה
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to delete Table #" + tableNumber + "?", ButtonType.YES, ButtonType.NO);
-        confirm.showAndWait();
-        if (confirm.getResult() != ButtonType.YES) {
-            return;
-        }
+		// --- Update Object ---
+		selected.setTableNumber(tableNumber);
+		selected.setTableSize(tableSize);
+		selected.setActive(active);
 
-        onClearClicked();
+		// --- Send Request ---
+		ConnectToServer_GUI.clientController.sendComplexObject(new Message(MessageType.UPDATE_TABLE_REQUEST, selected));
 
-        ConnectToServer_GUI.clientController.sendComplexObject(
-            new Message(MessageType.DELETE_TABLE_REQUEST, tableNumber)
-        );
-    }
+		onClearClicked();
+		refreshData();
+	}
 
-    @FXML
-    private void onBackClicked() {
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource("/gui/Workers.fxml"));
-            Stage stage = (Stage) tablesTable.getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.centerOnScreen();
+	/**
+	 * Handles the deletion of the selected table.
+	 */
+	@FXML
+	private void onDeleteClicked() {
+		Restaurant_Table selected = tablesTable.getSelectionModel().getSelectedItem();
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+		if (selected == null) {
+			showAlert("Please select a table to delete.");
+			return;
+		}
 
-    private void showAlert(String msg) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText(null);
-        alert.setContentText(msg);
-        alert.showAndWait();
-    }
-    
-    public void loadTables(List<Restaurant_Table> tables) {
-        tablesTable.getItems().setAll(tables);
-    }
+		int tableNumber = selected.getTableNumber();
+
+		// Optional: Confirmation Dialog
+		Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+				"Are you sure you want to delete Table #" + tableNumber + "?", ButtonType.YES, ButtonType.NO);
+		confirm.showAndWait();
+		if (confirm.getResult() != ButtonType.YES) {
+			return;
+		}
+
+		onClearClicked();
+
+		ConnectToServer_GUI.clientController
+				.sendComplexObject(new Message(MessageType.DELETE_TABLE_REQUEST, tableNumber));
+
+		refreshData();
+	}
+
+	/**
+	 * Navigates back to the Workers Main Dashboard. Ensures the window remains
+	 * maximized if previously set.
+	 * 
+	 * @param event The action event triggered by the back button.
+	 */
+	@FXML
+	private void onBackClicked(ActionEvent event) {
+		try {
+			Parent root = FXMLLoader.load(getClass().getResource("/gui/Workers.fxml"));
+			Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+			stage.setScene(new Scene(root));
+			stage.centerOnScreen();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Displays an error alert to the user.
+	 * 
+	 * @param msg The message to display.
+	 */
+	private void showAlert(String msg) {
+		Alert alert = new Alert(Alert.AlertType.ERROR);
+		alert.setTitle("Error");
+		alert.setHeaderText(null);
+		alert.setContentText(msg);
+		alert.showAndWait();
+	}
+
+	/**
+	 * Updates the TableView with a new list of tables. Called by the
+	 * ClientController when a response is received from the server.
+	 * 
+	 * @param tables The list of tables to display.
+	 */
+	public void loadTables(List<Restaurant_Table> tables) {
+		tablesTable.getItems().setAll(tables);
+	}
 }

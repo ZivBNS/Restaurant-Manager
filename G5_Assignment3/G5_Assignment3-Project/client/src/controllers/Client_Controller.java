@@ -1,12 +1,10 @@
 package controllers;
 
 import java.io.*;
-
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -170,7 +168,16 @@ public class Client_Controller implements ChatIF {
 		        }
 		    }
 		});
-
+		responseHandlers.put(MessageType.RETURN_RESERVATION_HISTORY, new ResponseHandler() {
+		    @Override
+		    public void handle(Message msg) {
+		        List<Reservation> historyList = (List<Reservation>) msg.getContent();
+		        // We will create OrderHistory_GUI in the next steps
+		        if (OrderHistory_GUI.instance != null) {
+		            OrderHistory_GUI.instance.updateTable(historyList);
+		        }
+		    }
+		});
 		// -----------------------------------------------------------
 		// Check in and out Actions
 		// -----------------------------------------------------------
@@ -876,5 +883,12 @@ public class Client_Controller implements ChatIF {
      */
     public void sendGetAllActiveWaitlistsRequest() {
         sendComplexObject(new Message(MessageType.GET_ALL_ACTIVE_WAITLISTS, null));
+    }
+    /**
+     * Sends a request to get the full reservation history for a logged-in user.
+     * @param userId The subscriber ID.
+     */
+    public void sendGetReservationHistoryRequest(int userId) {
+        sendComplexObject(new Message(MessageType.GET_RESERVATION_HISTORY, userId));
     }
 }

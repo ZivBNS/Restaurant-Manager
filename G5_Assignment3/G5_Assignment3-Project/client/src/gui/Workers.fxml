@@ -5,54 +5,47 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.TilePane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane fx:id="managerRoot" minHeight="600" minWidth="900" stylesheets="/Theme/application.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.Workers_GUI">
+<BorderPane fx:id="managerRoot" minHeight="650" minWidth="950" stylesheets="/Theme/application.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.Workers_GUI">
 
     <top>
         <VBox alignment="CENTER" spacing="10">
-            <padding>
-                <Insets bottom="20" top="35" />
-            </padding>
+            <padding><Insets bottom="20" top="35" /></padding>
             <children>
                 <Label styleClass="header-title" text="Employee Panel" />
                 <Label styleClass="card-label" text="Bistro Management Dashboard" />
-                       
                 <Separator maxWidth="300" opacity="0.35" />
             </children>
         </VBox>
     </top>
 
     <center>
-        <TilePane alignment="CENTER" hgap="30" prefColumns="3" prefTileHeight="150" prefTileWidth="250" vgap="30">
-            <padding>
-                <Insets bottom="40" left="40" right="40" top="20" />
-            </padding>
+        <FlowPane alignment="CENTER" hgap="30" vgap="30" prefWrapLength="850">
+            <padding><Insets bottom="40" left="40" right="40" top="20" /></padding>
             <children>
     
-                <Button fx:id="btnManageOpeningHours" maxHeight="Infinity" maxWidth="Infinity" styleClass="button, btn-secondary" text="Manage Opening Hours" />
+                <Button fx:id="btnManageOpeningHours" prefHeight="140.0" prefWidth="240.0" styleClass="button, btn-secondary, dashboard-card" text="Manage Opening Hours" />
     
-                <Button fx:id="btnManageTables" maxHeight="Infinity" maxWidth="Infinity" styleClass="button, btn-secondary" text="Manage Tables" />
+                <Button fx:id="btnManageTables" prefHeight="140.0" prefWidth="240.0" styleClass="button, btn-secondary, dashboard-card" text="Manage Tables" />
     
-                <Button fx:id="btnManageUsers" maxHeight="Infinity" maxWidth="Infinity" styleClass="button, btn-secondary" text="Manage Users" />
+                <Button fx:id="btnManageUsers" prefHeight="140.0" prefWidth="240.0" styleClass="button, btn-secondary, dashboard-card" text="Manage Users" />
+        
+                <Button fx:id="btnManageOrders" prefHeight="140.0" prefWidth="240.0" styleClass="button, btn-secondary, dashboard-card" text="Manage Reservations" />
     
-                <Button fx:id="btnReports" visible="false" maxHeight="Infinity" maxWidth="Infinity" styleClass="button, btn-primary" text="View Reports" />
-    
-                <Button fx:id="btnManageOrders" maxHeight="Infinity" maxWidth="Infinity" styleClass="button, btn-secondary" text="Manage Reservations" />
-    
-                <Button fx:id="btnManageWaitlist" maxHeight="Infinity" maxWidth="Infinity" styleClass="button, btn-secondary" text="Manage Waitlist" />
+                <Button fx:id="btnManageWaitlist" prefHeight="140.0" prefWidth="240.0" styleClass="button, btn-secondary, dashboard-card" text="Manage Waitlist" />
+            
+                <Button fx:id="btnReports" managed="false" visible="false" prefHeight="140.0" prefWidth="240.0" styleClass="button, btn-secondary, dashboard-card" text="View Reports" />
             
             </children>
-        </TilePane>
+        </FlowPane>
     </center>
 
     <bottom>
         <HBox alignment="CENTER_LEFT">
-            <padding>
-                <Insets bottom="30" left="30" />
-            </padding>
+            <padding><Insets bottom="30" left="30" /></padding>
             <children>
                 <Button fx:id="btnLogout" styleClass="button, btn-danger" text="⟵ Log Out" />
             </children>
