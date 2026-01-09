@@ -26,8 +26,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 import javafx.util.Callback;
-import messages.Message;
-import messages.MessageType;
+import utils.User_Session;
 
 /**
  * Controller for viewing and managing user reservations.

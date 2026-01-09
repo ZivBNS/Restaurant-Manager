@@ -13,6 +13,7 @@ import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import messages.Message;
 import messages.MessageType;
+import utils.User_Session;
 
 public class UpdateProfile_GUI {
 

@@ -11,7 +11,7 @@ import java.util.List;
 import entities.Bill;
 
 
-public class Bill_Repository implements Repository_Interface<Bill> {
+public class Bill_Repository {
 
     private static Bill_Repository instance;
     private DB_Controller db = DB_Controller.getInstance(); 
@@ -25,14 +25,7 @@ public class Bill_Repository implements Repository_Interface<Bill> {
     }
 
     
-
-    @Override
-    public void init() {
-        
-    }
-
     
-    @Override
     public boolean set(Bill bill) {
     	String query = "INSERT INTO bills (ReservationID, TotalAmount, BillDetails, Status, DiscountPercentage) VALUES (?, ?, ?, ?, ?)";        
         PooledConnection pConn = null;
@@ -60,7 +53,6 @@ public class Bill_Repository implements Repository_Interface<Bill> {
     }
 
     
-    @Override
     public boolean deleteById(int id) {
         String query = "DELETE FROM bills WHERE ID = ?";
         
@@ -85,7 +77,6 @@ public class Bill_Repository implements Repository_Interface<Bill> {
     }
 
     
-    @Override
     public Bill getById(int id) {
         String query = "SELECT * FROM bills WHERE id = ?";
         PooledConnection pConn = null;
@@ -120,9 +111,7 @@ public class Bill_Repository implements Repository_Interface<Bill> {
     }
     
     
-    @Override
     public boolean update(Bill objToUpdate) {
-        
         return false;
     }
 

@@ -22,7 +22,7 @@ import entities.Restaurant_Table;
  * Repository class for managing Table data and simulating seating capacity.
  * Implements "Best-Fit" Bin Packing with robust Debug Logging.
  */
-public class Table_Repository implements Repository_Interface<Restaurant_Table> {
+public class Table_Repository {
     
     private DB_Controller db = DB_Controller.getInstance();
     private static Table_Repository TableRepositoryInstance = new Table_Repository();
@@ -37,7 +37,6 @@ public class Table_Repository implements Repository_Interface<Restaurant_Table> 
      * Initializes the restaurant table configuration.
      * Includes Debug prints to verify tables are loaded correctly.
      */
-    @Override
     public void init() {
         int maxTableSize = 0;
         List<Restaurant_Table> tablesList = new ArrayList<>();
@@ -372,7 +371,6 @@ public class Table_Repository implements Repository_Interface<Restaurant_Table> 
         return null;
     }
 
-    @Override
     public boolean set(Restaurant_Table table) {
 
         String sql =
@@ -404,7 +402,6 @@ public class Table_Repository implements Repository_Interface<Restaurant_Table> 
         }
     }
 
-    @Override
     public boolean update(Restaurant_Table table) {
 
         String sql =
@@ -443,7 +440,6 @@ public class Table_Repository implements Repository_Interface<Restaurant_Table> 
      * * @param tableNumber The logical number of the table to remove.
      * @return true if the deletion was successful, false otherwise.
      */
-    @Override
     public boolean deleteById(int tableNumber) {
         String sql = "DELETE FROM tables WHERE TableNumber = ?";
         PooledConnection pConn = null;
@@ -477,7 +473,6 @@ public class Table_Repository implements Repository_Interface<Restaurant_Table> 
         }
     }
 
-    @Override
     public Restaurant_Table getById(int id) {
 
         String sql =

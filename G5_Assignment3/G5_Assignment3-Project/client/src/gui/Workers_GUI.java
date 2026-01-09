@@ -11,6 +11,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import utils.User_Session;
 
 /**
  * Controller for the Employee/Manager Dashboard.

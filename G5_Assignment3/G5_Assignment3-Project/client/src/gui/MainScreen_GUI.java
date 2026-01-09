@@ -25,6 +25,8 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent; // Added for WindowEvent
 import messages.Message;
+import utils.DataChecker;
+import utils.User_Session;
 
 public class MainScreen_GUI {
 	public static MainScreen_GUI instance;

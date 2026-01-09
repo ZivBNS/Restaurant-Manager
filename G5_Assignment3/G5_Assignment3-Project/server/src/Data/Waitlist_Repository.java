@@ -16,7 +16,7 @@ import entities.WaitlistStatus;
 /*******************************************************************
  * waitlist states are: PWAITING, WAITING, NOTIFIED, COMPLETED, CANCELED
  *******************************************************************/
-public class Waitlist_Repository implements Repository_Interface<Waitlist> {
+public class Waitlist_Repository {
     
     private DB_Controller db = DB_Controller.getInstance();
     private static Waitlist_Repository waitlistRepositoryInstance = new Waitlist_Repository();
@@ -28,7 +28,6 @@ public class Waitlist_Repository implements Repository_Interface<Waitlist> {
         return waitlistRepositoryInstance;
     }
 
-    @Override
     public void init() {
     	/*   String sql = "SELECT ID, ReservationID, Status, creationTime, TableFreedTime " +
                      "FROM Waitlist " +
@@ -55,7 +54,6 @@ public class Waitlist_Repository implements Repository_Interface<Waitlist> {
         }*/
     }
     
-    @Override
     public boolean set(Waitlist objToSet) {
         String creationTimeStr = Timestamp.valueOf(LocalDateTime.now()).toString();
         String sql = "INSERT INTO Waitlist (ReservationID, Status, creationTime, TableFreedTime) VALUES (" +
@@ -78,7 +76,6 @@ public class Waitlist_Repository implements Repository_Interface<Waitlist> {
         }
     }
 
-    @Override
     public boolean update(Waitlist objToUpdate) {
         String freedTimeStr = (objToUpdate.getTableFreedTime() != null) ? 
                               "'" + Timestamp.valueOf(objToUpdate.getTableFreedTime()).toString() + "'" : "NULL";
@@ -102,7 +99,6 @@ public class Waitlist_Repository implements Repository_Interface<Waitlist> {
         }
     }
 
-    @Override
     public boolean deleteById(int id) {
         String sql = "DELETE FROM Waitlist WHERE ID = " + id;        
         PooledConnection pConn = null;
@@ -119,7 +115,6 @@ public class Waitlist_Repository implements Repository_Interface<Waitlist> {
         }
     }
 
-    @Override
     public Waitlist getById(int id) {
         String sql = "SELECT * FROM Waitlist WHERE ID = " + id;
         PooledConnection pConn = null;

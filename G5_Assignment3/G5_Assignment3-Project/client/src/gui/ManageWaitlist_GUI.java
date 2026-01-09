@@ -3,7 +3,6 @@ package gui;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -19,8 +18,6 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.MapValueFactory;
 import javafx.stage.Stage;
-import messages.Message;
-import messages.MessageType;
 
 /**
  * Controller for the Waitlist Management Screen.

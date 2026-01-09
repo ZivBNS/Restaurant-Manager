@@ -21,7 +21,7 @@ import entities.Restaurant;
  * This class follows the Singleton pattern and utilizes a custom Connection Pool 
  * for optimized database access.
  */
-public class OpeningHours_Repository implements Repository_Interface<Opening_Hours> {
+public class OpeningHours_Repository {
     
     /** The database controller managing the connection pool. */
     private DB_Controller db = DB_Controller.getInstance();
@@ -55,7 +55,6 @@ public class OpeningHours_Repository implements Repository_Interface<Opening_Hou
      * It populates both the regular weekly schedule (where IsActive = 1) and special date exceptions.
      * Data is stored in the Restaurant singleton for global access.
      */
-    @Override
     public void init() {
         Opening_Hours oh = new Opening_Hours();
         PooledConnection pConn = null;
@@ -193,7 +192,6 @@ public class OpeningHours_Repository implements Repository_Interface<Opening_Hou
      * @param objToSet The entity to save.
      * @return false as individual updates are preferred for this entity.
      */
-    @Override
     public boolean set(Opening_Hours objToSet) {
         return false;
     }
@@ -258,7 +256,6 @@ public class OpeningHours_Repository implements Repository_Interface<Opening_Hou
      * @param objToUpdate The object to update.
      * @return false.
      */
-    @Override
     public boolean update(Opening_Hours objToUpdate) {
         return false;
     }
@@ -270,7 +267,6 @@ public class OpeningHours_Repository implements Repository_Interface<Opening_Hou
      * @param id The ordinal of the DayOfWeek (1 for Sunday, etc).
      * @return true if deactivated, false otherwise.
      */
-    @Override
     public boolean deleteById(int id) {
         if (id < 1 || id > 7) return false;
         DayOfWeek day = DayOfWeek.of(id == 7 ? 7 : id); // Mapping logic
@@ -324,7 +320,6 @@ public class OpeningHours_Repository implements Repository_Interface<Opening_Hou
      * @param id The ID (not used for this specific entity).
      * @return null.
      */
-    @Override
     public Opening_Hours getById(int id) {
         return null;
     }

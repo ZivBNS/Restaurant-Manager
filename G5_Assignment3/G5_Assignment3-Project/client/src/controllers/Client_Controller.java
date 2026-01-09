@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import utils.KryoUtil;
+import utils.User_Session;
 import gui.*;
 import entities.*;
 import messages.Message;
@@ -182,7 +183,6 @@ public class Client_Controller implements ChatIF {
 		// Check in and out Actions
 		// -----------------------------------------------------------
 
-		// check in
 
 		responseHandlers.put(MessageType.CHECK_IN_COMPLETED, new ResponseHandler() {
 			@Override
@@ -344,11 +344,6 @@ public class Client_Controller implements ChatIF {
 			}
 		});
 
-		responseHandlers.put(MessageType.RETURN_ALL_BILLS, msg -> {
-			if (BillManager_GUI.instance != null) {
-				BillManager_GUI.instance.updateBillsTable((List<Bill>) msg.getContent());
-			}
-		});
 
 		// -----------------------------------------------------------
 		// Updates, Cancellations & Admin Actions

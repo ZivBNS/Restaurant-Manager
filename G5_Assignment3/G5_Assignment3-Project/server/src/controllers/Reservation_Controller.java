@@ -12,7 +12,7 @@ import entities.Opening_Hours;
 import entities.Reservation;
 import entities.ReservationStatus;
 import entities.Restaurant;
-import entities.Subscribed_Customer;
+import entities.UserRecord;
 
 /**
  * Controller responsible for handling all reservation-related logic on the server side.
@@ -21,7 +21,6 @@ public class Reservation_Controller {
 
     private static final Reservation_Repository reservationRepository = Reservation_Repository.getInstance();
     private static final Table_Repository tableRepository = Table_Repository.getInstance();
-    //private static final Waitlist_Repository WaitlistRepository = Waitlist_Repository.getInstance();
 
     public static Message handleMessage(Message msg) {
     	
@@ -225,13 +224,19 @@ public class Reservation_Controller {
     private static Message getReservationsByUser(Message msg) {
         try {
             List<Reservation> reservations;
-            if (msg.getContent() instanceof Integer)
-                reservations = reservationRepository.getByUserId((int)msg.getContent());
-            else if (msg.getContent() instanceof Subscribed_Customer) {
-                reservations = reservationRepository.getByUserId(((Subscribed_Customer) msg.getContent()).getSubscriberCode());
-            } else {
-                reservations = reservationRepository.getByContactInfo((String) msg.getContent());
+            Object content = msg.getContent();
+
+            if (content instanceof Integer) {
+                reservations = reservationRepository.getByUserId((int) content);
+            } 
+            else if (content instanceof UserRecord) {
+                UserRecord user = (UserRecord) content;
+                reservations = reservationRepository.getByUserId(user.getId());
             }
+            else {
+                reservations = reservationRepository.getByContactInfo((String) content);
+            }
+
             return new Message(MessageType.RETURN_RESERVATIONS_BY_USER, reservations);
         } catch (Exception e) { 
             return new Message(MessageType.ERROR_RESPONSE, e.getMessage()); 

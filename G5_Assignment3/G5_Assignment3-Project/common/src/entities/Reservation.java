@@ -210,6 +210,7 @@ public class Reservation {
 		return orderStartTime.format(dateFormatter);
 	}
 
+	
 	public String getFormattedTime() {
 		if (orderStartTime == null)
 			return "";

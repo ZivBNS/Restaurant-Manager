@@ -1,6 +1,6 @@
 package entities;
 
-public class UserRecord implements User{
+public class UserRecord{
     private int id;
     private String firstName;
     private String lastName;
@@ -38,22 +38,11 @@ public class UserRecord implements User{
     public String getIdentity() { return identity; }
     public Integer getSubscriberCode() { return subscriberCode; }
 
-	@Override
-	public void setUsername(String username) {
-		// TODO Auto-generated method stub
-		
-	}
 
-	@Override
 	public String getPassword() {
-		// TODO Auto-generated method stub
 		return password;
 	}
 
-	@Override
-	public void setPassword(String password) {
-		// TODO Auto-generated method stub
-		
-	}
+
 }
 

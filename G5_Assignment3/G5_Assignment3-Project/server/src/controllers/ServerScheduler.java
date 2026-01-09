@@ -23,7 +23,6 @@ public class ServerScheduler {
 
         scheduler = Executors.newSingleThreadScheduledExecutor();
 
-        // Using Anonymous Inner Class instead of Lambda for the scheduled task
         scheduler.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
