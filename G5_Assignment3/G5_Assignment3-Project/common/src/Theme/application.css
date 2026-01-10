@@ -574,4 +574,14 @@
     -fx-border-color: #c8a165; /* Theme gold for focus */
 }
 
+/* Update this in your application.css or keep as inline in FXML */
+.discount-label {
+    -fx-text-fill: #2ecc71;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    /* This ensures the label doesn't cut off the symbol */
+    -fx-min-width: 250px; 
+    -fx-padding: 0 10 0 0; 
+}
+
 

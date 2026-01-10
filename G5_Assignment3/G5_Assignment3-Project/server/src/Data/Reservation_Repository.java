@@ -505,6 +505,53 @@ public class Reservation_Repository {
 
 		return null;
 	}
+	
+	/**
+	 * Retrieves the latest active reservation for a given email address.
+	 * * @param email The email address to search for.
+	 * @return The latest active Reservation or null if none found.
+	 */
+	public Reservation getLatestReservationByEmail(String email) {
+
+	    // SQL targeted at the Email column instead of Phone
+	    String sql = "SELECT ID, Phone, Email, ReservationStartTime, NumberOfDiners, TableID, Status " + 
+	                 "FROM reservations " + 
+	                 "WHERE Email = ? " + 
+	                 "AND status = 'ACTIVE' " + 
+	                 "ORDER BY ReservationStartTime ASC " + 
+	                 "LIMIT 1";
+
+	    PooledConnection pConn = null;
+
+	    try {
+	        pConn = db.getConnection();
+	        Connection conn = pConn.getConnection();
+	        PreparedStatement ps = conn.prepareStatement(sql);
+	        ps.setString(1, email); // Setting the email string as the parameter
+
+	        ResultSet rs = ps.executeQuery();
+
+	        if (rs.next()) {
+	            // Mapping the database result to the Reservation entity
+	            return new Reservation(
+	                rs.getInt("ID"), 
+	                rs.getString("Phone"),
+	                rs.getTimestamp("ReservationStartTime").toLocalDateTime(), 
+	                rs.getInt("NumberOfDiners"),
+	                (Integer) rs.getObject("TableID"), 
+	                rs.getString("Status")
+	            );
+	        }
+
+	    } catch (Exception e) {
+	        System.out.println("getLatestReservationByEmail ERROR: " + e.getMessage());
+	    } finally {
+	        if (pConn != null)
+	            db.releaseConnection(pConn);
+	    }
+
+	    return null;
+	}
 
 	public void markReservationAsCompleted(int reservationId) {
 		String sql = "UPDATE reservations SET Status = 'Completed', ActualDepartureTime = NOW() WHERE ID = ?";

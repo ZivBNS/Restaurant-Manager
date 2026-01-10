@@ -29,7 +29,7 @@
                 <Insets bottom="20" left="20" right="20" top="10" />
             </padding>
             <children>
-                <VBox maxWidth="350" spacing="20" styleClass="card">
+                <VBox maxWidth="350" spacing="20" styleClass="card" style="-fx-background-color: #1e1e26; -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 10, 0, 0, 5);">
                     <padding>
                         <Insets bottom="30" left="30" right="30" top="30" />
                     </padding>
@@ -38,47 +38,45 @@
                         <HBox alignment="CENTER_LEFT" spacing="10">
                             <children>
                                 <Label styleClass="card-label" text="Reservation ID:" />
-                                <Label fx:id="lblReservationId" style="-fx-text-fill: white; -fx-font-weight: bold;" />
+                                <Label fx:id="lblReservationId" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px;" />
                             </children>
                         </HBox>
 
-                        <VBox spacing="4">
+                        <VBox spacing="8" style="-fx-background-color: rgba(255,255,255,0.03); -fx-padding: 15; -fx-background-radius: 10; -fx-border-color: rgba(212, 163, 88, 0.2); -fx-border-radius: 10;">
                             <children>
-                                <HBox alignment="CENTER_LEFT" spacing="10">
+                                <Label styleClass="card-label" text="Payment Summary" style="-fx-font-size: 12px; -fx-opacity: 0.7;" />
+                                
+                                <Label fx:id="lblOriginalAmount" managed="false" visible="false" 
+                                       style="-fx-text-fill: #999999; -fx-font-size: 14px; -fx-strikethrough: true;" />
+                                
+                                <Label fx:id="lblDiscountInfo" managed="false" visible="false" maxWidth="Infinity"
+                                       style="-fx-text-fill: #2ecc71; -fx-font-size: 13px; -fx-font-weight: bold; -fx-padding: 0 5 0 0;" />
+                                
+                                <Separator opacity="0.1" />
+                                
+                                <HBox alignment="BASELINE_LEFT" spacing="8">
                                     <children>
-                                        <Label styleClass="card-label" text="Amount to Pay:" />
-                                        <VBox spacing="2">
-                                            <children>
-                                                <Label fx:id="lblOriginalAmount" managed="false" visible="false" style="-fx-text-fill: #999999; -fx-font-size: 13px; -fx-strikethrough: true;" />
-                                                <Label fx:id="lblDiscountInfo" managed="false" visible="false" style="-fx-text-fill: #2ecc71; -fx-font-size: 12px; -fx-font-weight: bold;" />
-                                                <Label fx:id="lblTotalAmount" style="-fx-text-fill: #d4a358; -fx-font-size: 20px; -fx-font-weight: bold;" />
-                                            </children>
-                                        </VBox>
+                                        <Label style="-fx-text-fill: white; -fx-font-size: 15px;" text="Total to Pay:" />
+                                        <Label fx:id="lblTotalAmount" style="-fx-text-fill: #d4a358; -fx-font-size: 24px; -fx-font-weight: bold;" />
                                     </children>
                                 </HBox>
                             </children>
                         </VBox>
 
-                        <VBox alignment="CENTER_LEFT" spacing="6">
+                        <VBox spacing="6">
                             <children>
                                 <Label styleClass="card-label" text="Bill Details" />
-                                <Label fx:id="lblBillDetails" maxWidth="280" style="-fx-text-fill: white;" wrapText="true" />
+                                <Label fx:id="lblBillDetails" maxWidth="280" style="-fx-text-fill: white; -fx-font-size: 14px;" wrapText="true" />
                             </children>
                         </VBox>
 
-                        <Separator opacity="0.3">
-                            <VBox.margin>
-                                <Insets bottom="5" top="5" />
-                            </VBox.margin>
-                        </Separator>
-
-                        <VBox spacing="10">
+                        <VBox spacing="12">
+                            <padding><Insets top="10"/></padding>
                             <children>
-                                <Button fx:id="btnPay" maxWidth="Infinity" onAction="#onPay" prefHeight="45" styleClass="button, btn-primary" text="Pay" />
+                                <Button fx:id="btnPay" maxWidth="Infinity" onAction="#onPay" prefHeight="45" styleClass="button, btn-primary" text="Confirm &amp; Pay" />
                                 <Button maxWidth="Infinity" onAction="#onBackClicked" prefHeight="45" styleClass="button, btn-secondary" text="Back" />
                             </children>
                         </VBox>
-
                     </children>
                 </VBox>
             </children>
@@ -87,18 +85,13 @@
 
     <bottom>
         <VBox alignment="CENTER">
-            <padding>
-                <Insets bottom="15" top="10" />
-            </padding>
+            <padding><Insets bottom="15" top="10" /></padding>
             <children>
                 <Label style="-fx-font-size: 10px; -fx-text-fill: #7f85a3;" text="Bistro Management System v1.0" />
             </children>
         </VBox>
     </bottom>
-
 </BorderPane>
-
-
 
 
 

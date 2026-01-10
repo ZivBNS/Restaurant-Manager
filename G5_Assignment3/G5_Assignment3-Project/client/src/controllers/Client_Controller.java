@@ -278,48 +278,87 @@ public class Client_Controller implements ChatIF {
 			}
 		});
 
-		responseHandlers.put(MessageType.RETURN_LATEST_RESERVATION_BY_PHONE, msg -> {
+		responseHandlers.put(MessageType.RETURN_LATEST_RESERVATION_BY_PHONE, new ResponseHandler() {
+		    @Override
+		    public void handle(Message msg) {
+		        Reservation r = (Reservation) msg.getContent();
 
-			Reservation r = (Reservation) msg.getContent();
+		        if (r != null) {
+		            sendComplexObject(new Message(MessageType.GET_BILL_BY_RESERVATION_ID, r.getId()));
+		        } else if (BillPayment_GUI.instance != null) {
+		            Platform.runLater(new Runnable() {
+		                @Override
+		                public void run() {
+		                    BillPayment_GUI.instance.showNoReservationFound();
+		                }
+		            });
+		        }
+		    }
+		});
+		
+		responseHandlers.put(MessageType.RETURN_LATEST_RESERVATION_BY_EMAIL, new ResponseHandler() {
+		    @Override
+		    public void handle(Message msg) {
+		        Reservation r = (Reservation) msg.getContent();
+		        System.out.println("[CLIENT DEBUG] Received response from server for email search.");
 
-			if (r != null) {
-				sendComplexObject(new Message(MessageType.GET_BILL_BY_RESERVATION_ID, r.getId()));
-			} else if (BillPayment_GUI.instance != null) {
-				Platform.runLater(() -> BillPayment_GUI.instance.showNoReservationFound());
-			}
+		        if (r != null) {
+		            System.out.println("[CLIENT DEBUG] Reservation found! ID: " + r.getId());
+		            sendComplexObject(new Message(MessageType.GET_BILL_BY_RESERVATION_ID, r.getId()));
+		        } else if (BillPayment_GUI.instance != null) {
+		            Platform.runLater(new Runnable() {
+		                @Override
+		                public void run() {
+		                    BillPayment_GUI.instance.showNoReservationFound();
+		                }
+		            });
+		        }
+		    }
 		});
 
-		responseHandlers.put(MessageType.RETURN_BILL_BY_RESERVATION_ID, msg -> {
-		    Bill b = (Bill) msg.getContent();
+		// -----------------------------------------------------------
+		// Billing & Final Payment Handlers (Standardized Format)
+		// -----------------------------------------------------------
 
-		    if (b != null) {
-		        // בדיקה: אם הסכום הוא 0 או קטן מ-1, נבצע הגרלה וחישוב
-		    	if (b.getTotalAmount() <= 0) {
-		    	    // 1. הגרלת מחיר מלא (לפני הנחה)
-		    	    double baseAmount = 100 + (Math.random() * 400); 
-		    	    baseAmount = Math.round(baseAmount * 100.0) / 100.0;
-		    	    
-		    	    double discountPercent = 0;
-		    	    if (User_Session.getLoggedInUser() != null) {
-		    	        discountPercent = 15.0; // מנוי מקבל 15%
-		    	    }
+		responseHandlers.put(MessageType.RETURN_BILL_BY_RESERVATION_ID, new ResponseHandler() {
+		    @Override
+		    public void handle(Message msg) {
+		        Bill b = (Bill) msg.getContent();
 
-		    	    // 2. עדכון האובייקט - שים לב: אנחנו שומרים את המחיר המלא!
-		    	    b.setTotalAmount(baseAmount);
-		    	    b.setDiscountRate(discountPercent);
-		    	    b.setBillDetails("Dinner Service Selection");
-		    	    
-		    	    System.out.println("[CLIENT DEBUG] Base: " + baseAmount + ", Discount: " + discountPercent + "%");
-		    	    sendComplexObject(new Message(MessageType.CREATE_BILL, b));
-		    	    return; 
-		    	}
+		        if (b != null) {
+		            // Logic: If total amount is 0, generate a random bill
+		            if (b.getTotalAmount() <= 0) {
+		                double baseAmount = 100 + (Math.random() * 400);
+		                baseAmount = Math.round(baseAmount * 100.0) / 100.0;
+		                
+		                double discountPercent = 0;
+		                // Apply subscriber discount if applicable
+		                if (User_Session.getLoggedInUser() != null) {
+		                    discountPercent = 10.0; 
+		                }
 
-		        // אם הגענו לכאן, הסכום כבר חזר מהשרת/DB - מציגים כפי שהוא
-		        if (BillPayment_GUI.instance != null) {
-		            System.out.println("[CLIENT DEBUG] Displaying Final Bill: " + b.getTotalAmount());
-		            Platform.runLater(() -> BillPayment_GUI.instance.displayBill(b));
+		                b.setTotalAmount(baseAmount);
+		                b.setDiscountRate(discountPercent);
+		                b.setBillDetails("Dinner Service Selection");
+		                
+		                System.out.println("[CLIENT DEBUG] Generated Bill: " + baseAmount);
+		                // Persist the new bill to the server
+		                sendComplexObject(new Message(MessageType.CREATE_BILL, b));
+		                return; 
+		            }
+
+		            // Display the finalized bill in the GUI
+		            if (BillPayment_GUI.instance != null) {
+		                Platform.runLater(new Runnable() {
+		                    @Override
+		                    public void run() {
+		                        BillPayment_GUI.instance.displayBill(b);
+		                    }
+		                });
+		            } else if (Terminal_GUI.instance != null) {
+		                Terminal_GUI.instance.onGetBillSuccess(b);
+		            }
 		        }
-		        else if (Terminal_GUI.instance!=null) Terminal_GUI.instance.onGetBillSuccess(b);
 		    }
 		});
 
@@ -919,6 +958,15 @@ public class Client_Controller implements ChatIF {
  public void sendGetLatestBillByPhoneRequest(String phone) {
      // We use the specific MessageType the server expects for this lookup
      sendComplexObject(new Message(MessageType.GET_LATEST_RESERVATION_BY_PHONE, phone));
+ }
+ 
+ /**
+  * Requests the latest reservation/bill associated with a phone number.
+  * @param phone The customer's phone number string.
+  */
+ public void sendGetLatestBillByEmailRequest(String email) {
+     // We use the specific MessageType the server expects for this lookup
+     sendComplexObject(new Message(MessageType.GET_LATEST_RESERVATION_BY_EMAIL, email));
  }
 
  /**

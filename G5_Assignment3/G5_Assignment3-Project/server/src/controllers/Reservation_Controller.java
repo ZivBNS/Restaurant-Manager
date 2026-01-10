@@ -34,6 +34,7 @@ public class Reservation_Controller {
             case GET_ALL_PENDING_AND_ACTIVE_RESERVATIONS: return fetchAllPendingAndActive(msg);
             case ADMIN_UPDATE_RESERVATION: return processAdminUpdate(msg);
             case GET_LATEST_RESERVATION_BY_PHONE: return getLatestReservationById(msg);
+            case GET_LATEST_RESERVATION_BY_EMAIL: return getLatestReservationByEmail(msg);
             case GET_RESERVATION_HISTORY: return getReservationHistory(msg);
             default: return null;
         }
@@ -45,6 +46,20 @@ public class Reservation_Controller {
         return new Message(
                 MessageType.RETURN_LATEST_RESERVATION_BY_PHONE,r);
 	}
+    private static Message getLatestReservationByEmail(Message msg) {
+        String email = (String) msg.getContent();
+        System.out.println("[SERVER DEBUG] Incoming request: GET_LATEST_RESERVATION_BY_EMAIL for: " + email);
+        
+        Reservation r = Reservation_Repository.getInstance().getLatestReservationByEmail(email);
+        
+        if (r != null) {
+            System.out.println("[SERVER DEBUG] Success! Found Reservation ID: " + r.getId() + " for email: " + email);
+        } else {
+            System.out.println("[SERVER DEBUG] Failed! No ACTIVE reservation found in DB for: " + email);
+        }
+        
+        return new Message(MessageType.RETURN_LATEST_RESERVATION_BY_EMAIL, r);
+    }
     
 	private static Message createInstantReservation(Message msg) {
 		Message createInstantReservation = createReservation(msg);
