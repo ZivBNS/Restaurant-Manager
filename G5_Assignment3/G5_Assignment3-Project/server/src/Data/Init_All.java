@@ -254,13 +254,13 @@ public class Init_All {
         int lastCode = 200000;
         List<Integer> userIds = new ArrayList<Integer>();
         Map<Integer, String[]> userData = new HashMap<Integer, String[]>();
-        
+
         String insertSql = "INSERT INTO Reservations (UserID, Phone, Email, ReservationStartTime, " +
                            "ReservationEndTime, ActualArrivalTime, ActualDepartureTime, " +
-                           "NumberOfDiners, TableID, Status, ConfirmationCode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Completed', ?)";
+                           "NumberOfDiners, TableID, Status, ConfirmationCode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try {
-            // Fetch users to link
+            // Fetch users
             ResultSet rs = stmt.executeQuery("SELECT ID, Phone, Email FROM Users WHERE Identity = 'Subscriber'");
             while (rs.next()) {
                 int id = rs.getInt("ID");
@@ -270,35 +270,20 @@ public class Init_All {
 
             try (PreparedStatement ps = con.prepareStatement(insertSql)) {
                 int userIdx = 0;
-                
-                // Iterate through all 31 days of December 2025
+
+                // --- PART 1: Historical (Completed) ---
                 for (int day = 1; day <= 31; day++) {
                     LocalDate date = LocalDate.of(2025, 12, day);
-                    
-                    // Randomize number of reservations for this day (between 8 and 25)
                     int dailyOrders = 8 + (int)(Math.random() * 18); 
-
                     for (int i = 0; i < dailyOrders; i++) {
+                        // ... (אותו קוד קיים לחלק ההיסטורי) ...
                         int uid = userIds.get(userIdx % userIds.size());
                         userIdx++;
-
-                        // Distribute times between 10:00 and 22:00
                         LocalDateTime start = LocalDateTime.of(date, LocalTime.of(10 + (i % 12), 0));
                         LocalDateTime end = start.plusHours(2);
-                        
-                        // --- Logic for +/- 30 Minutes Variance ---
-                        // Math.random() * 61 -> 0 to 60.99
-                        // Subtract 30 -> Range becomes -30 to +30
-                        int arrivalOffset = (int)(Math.random() * 61) - 30; 
-                        int departureOffset = (int)(Math.random() * 61) - 30;
-                        
-                        LocalDateTime actArr = start.plusMinutes(arrivalOffset); 
-                        LocalDateTime actDep = end.plusMinutes(departureOffset);
-
-                        // Randomize number of diners (between 2 and 8)
+                        LocalDateTime actArr = start.plusMinutes((int)(Math.random() * 61) - 30); 
+                        LocalDateTime actDep = end.plusMinutes((int)(Math.random() * 61) - 30);
                         int numDiners = 2 + (int)(Math.random() * 7);
-                        
-                        // Randomize Table ID (assuming 10 tables exist from initTables)
                         int tableId = 1 + (int)(Math.random() * 10);
 
                         ps.setInt(1, uid);
@@ -310,55 +295,133 @@ public class Init_All {
                         ps.setTimestamp(7, Timestamp.valueOf(actDep));
                         ps.setInt(8, numDiners);
                         ps.setInt(9, tableId);
-                        ps.setInt(10, lastCode++);
-                        
+                        ps.setString(10, "Completed");
+                        ps.setInt(11, lastCode++);
                         ps.addBatch();
                     }
                 }
+
+                // --- PART 2: Future (Pending) ---
+                for (int day = 15; day <= 21; day++) {
+                    // ... (אותו קוד קיים לחלק העתידי) ...
+                    LocalDate date = LocalDate.of(2026, 1, day);
+                    int dailyOrders = 5;
+                    for (int i = 0; i < dailyOrders; i++) {
+                        int uid = userIds.get(userIdx % userIds.size());
+                        userIdx++;
+                        LocalDateTime start = LocalDateTime.of(date, LocalTime.of(12 + (int)(Math.random() * 10), 0));
+                        ps.setInt(1, uid);
+                        ps.setString(2, userData.get(uid)[0]);
+                        ps.setString(3, userData.get(uid)[1]);
+                        ps.setTimestamp(4, Timestamp.valueOf(start));
+                        ps.setTimestamp(5, Timestamp.valueOf(start.plusHours(2)));
+                        ps.setNull(6, java.sql.Types.TIMESTAMP);
+                        ps.setNull(7, java.sql.Types.TIMESTAMP);
+                        ps.setInt(8, 2 + (int)(Math.random() * 5));
+                        ps.setNull(9, java.sql.Types.INTEGER);
+                        ps.setString(10, "Pending");
+                        ps.setInt(11, lastCode++);
+                        ps.addBatch();
+                    }
+                }
+
+                // --- PART 3: Current Live (Active) - NEW ---
+                // אנשים שיושבים כרגע במסעדה (נניח התאריך הוא 10.1.2026)
+                LocalDate today = LocalDate.of(2026, 1, 10); 
+                int activeTables = 4; // 4 שולחנות פעילים כרגע
+
+                for (int i = 0; i < activeTables; i++) {
+                    int uid = userIds.get(userIdx % userIds.size());
+                    userIdx++;
+
+                    // הם הגיעו לפני שעה בערך
+                    LocalDateTime start = LocalDateTime.of(today, LocalTime.now().minusMinutes(45 + (i * 10)));
+                    LocalDateTime end = start.plusHours(2);
+                    
+                    // הם הגיעו בפועל (Actual Arrival)
+                    LocalDateTime actArr = start.plusMinutes(2); 
+
+                    int numDiners = 2 + (int)(Math.random() * 4);
+                    int tableId = 1 + (int)(Math.random() * 10);
+
+                    ps.setInt(1, uid);
+                    ps.setString(2, userData.get(uid)[0]);
+                    ps.setString(3, userData.get(uid)[1]);
+                    ps.setTimestamp(4, Timestamp.valueOf(start));
+                    ps.setTimestamp(5, Timestamp.valueOf(end));
+                    ps.setTimestamp(6, Timestamp.valueOf(actArr)); // הגיעו
+                    ps.setNull(7, java.sql.Types.TIMESTAMP);       // עדיין לא עזבו (NULL)
+                    ps.setInt(8, numDiners);
+                    ps.setInt(9, tableId); // יש להם שולחן
+                    ps.setString(10, "Active"); // סטטוס פעיל
+                    ps.setInt(11, lastCode++);
+                    
+                    ps.addBatch();
+                }
+
                 ps.executeBatch();
             }
-            System.out.println("Reservations: Generated randomized full coverage for December 2025.");
+            System.out.println("Reservations: Init complete (History, Future-Pending, Live-Active).");
         } catch (SQLException e) { 
             e.printStackTrace(); 
         }
     }
 
-    /**
-     * Initializes Waitlist records for December 2025 with deliberate gaps.
-     */
     private static void initWaitlists(Connection con, Statement stmt) {
+        // 1. Insert Completed Waitlist Records (Historical)
         String selectSql = "SELECT ID, ReservationStartTime FROM Reservations " +
                            "WHERE Status = 'Completed' AND MONTH(ReservationStartTime) = 12";
         String insertSql = "INSERT INTO Waitlist (ReservationID, Status, creationTime, TableFreedTime) " +
-                           "VALUES (?, 'COMPLETED', ?, ?)";
+                           "VALUES (?, ?, ?, ?)";
 
-        try (ResultSet rs = stmt.executeQuery(selectSql);
-             PreparedStatement ps = con.prepareStatement(insertSql)) {
+        try (PreparedStatement ps = con.prepareStatement(insertSql)) {
+            
+            // --- Part A: Historical Data ---
+            try (ResultSet rs = stmt.executeQuery(selectSql)) {
+                while (rs.next()) {
+                    LocalDateTime arrival = rs.getTimestamp("ReservationStartTime").toLocalDateTime();
+                    int day = arrival.getDayOfMonth();
+                    if (day % 5 == 0) continue; 
 
-            while (rs.next()) {
-                LocalDateTime arrival = rs.getTimestamp("ReservationStartTime").toLocalDateTime();
-                int day = arrival.getDayOfMonth();
+                    if (Math.random() > 0.3) {
+                        int resId = rs.getInt("ID");
+                        int waitMins = 5 + (int)(Math.random() * 30);
+                        LocalDateTime created = arrival.minusMinutes(waitMins);
 
-                if (day % 5 == 0) {
-                    continue; 
+                        ps.setInt(1, resId);
+                        ps.setString(2, "Completed"); // Status
+                        ps.setTimestamp(3, Timestamp.valueOf(created));
+                        ps.setTimestamp(4, Timestamp.valueOf(arrival)); // Freed when they sat down
+                        ps.addBatch();
+                    }
                 }
+            }
 
-                if (Math.random() > 0.3) {
-                    int resId = rs.getInt("ID");
-                    int waitMins = 5 + (int)(Math.random() * 30);
-                    LocalDateTime created = arrival.minusMinutes(waitMins);
+            // --- Part B: Active Waitlist (People currently waiting) ---
+            // אנחנו שולפים הזמנות עתידיות/ממתינות (Pending) ומדמים שהן ברשימת המתנה כרגע
+            String selectPending = "SELECT ID, ReservationStartTime FROM Reservations " +
+                                   "WHERE Status = 'Pending' LIMIT 3"; // ניקח 3 אנשים שמחכים
+            
+            try (ResultSet rsPending = stmt.executeQuery(selectPending)) {
+                while (rsPending.next()) {
+                    int resId = rsPending.getInt("ID");
+                    LocalDateTime resTime = rsPending.getTimestamp("ReservationStartTime").toLocalDateTime();
+                    
+                    // הם נכנסו לרשימה לפני 10 דקות
+                    LocalDateTime created = LocalDateTime.now().minusMinutes(10 + (int)(Math.random()*15));
 
                     ps.setInt(1, resId);
-                    ps.setTimestamp(2, Timestamp.valueOf(created));
-                    ps.setTimestamp(3, Timestamp.valueOf(arrival));
+                    ps.setString(2, "Waiting"); // הם עדיין ברשימה
+                    ps.setTimestamp(3, Timestamp.valueOf(created));
+                    ps.setNull(4, java.sql.Types.TIMESTAMP); // עדיין לא התפנה שולחן (NULL)
                     ps.addBatch();
                 }
             }
+
             ps.executeBatch();
-            System.out.println("Waitlist: Initialized December data with deliberate gaps.");
+            System.out.println("Waitlist: Initialized (Historical & Active).");
         } catch (SQLException e) { e.printStackTrace(); }
     }
-
     /**
      * Pre-generates historical report data for October and November.
      */

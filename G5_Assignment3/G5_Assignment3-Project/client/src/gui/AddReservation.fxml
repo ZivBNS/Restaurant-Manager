@@ -40,7 +40,7 @@
                         <VBox spacing="8">
                             <children>
                                 <Label styleClass="card-label" text="How many guests?" />
-                                <Spinner fx:id="guestsSpinner" editable="true" maxWidth="Infinity" prefHeight="35.0" />
+                                <Spinner fx:id="guestsSpinner" editable="false" maxWidth="Infinity" prefHeight="35.0" />
                             </children>
                         </VBox>
 

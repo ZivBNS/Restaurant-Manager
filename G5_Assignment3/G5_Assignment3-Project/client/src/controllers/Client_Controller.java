@@ -427,6 +427,19 @@ public class Client_Controller implements ChatIF {
 				}
 			}
 		});
+		// Inside initializeHandlers in Client_Controller.java
+
+        responseHandlers.put(MessageType.ADMIN_UPDATE_SUCCESS, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                if (ManageOrders_GUI.instance != null) {
+                    // Refresh data first
+                    ManageOrders_GUI.instance.refreshAdminData();
+                    // Show success alert
+                    ManageOrders_GUI.instance.showUpdateSuccessAlert();
+                }
+            }
+        });
 		// -----------------------------------------------------------
 		// Report Handling
 		// -----------------------------------------------------------
@@ -460,27 +473,118 @@ public class Client_Controller implements ChatIF {
 		// General Data (Opening Hours)
 		// -----------------------------------------------------------
 
+		// Inside initializeHandlers() method in Client_Controller.java
+
 		responseHandlers.put(MessageType.RETURN_OPENING_HOURS, new ResponseHandler() {
-			@Override
-			public void handle(Message msg) {
-				Opening_Hours oh = (Opening_Hours) msg.getContent();
-				Restaurant.getInstance().setOpeningHours(oh);
+            @Override
+            public void handle(Message msg) {
+                Opening_Hours oh = (Opening_Hours) msg.getContent();
+                Restaurant.getInstance().setOpeningHours(oh);
 
-				// Refresh management screen if open
-				if (ManageHours_GUI.instance != null) {
-					ManageHours_GUI.instance.refreshUI(oh);
-				}
+                // Refresh management screen if open
+                if (ManageHours_GUI.instance != null) {
+                    ManageHours_GUI.instance.refreshUI(oh);
+                    
+                    // CHECK FLAG: Only show alert if user requested an update
+                    if (ManageHours_GUI.instance.isUpdatePending()) {
+                        Platform.runLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                                alert.setTitle("Success");
+                                alert.setHeaderText(null);
+                                alert.setContentText("Operation completed successfully!");
+                                alert.showAndWait();
+                            }
+                        });
+                        // Reset flag
+                        ManageHours_GUI.instance.setUpdatePending(false);
+                    }
+                } 
+            }
+        });
+		responseHandlers.put(MessageType.OPENING_HOURS_ONLY_ONE_A_DAY_ERROR, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                if (ManageHours_GUI.instance != null) {
+                    
+                    // 1. Reset the pending flag since the update failed
+                    ManageHours_GUI.instance.setUpdatePending(false);
 
-				// Refresh reservation screen if open
-				if (AddReservation_GUI.instance != null) {
-					LocalDate currentDate = AddReservation_GUI.instance.getDatePicker().getValue();
-					if (currentDate != null) {
-						AddReservation_GUI.instance.loadDynamicHours(currentDate);
-					}
-				}
-			}
-		});
+                    // 2. Show Error Alert on JavaFX Thread
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            Alert alert = new Alert(Alert.AlertType.ERROR);
+                            alert.setTitle("Operation Failed");
+                            alert.setHeaderText("Duplicate Date");
+                            alert.setContentText("You cannot define two special schedules for the same date.\nPlease delete the existing entry first or edit it.");
+                            alert.showAndWait();
+                        }
+                    });
+                }
+            }
+        });
+		/**
+         * Handles the specific error when an opening hours update fails due to
+         * existing reservations conflicting with the new schedule.
+         */
+        responseHandlers.put(MessageType.OPENING_HOURS_UPDATE_CONFLICT_ERROR, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                String conflictDetails = (String) msg.getContent();
 
+                // Check if the management screen is currently active
+                if (ManageHours_GUI.instance != null) {
+                    
+                    // 1. Critical: Reset the 'pending' flag so the UI logic doesn't get stuck
+                    ManageHours_GUI.instance.setUpdatePending(false);
+
+                    // 2. Display the conflict details in an Error Alert
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            Alert alert = new Alert(Alert.AlertType.ERROR);
+                            alert.setTitle("Update Rejected");
+                            alert.setHeaderText("Schedule Conflict Detected");
+                            alert.setContentText(conflictDetails); // Displays the text sent from Server  
+                            alert.showAndWait();
+                            sendGetOpeningHoursRequest();
+                        }
+                    });
+                }
+            }
+        });
+        /**
+         * Handles the specific error when an opening hours update fails due to
+         * existing reservations conflicting with the new schedule.
+         */
+        responseHandlers.put(MessageType.SPECIAL_HOURS_UPDATE_CONFLICT_ERROR, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                String conflictDetails = (String) msg.getContent();
+
+                // Check if the management screen is currently active
+                if (ManageHours_GUI.instance != null) {
+                    
+                    // 1. Critical: Reset the 'pending' flag so the UI logic doesn't get stuck
+                    ManageHours_GUI.instance.setUpdatePending(false);
+
+                    // 2. Display the conflict details in an Error Alert
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            Alert alert = new Alert(Alert.AlertType.ERROR);
+                            alert.setTitle("Update Rejected");
+                            alert.setHeaderText("Schedule Conflict Detected - Cannot add special hours");
+                            alert.setContentText(conflictDetails); // Displays the text sent from Server
+                            alert.showAndWait();
+                            sendGetOpeningHoursRequest();
+                            }
+                    });
+                }
+            }
+        });
 		// -----------------------------------------------------------
 		// User Management
 		// -----------------------------------------------------------
@@ -548,14 +652,65 @@ public class Client_Controller implements ChatIF {
 		// -----------------------------------------------------------
 
 		responseHandlers.put(MessageType.RETURN_ALL_TABLES, new ResponseHandler() {
-			@Override
-			public void handle(Message msg) {
-				List<Restaurant_Table> tables = (List<Restaurant_Table>) msg.getContent();
-				if (ManageTables_GUI.instance != null) {
-					ManageTables_GUI.instance.loadTables(tables);
-				}
-			}
-		});
+            @Override
+            public void handle(Message msg) {
+                List<Restaurant_Table> tables = (List<Restaurant_Table>) msg.getContent();
+                
+                // Update the local Singleton cache with fresh data
+                Restaurant.getInstance().setTables(tables);
+
+                // 1. Update Manage Tables Screen if currently open
+                if (ManageTables_GUI.instance != null) {
+                    ManageTables_GUI.instance.loadTables(tables);
+                }
+                
+                // --- Calculate Max Capacity Logic ---
+                // We iterate through active tables to find the largest table size.
+                // This is used to set limits on guest input fields in other screens.
+                int maxCap = 0;
+                for (Restaurant_Table t : tables) {
+                    if (t.isActive() && t.getSize() > maxCap) {
+                        maxCap = t.getSize();
+                    }
+                }
+                
+                // Fallback: If no tables exist or max is 0, default to 10
+                if (maxCap == 0) {
+                    maxCap = 10;
+                }
+                
+                final int calculatedMax = maxCap;
+
+                // 2. Update Add Reservation Screen (Using Anonymous Inner Class)
+                if (AddReservation_GUI.instance != null) {
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            AddReservation_GUI.instance.updateSpinnerLimit(calculatedMax);
+                        }
+                    });
+                }
+
+                // 3. Update View Reservations Screen (Using Anonymous Inner Class)
+                if (ViewReservations_GUI.instance != null) {
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            ViewReservations_GUI.instance.updateMaxCapacity(calculatedMax);
+                        }
+                    });
+                }
+                // 4. Update Manage Orders Screen (Admin)
+                if (ManageOrders_GUI.instance != null) {
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            ManageOrders_GUI.instance.updateMaxCapacity(calculatedMax);
+                        }
+                    });
+                }
+            }
+        });
 
 		responseHandlers.put(MessageType.TABLE_OPERATION_FAILED, new ResponseHandler() {
 			@Override
@@ -570,13 +725,30 @@ public class Client_Controller implements ChatIF {
 		});
 
 		responseHandlers.put(MessageType.TABLE_OPERATION_SUCCESS, new ResponseHandler() {
-			@Override
-			public void handle(Message msg) {
-				if (ManageTables_GUI.instance != null) {
-					sendComplexObject(new Message(MessageType.GET_ALL_TABLES, null));
-				}
-			}
-		});
+            @Override
+            public void handle(Message msg) {
+                // 1. Extract the success message sent from the server
+                String successMsg = (String) msg.getContent();
+
+                if (ManageTables_GUI.instance != null) {
+                    
+                    // 2. Show Success Alert on the JavaFX Application Thread
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                            alert.setTitle("Success");
+                            alert.setHeaderText(null);
+                            alert.setContentText(successMsg);
+                            alert.showAndWait();
+                        }
+                    });
+
+                    // 3. Refresh the table list to show changes
+                    sendComplexObject(new Message(MessageType.GET_ALL_TABLES, null));
+                }
+            }
+        });
 		// -----------------------------------------------------------
 		// Waitlist
 		// -----------------------------------------------------------
@@ -651,17 +823,27 @@ public class Client_Controller implements ChatIF {
 	}
 
 	/**
-	 * Helper method to refresh reservations for the currently logged-in user.
-	 */
-	private void refreshUserReservations() {
-		Object user;
-		if (User_Session.getLoggedInUser() != null) {
-			user = User_Session.getLoggedInUser();
-		} else {
-			user = User_Session.getCasualPhone();
-		}
-		sendGetReservationsRequest(user);
-	}
+     * Helper method to refresh reservations for the currently logged-in user.
+     * UPDATED: Now uses getCasualIdentifier() to support Email logins.
+     */
+    private void refreshUserReservations() {
+        Object user;
+        
+        // 1. Check for Subscriber
+        if (User_Session.getLoggedInUser() != null) {
+            user = User_Session.getLoggedInUser();
+        } else {
+            // 2. Check for Casual (Phone OR Email) using the new helper
+            user = User_Session.getCasualIdentifier();
+        }
+        
+        // 3. Null Safety Check before sending
+        if (user != null) {
+            sendGetReservationsRequest(user);
+        } else {
+            System.err.println("[Client_Controller] Cannot refresh reservations: No active session found.");
+        }
+    }
 
 	@Override
 	public void display(Object message) {
@@ -754,41 +936,43 @@ public class Client_Controller implements ChatIF {
 	}
 
 	/**
-	 * Resolves the user identifier (Phone or Email) and sends the request to the server.
-	 * This version supports login via Email by falling back to the email field if phone is missing.
-	 */
+     * Resolves the user identifier (Phone or Email) and sends the request to the server.
+     * This version supports login via Email by falling back to the email field if phone is missing.
+     * Updated to handle String identifiers properly.
+     */
 	public void sendGetReservationsRequest(Object user) {
-	    String identifier = null;
+        String identifier = null;
 
-	    if (user == null) {
-	        System.err.println("[Client_Controller] sendGetReservationsRequest: Received a NULL object.");
-	        return;
-	    }
+        if (user == null) {
+            System.err.println("[Client_Controller] sendGetReservationsRequest received NULL!");
+            return;
+        }
 
-	    // Case 1: The user is a logged-in Subscriber (UserRecord)
-	    if (user instanceof entities.UserRecord) {
-	        entities.UserRecord record = (entities.UserRecord) user;
-	        // Priority 1: Phone
-	        identifier = record.getPhone();
-	        
-	        // Priority 2: Email (if phone is missing)
-	        if (identifier == null || identifier.trim().isEmpty()) {
-	            identifier = record.getEmail();
-	        }
-	    } 
-	    // Case 2: The user is a Casual Customer (identified by a String from User_Session)
-	    else if (user instanceof String) {
-	        identifier = (String) user;
-	    }
+        System.out.println("[Client_Controller] Processing request for user object: " + user.toString());
 
-	    // Validation and Sending
-	    if (identifier != null && !identifier.trim().isEmpty()) {
-	        System.out.println("[Client_Controller] Fetching reservations for identifier: " + identifier);
-	        sendComplexObject(new Message(MessageType.GET_RESERVATIONS_BY_USER, identifier));
-	    } else {
-	        System.err.println("[Client_Controller] Request failed: No identifier (Phone or Email) could be resolved.");
-	    }
-	}
+        // Case 1: Subscriber (UserRecord)
+        if (user instanceof entities.UserRecord) {
+            entities.UserRecord record = (entities.UserRecord) user;
+            identifier = record.getPhone();
+            
+            // Priority 2: Email (fallback)
+            if (identifier == null || identifier.trim().isEmpty()) {
+                identifier = record.getEmail();
+            }
+        } 
+        // Case 2: Casual Customer (String)
+        else if (user instanceof String) {
+            identifier = (String) user;
+        }
+
+        // Validation and Sending
+        if (identifier != null && !identifier.trim().isEmpty()) {
+            System.out.println("[Client_Controller] Sending request for identifier: " + identifier);
+            sendComplexObject(new Message(MessageType.GET_RESERVATIONS_BY_USER, identifier));
+        } else {
+            System.err.println("[Client_Controller] Error: Could not resolve a valid Phone or Email from the object.");
+        }
+    }
 
 	/**
 	 * Sends a batch update request for the weekly schedule.

@@ -17,13 +17,11 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
-
 import entities.Opening_Hours;
 import entities.Opening_Hours.TimeRange;
 
@@ -39,26 +37,24 @@ public class ManageHours_GUI {
     @FXML private Button btnSaveRegular;
     @FXML private Button btnBack;
 
-    // Special Hours Table
     @FXML private TableView<SpecialHourRow> tableSpecialHours;
     @FXML private TableColumn<SpecialHourRow, String> colDate;
     @FXML private TableColumn<SpecialHourRow, String> colOpen;
     @FXML private TableColumn<SpecialHourRow, String> colClose;
     @FXML private TableColumn<SpecialHourRow, String> colDesc;
 
-    // Special Hour Form
     @FXML private DatePicker dpSpecialDate;
     @FXML private ComboBox<String> cbSpecialOpen;
     @FXML private ComboBox<String> cbSpecialClose;
     @FXML private TextField txtSpecialDesc;
     @FXML private Button btnAddSpecial;
     @FXML private Button btnDeleteSpecial;
-    
-    // NEW BUTTON
     @FXML private Button btnMarkClosed;
 
-    /** Map to keep track of the UI controls for each day. */
     private Map<DayOfWeek, DayRowControls> dayControlsMap = new HashMap<DayOfWeek, DayRowControls>();
+    
+    /** Flag to distinguish between initial load and user updates */
+    private boolean updatePending = false;
 
     @FXML
     public void initialize() {
@@ -68,7 +64,6 @@ public class ManageHours_GUI {
         populateTimeComboBox(cbSpecialOpen);
         populateTimeComboBox(cbSpecialClose);
         
-        // --- Listener: Enable "Mark Closed" only if date is selected ---
         dpSpecialDate.valueProperty().addListener(new ChangeListener<LocalDate>() {
             @Override
             public void changed(ObservableValue<? extends LocalDate> obs, LocalDate oldVal, LocalDate newVal) {
@@ -76,18 +71,15 @@ public class ManageHours_GUI {
             }
         });
 
-        // --- Action: Mark as Closed ---
         btnMarkClosed.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                // Set logic: 06:00 to 06:30 implies "Closed" logic on server side or just invalid range
                 cbSpecialOpen.setValue("06:00");
                 cbSpecialClose.setValue("06:30");
                 txtSpecialDesc.setText("Closed");
             }
         });
 
-        // --- 1. Batch Save Action ---
         btnSaveRegular.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
@@ -95,7 +87,6 @@ public class ManageHours_GUI {
             }
         });
 
-        // --- 2. Add Exception Action ---
         btnAddSpecial.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
@@ -103,7 +94,6 @@ public class ManageHours_GUI {
             }
         });
 
-        // --- 3. Delete Exception Action ---
         btnDeleteSpecial.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
@@ -111,7 +101,6 @@ public class ManageHours_GUI {
             }
         });
 
-        // --- 4. Navigation ---
         btnBack.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
@@ -119,7 +108,20 @@ public class ManageHours_GUI {
             }
         });
 
+        // This request will NOT trigger a success alert because updatePending is false
         ConnectToServer_GUI.clientController.sendGetOpeningHoursRequest();
+    }
+    
+    /**
+     * Sets the flag indicating a user-initiated update is in progress.
+     * @param pending true if waiting for server response after an action.
+     */
+    public void setUpdatePending(boolean pending) {
+        this.updatePending = pending;
+    }
+
+    public boolean isUpdatePending() {
+        return updatePending;
     }
 
     private void populateTimeComboBox(ComboBox<String> cb) {
@@ -144,6 +146,8 @@ public class ManageHours_GUI {
                 return;
             }
         }
+        // Set flag before sending
+        this.updatePending = true;
         ConnectToServer_GUI.clientController.sendBatchUpdateHours(batchData);
     }
 
@@ -181,7 +185,6 @@ public class ManageHours_GUI {
             populateTimeComboBox(cbClose);
             cbOpen.setPrefWidth(120);
             cbClose.setPrefWidth(120);
-
 
             final CheckBox cbActive = new CheckBox();
             cbActive.setStyle("-fx-mark-color: #3498db;");
@@ -230,18 +233,34 @@ public class ManageHours_GUI {
                 showAlert("Missing Data", "Please fill all fields.");
                 return;
             }
+
+            // Check if date already exists
+            String dateString = date.toString();
+            for (SpecialHourRow row : tableSpecialHours.getItems()) {
+                if (row.getDate().equals(dateString)) {
+                    showAlert("Duplicate Date", "Error: You can only have one special schedule per date.\nPlease delete the existing entry first.");
+                    return;
+                }
+            }
+
             LocalTime open = LocalTime.parse(cbSpecialOpen.getValue());
             LocalTime close = LocalTime.parse(cbSpecialClose.getValue());
             String desc = txtSpecialDesc.getText();
 
+            // Set flag before sending
+            this.updatePending = true;
             ConnectToServer_GUI.clientController.sendAddSpecialHourRequest(date, open, close, desc);
             clearSpecialForm();
-        } catch (Exception e) { showAlert("Error", "Invalid selection."); }
+        } catch (Exception e) { 
+            showAlert("Error", "Invalid selection."); 
+        }
     }
 
     private void onDeleteSpecialHour() {
         SpecialHourRow selected = tableSpecialHours.getSelectionModel().getSelectedItem();
         if (selected != null) {
+            // Set flag before sending
+            this.updatePending = true;
             ConnectToServer_GUI.clientController.sendDeleteSpecialHourRequest(LocalDate.parse(selected.getDate()));
         } else {
             showAlert("Missing Selection", "Select a Special Hour(row) to delete.");
@@ -254,6 +273,7 @@ public class ManageHours_GUI {
         colClose.setCellValueFactory(new PropertyValueFactory<SpecialHourRow, String>("close"));
         colDesc.setCellValueFactory(new PropertyValueFactory<SpecialHourRow, String>("description"));
     }
+    
     private void onBackClicked(ActionEvent event) {
         try {
             Parent root = FXMLLoader.load(getClass().getResource("/gui/Workers.fxml"));
@@ -274,6 +294,7 @@ public class ManageHours_GUI {
     private void showAlert(String title, String content) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
+        alert.setHeaderText(null);
         alert.setContentText(content);
         alert.showAndWait();
     }

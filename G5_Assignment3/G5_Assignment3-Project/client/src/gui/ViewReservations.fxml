@@ -6,9 +6,9 @@
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Spinner?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
-<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
@@ -73,7 +73,7 @@
                                 <VBox spacing="5">
                                     <children>
                                         <Label styleClass="card-label" text="Guests" />
-                                        <TextField fx:id="editGuestsField" prefWidth="80" />
+                                        <Spinner fx:id="editGuestsSpinner" editable="false" prefWidth="90" />
                                     </children>
                                 </VBox>
                             </children>

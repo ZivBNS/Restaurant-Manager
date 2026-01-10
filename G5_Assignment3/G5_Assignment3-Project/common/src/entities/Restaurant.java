@@ -1,92 +1,159 @@
 package entities;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Represents the Restaurant entity. Implements the Singleton pattern because
- * there is only one restaurant instance in the system.
+ * Represents the Restaurant entity. 
+ * This class implements the **Singleton Pattern**, ensuring that only one 
+ * instance of the Restaurant object exists throughout the application's lifecycle.
+ * It holds the global state of the restaurant, including tables and opening hours.
  */
 public class Restaurant {
 
-	// The single instance of the class
-	private static Restaurant instance;
-	private static int biggestTableSize;
-	private int id;
-	private String name;
+    // --- Singleton Instance ---
+    /** The single static instance of the Restaurant class */
+    private static Restaurant instance;
 
-	private List<Restaurant_Table> tables;
-	private Opening_Hours openingHours;
+    // --- Static Fields ---
+    /** Stores the capacity of the largest table (used for UI limits and validation) */
+    private static int biggestTableSize;
 
-	// --- Private Constructor (Singleton) ---
-	private Restaurant() {
-		this.name = "Bistro"; // Default name
-	}
+    // --- Instance Fields ---
+    /** The unique identifier for the restaurant */
+    private int id;
+    /** The name of the restaurant */
+    private String name;
 
-	// --- Static Accessor Method ---
-	public static Restaurant getInstance() {
-		if (instance == null) {
-			instance = new Restaurant();
-		}
-		return instance;
-	}
+    /** * List of all physical tables in the restaurant.
+     * IMPORTANT: Initialize with an empty ArrayList to prevent NullPointerException
+     */
+    private List<Restaurant_Table> tables = new ArrayList<>();
+    
+    /** The operating hours and schedule for the restaurant */
+    private Opening_Hours openingHours;
 
-	public void addTable(Restaurant_Table table) {
-		tables.add(table);
-	}
+    // --- Private Constructor (Singleton) ---
+    
+    /**
+     * Private constructor to prevent direct instantiation from other classes.
+     * Initializes default values such as the restaurant name.
+     */
+    private Restaurant() {
+        this.name = "Bistro"; // Default name
+        this.tables = new ArrayList<>(); // Double safety: ensure list is not null
+    }
 
-	public Restaurant_Table getTableByNumber(int tableNumber) {
-		for (Restaurant_Table table : tables) {
-			if (table.getTableNumber() == tableNumber) {
-				return table;
-			}
-		}
-		return null;
-	}
+    // --- Static Accessor Method ---
 
-	// --- Getters and Setters ---
+    /**
+     * Returns the single instance of the Restaurant class.
+     * Creates the instance if it does not exist yet (Lazy Initialization).
+     * @return The Singleton Restaurant instance.
+     */
+    public static Restaurant getInstance() {
+        if (instance == null) {
+            instance = new Restaurant();
+        }
+        return instance;
+    }
 
-	public int getId() {
-		return id;
-	}
+    // --- Business Logic Methods ---
 
-	public void setId(int id) {
-		this.id = id;
-	}
+    /**
+     * Adds a new table to the restaurant's list.
+     * Performs a null check on the tables list before adding.
+     * @param table The Restaurant_Table object to add.
+     */
+    public void addTable(Restaurant_Table table) {
+        if (this.tables == null) {
+            this.tables = new ArrayList<>();
+        }
+        tables.add(table);
+    }
 
-	public String getName() {
-		return name;
-	}
+    /**
+     * Searches for a table by its visible table number.
+     * @param tableNumber The specific table number to search for.
+     * @return The Restaurant_Table object if found, otherwise null.
+     */
+    public Restaurant_Table getTableByNumber(int tableNumber) {
+        if (tables == null) return null;
+        
+        for (Restaurant_Table table : tables) {
+            if (table.getTableNumber() == tableNumber) {
+                return table;
+            }
+        }
+        return null;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    // --- Getters and Setters ---
 
-	public List<Restaurant_Table> getTables() {
-		return tables;
-	}
+    /** @return The restaurant's internal ID */
+    public int getId() {
+        return id;
+    }
 
-	public void setTables(List<Restaurant_Table> tables) {
-		this.tables = tables;
-	}
+    /** @param id Set the restaurant's internal ID */
+    public void setId(int id) {
+        this.id = id;
+    }
 
-	public Opening_Hours getOpeningHours() {
-		return openingHours;
-	}
+    /** @return The name of the restaurant */
+    public String getName() {
+        return name;
+    }
 
-	public void setOpeningHours(Opening_Hours openingHours) {
-		this.openingHours = openingHours;
-	}
+    /** @param name Set the name of the restaurant */
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	@Override
-	public String toString() {
-		return "Restaurant: " + name + " [Total Tables: " + tables.size() + "]";
-	}
+    /**
+     * Gets the list of tables.
+     * Includes defensive coding to ensure a null list is never returned.
+     * @return A List of Restaurant_Table objects.
+     */
+    public List<Restaurant_Table> getTables() {
+        // Defensive coding: Ensure we never return null to the GUI or other layers
+        if (tables == null) {
+            tables = new ArrayList<>();
+        }
+        return tables;
+    }
 
-	public static int getBiggestTableSize() {
-		return biggestTableSize;
-	}
+    /** @param tables Set the list of restaurant tables */
+    public void setTables(List<Restaurant_Table> tables) {
+        this.tables = tables;
+    }
 
-	public static void setBiggestTableSize(int biggestTableSize) {
-		Restaurant.biggestTableSize = biggestTableSize;
-	}
+    /** @return The current Opening_Hours object */
+    public Opening_Hours getOpeningHours() {
+        return openingHours;
+    }
+
+    /** @param openingHours Set the restaurant's opening hours */
+    public void setOpeningHours(Opening_Hours openingHours) {
+        this.openingHours = openingHours;
+    }
+
+    /** @return The size/capacity of the largest table in the system */
+    public static int getBiggestTableSize() {
+        return biggestTableSize;
+    }
+
+    /** @param biggestTableSize Set the maximum table size for the system */
+    public static void setBiggestTableSize(int biggestTableSize) {
+        Restaurant.biggestTableSize = biggestTableSize;
+    }
+
+    /**
+     * Returns a summary of the restaurant, including name and total table count.
+     */
+    @Override
+    public String toString() {
+        int count = (tables != null) ? tables.size() : 0;
+        return "Restaurant: " + name + " [Total Tables: " + count + "]";
+    }
 }

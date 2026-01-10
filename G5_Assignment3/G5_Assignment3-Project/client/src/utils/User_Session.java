@@ -41,7 +41,15 @@ public class User_Session {
         // אם לא, ניקח את הטלפון שהוזן ידנית
         return casualPhone;
     }
-
+    public static String getCasualIdentifier() {
+        if (casualPhone != null && !casualPhone.isEmpty()) {
+            return casualPhone;
+        }
+        if (casualEmail != null && !casualEmail.isEmpty()) {
+            return casualEmail;
+        }
+        return null;
+    }
     /**
      * Clears session data upon logout or disconnection.
      */

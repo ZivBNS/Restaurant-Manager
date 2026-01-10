@@ -96,14 +96,14 @@ public class Reservation_Controller {
             LocalDateTime endTime = startTime.plusHours(2);
             
             // 3. must check: if the person invite more orders to the same time - result: block him
-            List<Reservation> checkReservations = tableRepository.getOverlappingReservationsList(startTime, endTime, reservation.getId());
-            for (Reservation r:checkReservations) {
-                boolean sameUserId = (r.getUserId() != null && r.getUserId().equals(reservation.getUserId()));
-                boolean sameEmail = (r.getEmail() != null && !r.getEmail().isEmpty() && r.getEmail().equalsIgnoreCase(reservation.getEmail()));                
-                boolean samePhone = (r.getPhone() != null && !r.getPhone().isEmpty() && r.getPhone().equals(reservation.getPhone()));
-                if (sameUserId || sameEmail || samePhone)
-                	return new Message(MessageType.RESERVATION_FAILED_ALREADY_BOOKED, "It looks like you're already booked with us for this time!\nPlease use your existing confirmation code, or cancel the previous reservation to make a new one.");
-            }
+//            List<Reservation> checkReservations = tableRepository.getOverlappingReservationsList(startTime, endTime, reservation.getId());
+//            for (Reservation r:checkReservations) {
+//                boolean sameUserId = (r.getUserId() != null && r.getUserId().equals(reservation.getUserId()));
+//                boolean sameEmail = (r.getEmail() != null && !r.getEmail().isEmpty() && r.getEmail().equalsIgnoreCase(reservation.getEmail()));                
+//                boolean samePhone = (r.getPhone() != null && !r.getPhone().isEmpty() && r.getPhone().equals(reservation.getPhone()));
+//                if (sameUserId || sameEmail || samePhone)
+//                	return new Message(MessageType.RESERVATION_FAILED_ALREADY_BOOKED, "It looks like you're already booked with us for this time!\nPlease use your existing confirmation code, or cancel the previous reservation to make a new one.");
+//            }
             
 
             // 4. Capacity Check

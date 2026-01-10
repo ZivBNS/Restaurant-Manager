@@ -33,6 +33,7 @@ import javafx.stage.Stage;
 import javafx.util.Callback;
 import messages.Message;
 import messages.MessageType;
+import utils.DataChecker;
 
 /**
  * Unified Controller for Managing Reservations (Admin View). Handles table
@@ -41,7 +42,6 @@ import messages.MessageType;
  */
 public class ManageOrders_GUI {
 
-	/** Static instance for external access from Client_Controller. */
 	public static ManageOrders_GUI instance;
 
 	// --- Table Components ---
@@ -66,103 +66,98 @@ public class ManageOrders_GUI {
 
 	// Buttons
 	@FXML
-	private Button btnAdd; // Added for disabling during edit mode
+	private Button btnAdd;
 	@FXML
 	private Button btnUpdate, btnCancel;
 
-	/** Stores the database ID of the user fetched via lookup. */
 	private Integer activeInternalUserId = null;
+	private int maxRestaurantCapacity = 10;
 
 	private ObservableList<Reservation> masterData = FXCollections.observableArrayList();
 
-	/**
-	 * Initializes the controller. Sets up table columns, spinner, status dropdown,
-	 * and dark-themed component styling.
-	 */
-    @FXML
-    public void initialize() {
-        instance = this;
-        
-        // 1. Basic Setup
-        setupAdminTable();
-        restrictDatePickerRange();
-        setupUserIDListener();
-        setupComboBoxStyling();
+	@FXML
+	public void initialize() {
+		instance = this;
+		// 1. Request opening hours from the server
+		ConnectToServer_GUI.clientController.sendGetOpeningHoursRequest();
 
-        // --- SORTING LOGIC START ---
-        
-        // Wrap the ObservableList in a SortedList. 
-        // 'masterList' is the list where you add data from the server.
-        SortedList<Reservation> sortedData = new SortedList<>(masterData);
+		// 2. Request Table Data to determine max capacity for validation
+		ConnectToServer_GUI.clientController.sendGetAllTablesRequest();
+		setupAdminTable();
+		restrictDatePickerRange();
+		setupUserIDListener();
+		setupComboBoxStyling();
+		setupGuestsSpinner();
 
-        // Bind the SortedList comparator to the TableView comparator.
-        // This ensures that clicking column headers sorts the data automatically.
-        sortedData.comparatorProperty().bind(adminTable.comparatorProperty());
+		// Sorting Logic
+		SortedList<Reservation> sortedData = new SortedList<>(masterData);
+		sortedData.comparatorProperty().bind(adminTable.comparatorProperty());
+		adminTable.setItems(sortedData);
+		colStatus.setSortType(TableColumn.SortType.ASCENDING);
+		adminTable.getSortOrder().add(colStatus);
 
-        // Set the sorted data into the TableView
-        adminTable.setItems(sortedData);
+		cbStatus.getItems().addAll("Pending", "Active", "Completed", "No_show", "Canceled");
+		cbStatus.setValue("Pending");
+		cbStatus.setDisable(true);
 
-        // Define default sort order (by Status column)
-        colStatus.setSortType(TableColumn.SortType.ASCENDING);
-        adminTable.getSortOrder().add(colStatus);
-        
-        // --- SORTING LOGIC END ---
+		ConnectToServer_GUI.clientController.sendGetOpeningHoursRequest();
+		ConnectToServer_GUI.clientController.sendGetAllTablesRequest();
+		refreshAdminData();
 
-        // 2. Initialize UI Components
-        
-        // Initialize Status choices
-        cbStatus.getItems().addAll("Pending", "Active", "Completed", "No_show", "Canceled");
-        cbStatus.setValue("Pending");
-        cbStatus.setDisable(true); // Locked for new reservations by default
+		// Listeners
+		adminTable.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Reservation>() {
+			@Override
+			public void changed(ObservableValue<? extends Reservation> obs, Reservation oldV, Reservation newV) {
+				if (newV != null) {
+					populateForm(newV);
+					setEditMode(true);
+				}
+			}
+		});
 
-        // Initialize Guests Spinner (1 to 20 guests, default 2)
-        SpinnerValueFactory<Integer> valueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 20, 2);
-        spGuests.setValueFactory(valueFactory);
+		datePicker.valueProperty().addListener(new ChangeListener<LocalDate>() {
+			@Override
+			public void changed(ObservableValue<? extends LocalDate> obs, LocalDate oldV, LocalDate newV) {
+				if (newV != null) {
+					loadDynamicHours(newV, null);
+				}
+			}
+		});
 
-        // 3. Fetch Data
-        
-        // Fetch operational data and reservations from server
-        ConnectToServer_GUI.clientController.sendGetOpeningHoursRequest();
-        refreshAdminData();
+		txtUserID.textProperty().addListener(new ChangeListener<String>() {
+			@Override
+			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+				if (!newValue.equals(oldValue)) {
+					activeInternalUserId = null;
+				}
+			}
+		});
+	}
 
-        // 4. Listeners (Using Anonymous Inner Classes)
+	private void setupGuestsSpinner() {
+		SpinnerValueFactory<Integer> valueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 10, 2);
+		spGuests.setValueFactory(valueFactory);
 
-        // Listener for table row selection to populate the form
-        adminTable.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Reservation>() {
-            @Override
-            public void changed(ObservableValue<? extends Reservation> obs, Reservation oldV, Reservation newV) {
-                if (newV != null) {
-                    populateForm(newV);
-                    setEditMode(true);
-                }
-            }
-        });
-        
-        // Listener for DatePicker changes to reload time slots dynamically
-        datePicker.valueProperty().addListener(new ChangeListener<LocalDate>() {
-            @Override
-            public void changed(ObservableValue<? extends LocalDate> obs, LocalDate oldV, LocalDate newV) {
-                if (newV != null) {
-                    loadDynamicHours(newV, null);
-                }
-            }
-        });
+		spGuests.focusedProperty().addListener(new ChangeListener<Boolean>() {
+			@Override
+			public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+				if (!newValue) {
+					spGuests.increment(0);
+				}
+			}
+		});
+	}
 
-        // Listener to reset verification if UserID text is edited manually
-        txtUserID.textProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-                if (!newValue.equals(oldValue)) {
-                    activeInternalUserId = null;
-                }
-            }
-        });
-    }
+	public void updateMaxCapacity(int realMax) {
+		this.maxRestaurantCapacity = realMax;
+		if (spGuests != null) {
+			SpinnerValueFactory<Integer> currentFactory = spGuests.getValueFactory();
+			if (currentFactory instanceof SpinnerValueFactory.IntegerSpinnerValueFactory) {
+				((SpinnerValueFactory.IntegerSpinnerValueFactory) currentFactory).setMax(realMax);
+			}
+		}
+	}
 
-	/**
-	 * Applies dark mode styling to the Time ComboBox cells to match AddReservation
-	 * screen.
-	 */
 	private void setupComboBoxStyling() {
 		timeCombo.setCellFactory(new Callback<ListView<String>, ListCell<String>>() {
 			@Override
@@ -196,9 +191,6 @@ public class ManageOrders_GUI {
 		});
 	}
 
-	/**
-	 * Sets up the UserID field listener to handle Enter key for subscriber lookup.
-	 */
 	private void setupUserIDListener() {
 		txtUserID.setOnKeyPressed(new EventHandler<KeyEvent>() {
 			@Override
@@ -210,7 +202,6 @@ public class ManageOrders_GUI {
 							int subCode = Integer.parseInt(idStr);
 							Message msg = new Message(MessageType.GET_USER_DETAILS, subCode);
 							ConnectToServer_GUI.clientController.sendComplexObject(msg);
-							System.out.println("Sent request for User ID: " + subCode);
 						} catch (NumberFormatException e) {
 							showAlert("Input Error", "Subscriber Code must be numeric.");
 						}
@@ -220,11 +211,6 @@ public class ManageOrders_GUI {
 		});
 	}
 
-	/**
-	 * Fills the form with details of a found subscriber.
-	 * 
-	 * @param user The user record returned from the server.
-	 */
 	public void fillUserDetails(final UserRecord user) {
 		Platform.runLater(new Runnable() {
 			@Override
@@ -243,9 +229,6 @@ public class ManageOrders_GUI {
 		});
 	}
 
-	/**
-	 * Maps table columns and sets resize policy.
-	 */
 	private void setupAdminTable() {
 		adminTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
 		colCode.setCellValueFactory(new PropertyValueFactory<Reservation, Integer>("confirmationCode"));
@@ -260,9 +243,6 @@ public class ManageOrders_GUI {
 		adminTable.setItems(masterData);
 	}
 
-	/**
-	 * Restricts the DatePicker range and applies DARK styling to cells.
-	 */
 	private void restrictDatePickerRange() {
 		final LocalDate minDate = LocalDate.now();
 		final LocalDate maxDate = LocalDate.now().plusMonths(1);
@@ -275,7 +255,6 @@ public class ManageOrders_GUI {
 						super.updateItem(item, empty);
 						if (item != null && (item.isBefore(minDate) || item.isAfter(maxDate))) {
 							setDisable(true);
-							// Use dark mode style for disabled dates to match AddReservation screen
 							setStyle(
 									"-fx-background-color: #4a4a4a; -fx-control-inner-background: #4a4a4a; -fx-text-fill: white;");
 						} else {
@@ -287,18 +266,14 @@ public class ManageOrders_GUI {
 		});
 	}
 
-	/**
-	 * Populates the editor form with data from a selected reservation.
-	 * 
-	 * @param res The reservation to edit.
-	 */
 	private void populateForm(Reservation res) {
 		txtOrderID.setText(String.valueOf(res.getConfirmationCode()));
 		txtUserID.setText(res.getUserId() != null ? String.valueOf(res.getUserId()) : "");
 		this.activeInternalUserId = res.getUserId();
 
-		txtPhone.setText(res.getPhone());
-		txtEmail.setText(res.getEmail());
+		txtPhone.setText(res.getPhone() != null ? res.getPhone() : "");
+		txtEmail.setText(res.getEmail() != null ? res.getEmail() : "");
+
 		spGuests.getValueFactory().setValue(res.getNumberOfDiners());
 		txtTable.setText(res.getTableId() != null ? String.valueOf(res.getTableId()) : "Auto");
 
@@ -306,16 +281,13 @@ public class ManageOrders_GUI {
 		if (status != null)
 			cbStatus.setValue(status.substring(0, 1).toUpperCase() + status.substring(1).toLowerCase());
 
-		cbStatus.setDisable(false); // Allow status editing for existing orders
+		cbStatus.setDisable(false);
 		datePicker.setValue(res.getOrderStartTime().toLocalDate());
 		String timeStr = String.format("%02d:%02d", res.getOrderStartTime().getHour(),
 				res.getOrderStartTime().getMinute());
 		loadDynamicHours(res.getOrderStartTime().toLocalDate(), timeStr);
 	}
 
-	/**
-	 * Resets the form to a "New Order" state.
-	 */
 	@FXML
 	void onClearClicked(ActionEvent event) {
 		adminTable.getSelectionModel().clearSelection();
@@ -328,32 +300,31 @@ public class ManageOrders_GUI {
 		spGuests.getValueFactory().setValue(2);
 		txtTable.setText("Auto");
 		cbStatus.setValue("Pending");
-		cbStatus.setDisable(true); // Locked for new orders
+		cbStatus.setDisable(true);
 		datePicker.setValue(LocalDate.now());
 		loadDynamicHours(LocalDate.now(), null);
 		setEditMode(false);
 	}
 
-	/**
-	 * Toggles interaction buttons based on selection. Disables the "Create" button
-	 * if an order is being updated.
-	 */
 	private void setEditMode(boolean isEdit) {
 		btnUpdate.setDisable(!isEdit);
 		btnCancel.setDisable(!isEdit);
-		txtUserID.setDisable(isEdit); // Lock ID during editing
-
-		// --- NEW CHANGE: Disable Create Order button during Edit mode ---
+		txtUserID.setDisable(isEdit);
 		btnAdd.setDisable(isEdit);
 	}
 
-	/**
-	 * Validates and submits a new reservation request.
-	 */
 	@FXML
 	void onAddClicked(ActionEvent event) {
 		if (!validateInput())
 			return;
+
+		int diners = spGuests.getValue();
+		if (diners > maxRestaurantCapacity) {
+			showAlert("Capacity Error",
+					"We cannot accommodate a group of " + diners + ".\nMax capacity is " + maxRestaurantCapacity + ".");
+			return;
+		}
+
 		try {
 			Reservation newRes = buildReservationFromForm();
 			newRes.setStatus("Pending");
@@ -365,16 +336,23 @@ public class ManageOrders_GUI {
 		}
 	}
 
-	/**
-	 * Validates and submits an update request for an existing reservation.
-	 */
 	@FXML
 	void onUpdateClicked(ActionEvent event) {
 		Reservation selected = adminTable.getSelectionModel().getSelectedItem();
-		if (selected == null)
+		if (selected == null) {
+			showAlert("No Selection", "Please select a reservation to update.");
 			return;
+		}
 		if (!validateInput())
 			return;
+
+		int diners = spGuests.getValue();
+		if (diners > maxRestaurantCapacity) {
+			showAlert("Capacity Error",
+					"We cannot accommodate a group of " + diners + ".\nMax capacity is " + maxRestaurantCapacity + ".");
+			return;
+		}
+
 		try {
 			Reservation updatedRes = buildReservationFromForm();
 			updatedRes.setId(selected.getId());
@@ -387,9 +365,6 @@ public class ManageOrders_GUI {
 		}
 	}
 
-	/**
-	 * Confirms and sends a cancellation request.
-	 */
 	@FXML
 	void onDeleteClicked(ActionEvent event) {
 		final Reservation selected = adminTable.getSelectionModel().getSelectedItem();
@@ -408,24 +383,39 @@ public class ManageOrders_GUI {
 		});
 	}
 
+	/**
+	 * Validates input fields including Phone and Email format.
+	 */
 	private boolean validateInput() {
-		if (txtPhone.getText().isEmpty() && txtEmail.getText().isEmpty()) {
-			showAlert("Validation Error", "Please fill Phone or Email.");
+		String phone = txtPhone.getText().trim();
+		String email = txtEmail.getText().trim();
+
+		if (phone.isEmpty() && email.isEmpty()) {
+			showAlert("Validation Error", "Please provide at least one contact method (Phone or Email).");
 			return false;
 		}
+
+		// Use DataChecker for validation
+		// Pass null for the field that is empty so DataChecker skips it
+		String phoneToCheck = phone.isEmpty() ? null : phone;
+		String emailToCheck = email.isEmpty() ? null : email;
+
+		if (!DataChecker.validateContactInfo(emailToCheck, phoneToCheck)) {
+			showAlert("Validation Error", "Invalid Phone or Email format.");
+			return false;
+		}
+
 		if (datePicker.getValue() == null || timeCombo.getValue() == null) {
 			showAlert("Validation Error", "Please select Date and Time.");
 			return false;
 		}
+
 		return true;
 	}
 
-	/**
-	 * Logic to create a Reservation object from form fields, adjusting for shifts
-	 * crossing midnight.
-	 */
 	private Reservation buildReservationFromForm() {
-		if (!txtUserID.getText().trim().isEmpty() && activeInternalUserId == null) {
+		String idText = txtUserID.getText();
+		if (idText != null && !idText.trim().isEmpty() && activeInternalUserId == null) {
 			throw new RuntimeException("Please press ENTER in User ID box to verify the subscriber first.");
 		}
 		LocalDate d = datePicker.getValue();
@@ -443,13 +433,14 @@ public class ManageOrders_GUI {
 			d = d.plusDays(1);
 		}
 		LocalDateTime start = LocalDateTime.of(d, t);
-		return new Reservation(activeInternalUserId, txtPhone.getText().trim(), txtEmail.getText().trim(), start,
-				start.plusHours(2), spGuests.getValue());
+
+		String safePhone = (txtPhone.getText() != null) ? txtPhone.getText().trim() : "";
+		String safeEmail = (txtEmail.getText() != null) ? txtEmail.getText().trim() : "";
+
+		return new Reservation(activeInternalUserId, safePhone, safeEmail, start, start.plusHours(2),
+				spGuests.getValue());
 	}
 
-	/**
-	 * Dynamically loads available time slots based on restaurant hours.
-	 */
 	public void loadDynamicHours(final LocalDate selectedDate, final String timeToSelect) {
 		Platform.runLater(new Runnable() {
 			@Override
@@ -568,12 +559,26 @@ public class ManageOrders_GUI {
 		});
 	}
 
+	// --- Success Alerts ---
+
 	public void showSuccessAlert(final int code) {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
 				new Alert(Alert.AlertType.INFORMATION, "Reservation created successfully.\nCode: " + code)
 						.showAndWait();
+				refreshAdminData();
+				onClearClicked(null);
+			}
+		});
+	}
+
+	// NEW: Called when an update is successful
+	public void showUpdateSuccessAlert() {
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				new Alert(Alert.AlertType.INFORMATION, "Reservation updated successfully!").showAndWait();
 				refreshAdminData();
 				onClearClicked(null);
 			}

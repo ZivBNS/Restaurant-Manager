@@ -10,34 +10,29 @@ import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import java.util.List;
 import entities.Restaurant_Table;
 
+
 /**
  * Controller class for the Manage Tables screen.
  * Handles the creation, update, deletion, and viewing of restaurant tables.
+ * GUI Update: Removed Active status column and checkbox (Soft delete logic will be server-side).
  */
 public class ManageTables_GUI {
 
-    @FXML
-    private TableView<Restaurant_Table> tablesTable;
-    @FXML
-    private TableColumn<Restaurant_Table, Integer> colTableNumber;
-    @FXML
-    private TableColumn<Restaurant_Table, Integer> colTableSize;
-    @FXML
-    private TableColumn<Restaurant_Table, String> colActive;
-
-    @FXML
-    private TextField tableNumberField;
-    @FXML
-    private TextField tableSizeField;
-    @FXML
-    private CheckBox activeCheckBox;
+    @FXML private TableView<Restaurant_Table> tablesTable;
+    @FXML private TableColumn<Restaurant_Table, Integer> colTableNumber;
+    @FXML private TableColumn<Restaurant_Table, Integer> colTableSize;
+    @FXML private TextField tableNumberField;
+    @FXML private TextField tableSizeField;
+    @FXML private Button btnSaveNew; 
+    @FXML private Button btnUpdate; 
+    @FXML private Button btnDelete;
+    @FXML private Button btnClear;
 
     public static ManageTables_GUI instance;
 
@@ -49,7 +44,7 @@ public class ManageTables_GUI {
     public void initialize() {
         instance = this;
 
-        // --- Column Setup (Using Anonymous Inner Classes instead of Lambdas) ---
+        // --- Column Setup (Using Anonymous Inner Classes) ---
 
         // Table Number Column
         colTableNumber.setCellValueFactory(new Callback<CellDataFeatures<Restaurant_Table, Integer>, ObservableValue<Integer>>() {
@@ -67,13 +62,7 @@ public class ManageTables_GUI {
             }
         });
 
-        // Active Status Column
-        colActive.setCellValueFactory(new Callback<CellDataFeatures<Restaurant_Table, String>, ObservableValue<String>>() {
-            @Override
-            public ObservableValue<String> call(CellDataFeatures<Restaurant_Table, String> param) {
-                return new SimpleStringProperty(param.getValue().isActive() ? "Yes" : "No");
-            }
-        });
+        // Removed colActive setup
 
         // --- Table Selection Listener ---
         tablesTable.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Restaurant_Table>() {
@@ -82,18 +71,28 @@ public class ManageTables_GUI {
                 if (newValue != null) {
                     tableNumberField.setText(String.valueOf(newValue.getTableNumber()));
                     tableSizeField.setText(String.valueOf(newValue.getSize()));
-                    activeCheckBox.setSelected(newValue.isActive());
-                }
+                    setEditMode(true);
+                    }
             }
         });
 
         // --- Initial Data Load ---
+        setEditMode(false);
         refreshData();
     }
-
+    private void setEditMode(boolean isEdit) {
+        if (btnSaveNew != null) {
+            btnSaveNew.setDisable(isEdit); 
+        }
+        if (btnUpdate != null) {
+            btnUpdate.setDisable(!isEdit);
+        }
+        if (btnDelete != null) {
+            btnDelete.setDisable(!isEdit);
+        }
+    }
     /**
      * Sends a request to the server to get the current list of tables.
-     * Uses the centralized method in Client_Controller.
      */
     private void refreshData() {
         ConnectToServer_GUI.clientController.sendGetAllTablesRequest();
@@ -101,7 +100,6 @@ public class ManageTables_GUI {
 
     /**
      * Event handler for the Refresh button.
-     * Reloads data from the server and clears the form.
      */
     @FXML
     private void onRefreshClicked() {
@@ -117,12 +115,11 @@ public class ManageTables_GUI {
         tablesTable.getSelectionModel().clearSelection();
         tableNumberField.clear();
         tableSizeField.clear();
-        activeCheckBox.setSelected(false);
+        setEditMode(false);
     }
 
     /**
      * Handles the creation of a new table.
-     * Validates input, checks for duplicates locally, and sends a request to the server.
      */
     @FXML
     private void onSaveNewClicked() {
@@ -147,9 +144,7 @@ public class ManageTables_GUI {
             return;
         }
 
-        boolean active = activeCheckBox.isSelected();
-
-        // --- Duplicate check (CLIENT SIDE - Standard Loop) ---
+        // --- Duplicate check (CLIENT SIDE) ---
         boolean exists = false;
         for (Restaurant_Table t : tablesTable.getItems()) {
             if (t.getTableNumber() == tableNumber) {
@@ -164,9 +159,9 @@ public class ManageTables_GUI {
         }
 
         // --- Create Object and Send Request ---
-        Restaurant_Table newTable = new Restaurant_Table(-1, tableNumber, tableSize, active);
+        // New tables are ALWAYS active by default (true)
+        Restaurant_Table newTable = new Restaurant_Table(-1, tableNumber, tableSize, true);
 
-        // Uses the centralized method in Client_Controller
         ConnectToServer_GUI.clientController.sendAddTableRequest(newTable);
 
         onClearClicked();
@@ -175,7 +170,6 @@ public class ManageTables_GUI {
 
     /**
      * Handles the update of an existing table.
-     * Validates input and ensures table number uniqueness.
      */
     @FXML
     private void onUpdateClicked() {
@@ -197,10 +191,7 @@ public class ManageTables_GUI {
             return;
         }
 
-        boolean active = activeCheckBox.isSelected();
-
-        // --- Duplicate check (CLIENT SIDE - Standard Loop) ---
-        // Ensure we don't accidentally assign a Table Number that belongs to ANOTHER table
+        // --- Duplicate check (CLIENT SIDE) ---
         boolean existsForOther = false;
         for (Restaurant_Table t : tablesTable.getItems()) {
             if (t.getTableNumber() == tableNumber && t.getId() != selected.getId()) {
@@ -217,10 +208,10 @@ public class ManageTables_GUI {
         // --- Update Object ---
         selected.setTableNumber(tableNumber);
         selected.setTableSize(tableSize);
-        selected.setActive(active);
+        // Maintain existing active status (usually true if it's visible here)
+        selected.setActive(selected.isActive());
 
         // --- Send Request ---
-        // Uses the centralized method in Client_Controller
         ConnectToServer_GUI.clientController.sendUpdateTableRequest(selected);
 
         onClearClicked();
@@ -229,6 +220,7 @@ public class ManageTables_GUI {
 
     /**
      * Handles the deletion of the selected table.
+     * Note: Server will handle if this is a "Soft Delete" (marking inactive) or "Hard Delete".
      */
     @FXML
     private void onDeleteClicked() {
@@ -250,17 +242,11 @@ public class ManageTables_GUI {
 
         onClearClicked();
 
-        // Uses the centralized method in Client_Controller
         ConnectToServer_GUI.clientController.sendDeleteTableRequest(tableNumber);
         
         refreshData();
     }
 
-    /**
-     * Navigates back to the Workers Main Dashboard.
-     * Ensures the window remains maximized if previously set.
-     * @param event The action event triggered by the back button.
-     */
     @FXML
     private void onBackClicked(ActionEvent event) {
     	try {
@@ -268,15 +254,12 @@ public class ManageTables_GUI {
 			Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
 			stage.setScene(new Scene(root));
 			stage.centerOnScreen();
+			stage.centerOnScreen();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
     }
 
-    /**
-     * Displays an error alert to the user.
-     * @param msg The message to display.
-     */
     private void showAlert(String msg) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error");
@@ -285,11 +268,8 @@ public class ManageTables_GUI {
         alert.showAndWait();
     }
     
-    /**
-     * Updates the TableView with a new list of tables.
-     * Called by the ClientController when a response is received from the server.
-     * @param tables The list of tables to display.
-     */
+    
+    
     public void loadTables(List<Restaurant_Table> tables) {
         tablesTable.getItems().setAll(tables);
     }

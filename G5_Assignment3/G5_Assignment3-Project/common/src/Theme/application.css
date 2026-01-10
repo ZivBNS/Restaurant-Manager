@@ -1,8 +1,13 @@
-
 /*========================================================================================
-   "Modern Matte Luxury" (Dark MODE)
+   "Modern Matte Luxury" (DARK MODE)
+   Main Application Stylesheet for the Bistro Management System.
+   Theme: Matte Black, Charcoal Grey, and Metallic Gold accents.
 ========================================================================================*/
 
+/**
+ * Root container styling.
+ * Sets the global background with a subtle dot pattern and defines the primary font family.
+ */
 .root {
     /* Layer 1: Base color, Layer 2: Subtle radial pattern (dots) */
     -fx-background-color: 
@@ -15,11 +20,19 @@
     -fx-faint-focus-color: transparent;
 }
 
+/**
+ * Header section at the top of the pages.
+ */
 .page-header {
     -fx-background-color: #1a1d26; 
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 10, 0, 0, 2);
 }
+
 /* --- THE ULTIMATE ELITE HEADER --- */
+/**
+ * Main application title with a high-end 5-stop metallic gold gradient.
+ * Features a 3D depth shadow and an engraved plaque aesthetic.
+ */
 .header-title-main {
     -fx-font-size: 60px; /* Enhanced size */
     -fx-font-weight: 900;
@@ -45,8 +58,9 @@
     -fx-alignment: CENTER;
 }
 
-
-
+/**
+ * Sub-headers or secondary page titles.
+ */
 .header-title {
     -fx-font-size: 32px;
     -fx-font-weight: 900;
@@ -59,6 +73,9 @@
 }
 
 /* --- CARDS --- */
+/**
+ * Generic container for grouping content with a floating card effect.
+ */
 .card {
     -fx-background-color: #1c1e24; 
     -fx-background-radius: 12; 
@@ -72,6 +89,9 @@
     -fx-padding: 30; /* Generous internal padding for a luxury feel */
 }
 
+/**
+ * Centered title within a card.
+ */
 .card-title {
     -fx-text-fill: white;
     -fx-font-size: 20px; 
@@ -84,6 +104,9 @@
     -fx-padding: 0 0 15 0;
 }
 
+/**
+ * Muted grey label for secondary text inside cards.
+ */
 .card-label {
     -fx-text-fill: #8a8d96; 
     -fx-font-size: 13px;
@@ -91,12 +114,15 @@
 }
 
 /* --- CUSTOM RADIO BUTTONS --- */
+/**
+ * Styling for radio selection buttons with gold highlights.
+ */
 .radio-button {
 	-fx-padding: 0 0 15 0;
     -fx-cursor: hand;
 }
 
-/* The outer circle */
+/* The outer circle of the radio button */
 .radio-button .radio {
     -fx-background-color: #111315;
     -fx-border-color: #4b4e5b;
@@ -118,6 +144,9 @@
     -fx-background-radius: 10;
 }
 
+/**
+ * TitledPane styling (Accordion/Collapsible sections).
+ */
 .titled-pane > .title {
     -fx-background-color: #1c1e24; 
     -fx-background-radius: 12 12 0 0;
@@ -135,6 +164,9 @@
     -fx-min-height: 280px; 
 }
 
+/**
+ * Base button styling.
+ */
 .button {
     -fx-background-radius: 8;
     -fx-cursor: hand;
@@ -146,6 +178,9 @@
     -fx-border-width: 0;
 }
 
+/**
+ * Primary and success buttons using the gold theme.
+ */
 .btn-primary, .btn-success {
     -fx-background-color: #c8a165; 
     -fx-text-fill: #111315; 
@@ -155,6 +190,9 @@
     -fx-background-color: #dcc08e; 
 }
 
+/**
+ * Danger/Delete buttons with a subtle red outline and fill on hover.
+ */
 .btn-danger {
     -fx-background-color: rgba(239, 68, 68, 0.1); 
     -fx-text-fill: #ef4444; 
@@ -168,6 +206,9 @@
     -fx-text-fill: white;
 }
 
+/**
+ * Secondary/Cancel buttons with muted borders.
+ */
 .btn-secondary {
     -fx-background-color: transparent;
     -fx-text-fill: #8a8d96;
@@ -182,6 +223,9 @@
 }
 
 /* --- General TabPane Styling --- */
+/**
+ * Navigation tabs styling.
+ */
 .tab-pane {
     -fx-background-color: transparent;
 }
@@ -244,7 +288,7 @@
     -fx-border-width: 0;
 }
 
-/* --- Content Area --- */
+/* --- Content Area of Tabs --- */
 .tab-pane .tab-content-area {
     -fx-background-color: #1E1E1E;
     -fx-border-color: #3D3D3D;
@@ -252,7 +296,9 @@
     -fx-padding: 10;
 }
 
-
+/**
+ * Text input field styling.
+ */
 .text-field {
     -fx-background-color: #111315; 
     -fx-text-fill: white;
@@ -269,6 +315,9 @@
     -fx-border-radius: 8;
 }
 
+/**
+ * TableView styling for dark mode with gold column headers.
+ */
 .table-view {
     -fx-background-color: transparent;
     -fx-base: #1c1e24;
@@ -313,6 +362,9 @@
     -fx-border-color: transparent;
 }
 
+/**
+ * Form container with a top gold border accent.
+ */
 .dark-form-container {
     -fx-background-color: #1c1e24;
     -fx-border-color: #c8a165 transparent transparent transparent;
@@ -338,6 +390,7 @@
     -fx-font-size: 12px;
 }
 
+/* --- DASHBOARD --- */
 .dashboard-title {
     -fx-font-size: 36px;
     -fx-font-weight: bold;
@@ -350,6 +403,9 @@
     -fx-font-size: 13px;
 }
 
+/**
+ * Interactive tiles for the main menu/dashboard.
+ */
 .dashboard-tile {
     -fx-background-color: #1c1e24;
     -fx-text-fill: #b0b3c6;
@@ -371,6 +427,9 @@
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 25, 0, 0, 8);
 }
 
+/**
+ * Accent variation for dashboard tiles (Gold focus).
+ */
 .tile-accent {
     -fx-border-color: #c8a165;
     -fx-border-width: 1;
@@ -385,6 +444,7 @@
     -fx-effect: dropshadow(gaussian, rgba(200, 161, 101, 0.6), 30, 0.3, 0, 8);
 }
 
+/* --- SCHEDULING --- */
 .schedule-header-label {
     -fx-text-fill: #d4a358; 
     -fx-font-weight: bold;
@@ -408,11 +468,16 @@
     -fx-alignment: CENTER_LEFT;
 }
 
-
+/**
+ * Validation error text.
+ */
 .error-label {
     -fx-text-fill: #e74c3c;
 }
 
+/**
+ * Monospaced terminal/log area styling.
+ */
 .console-log {
     -fx-font-family: 'Consolas', 'Monospaced', 'Courier New';
     -fx-font-size: 13px;
@@ -435,6 +500,9 @@
     -fx-background-color: #4f545c;
 }
 
+/**
+ * Shared styling for Spinner, DatePicker, and ComboBox controls.
+ */
 .spinner, .date-picker, .combo-box {
     -fx-pref-height: 35px;          
     -fx-min-height: 35px;
@@ -458,6 +526,7 @@
     -fx-focus-color: transparent;
 }
 
+/* Spinner Internal Components */
 .spinner .text-field {
     -fx-background-color: transparent;
     -fx-text-fill: white;
@@ -480,6 +549,7 @@
     -fx-background-color: #d4a358;
 }
 
+/* DatePicker Internal Components */
 .date-picker .text-field {
     -fx-background-color: transparent;
     -fx-text-fill: white;
@@ -498,6 +568,7 @@
     -fx-background-color: #d4a358;
 }
 
+/* Calendar Popup Styling */
 .date-picker-popup {
     -fx-background-color: #2f3136;
     -fx-border-color: #d4a358;
@@ -521,6 +592,7 @@
     -fx-font-weight: bold;
 }
 
+/* ComboBox Internal Components */
 .combo-box .list-cell {
     -fx-background-color: transparent;
     -fx-text-fill: white;
@@ -551,6 +623,9 @@
 }
 
 /* --- EMPLOYEE LOGIN FIELDS (Simple Thin Border) --- */
+/**
+ * Specific input fields for employee login with a cleaner, minimalistic look.
+ */
 #empUserField, #empPassField {
     /* Transparent background to emphasize the border */
     -fx-background-color: transparent; 
@@ -568,13 +643,15 @@
     -fx-padding: 10 10;
 }
 
-/* Interaction state: Subtle highlight when clicking the field */
+/* Interaction state: Subtle highlight when clicking the login fields */
 #empUserField:focused, #empPassField:focused {
     -fx-background-color: rgba(255, 255, 255, 0.02);
     -fx-border-color: #c8a165; /* Theme gold for focus */
 }
 
-/* Update this in your application.css or keep as inline in FXML */
+/**
+ * Green success label specifically for displaying discount information.
+ */
 .discount-label {
     -fx-text-fill: #2ecc71;
     -fx-font-size: 13px;
@@ -583,5 +660,3 @@
     -fx-min-width: 250px; 
     -fx-padding: 0 10 0 0; 
 }
-
-

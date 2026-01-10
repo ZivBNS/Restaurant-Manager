@@ -6,7 +6,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.ArrayList;
 import entities.Reservation;
@@ -959,5 +962,107 @@ public class Reservation_Repository {
                 db.releaseConnection(pConn);
         }
         return results;
+    }
+    /**
+     * Checks if a proposed change to Regular Hours conflicts with existing reservations.
+     * @param dayOfWeek The day being updated.
+     * @param newOpen Proposed opening time.
+     * @param newClose Proposed closing time.
+     * @param isActive Proposed status (false = closed).
+     * @return The latest conflicting reservation date, or null if safe.
+     */
+    public LocalDate findConflictForRegularUpdate(DayOfWeek dayOfWeek, LocalTime newOpen, LocalTime newClose, boolean isActive) {
+        // We only care about future reservations
+        String sql = "SELECT ReservationStartTime, ReservationEndTime FROM reservations " +
+                     "WHERE Status IN ('Pending', 'Active') " +
+                     "AND ReservationStartTime > NOW()"; 
+                     
+        // Note: We fetch all future reservations and filter in Java because 
+        // SQL 'DayOfWeek' functions vary by database vendor (MySQL vs others).
+        
+        PooledConnection pConn = null;
+        LocalDate lastConflict = null;
+
+        try {
+            pConn = db.getConnection();
+            try (Statement stmt = pConn.getConnection().createStatement();
+                 ResultSet rs = stmt.executeQuery(sql)) {
+
+                while (rs.next()) {
+                    LocalDateTime resStart = rs.getTimestamp("ReservationStartTime").toLocalDateTime();
+                    LocalDateTime resEnd = rs.getTimestamp("ReservationEndTime").toLocalDateTime();
+
+                    // Check if this reservation falls on the day we are changing
+                    if (resStart.getDayOfWeek() == dayOfWeek) {
+                        
+                        // Case 1: Proposed to close the day entirely
+                        if (!isActive) {
+                            if (lastConflict == null || resStart.toLocalDate().isAfter(lastConflict)) {
+                                lastConflict = resStart.toLocalDate();
+                            }
+                            continue;
+                        }
+
+                        // Case 2: Reservation is outside new hours
+                        LocalTime resStartTime = resStart.toLocalTime();
+                        LocalTime resEndTime = resEnd.toLocalTime();
+
+                        // Logic: Conflict if reservation starts before new Open OR ends after new Close
+                        // (Handling midnight crossing logic simply for now: assuming same day shifts)
+                        if (resStartTime.isBefore(newOpen) || resEndTime.isAfter(newClose)) {
+                             if (lastConflict == null || resStart.toLocalDate().isAfter(lastConflict)) {
+                                lastConflict = resStart.toLocalDate();
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            if (pConn != null) db.releaseConnection(pConn);
+        }
+        return lastConflict;
+    }
+
+    /**
+     * Checks if a new Special Hour (Exception) conflicts with reservations on that specific date.
+     * @param date The special date.
+     * @param newOpen New Open time (null if closed).
+     * @param newClose New Close time.
+     * @return True if a conflict exists.
+     */
+    public boolean hasConflictForSpecialDate(LocalDate date, LocalTime newOpen, LocalTime newClose) {
+        String sql = "SELECT ReservationStartTime, ReservationEndTime FROM reservations " +
+                     "WHERE Status IN ('Pending', 'Active') " +
+                     "AND DATE(ReservationStartTime) = ?";
+
+        PooledConnection pConn = null;
+        try {
+            pConn = db.getConnection();
+            try (PreparedStatement ps = pConn.getConnection().prepareStatement(sql)) {
+                ps.setDate(1, java.sql.Date.valueOf(date));
+                
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        // Case 1: Closed completely
+                        if (newOpen == null || newClose == null) return true; // Found a reservation on a day you want to close
+
+                        // Case 2: Partial Hours
+                        LocalDateTime resStart = rs.getTimestamp("ReservationStartTime").toLocalDateTime();
+                        LocalDateTime resEnd = rs.getTimestamp("ReservationEndTime").toLocalDateTime();
+                        
+                        if (resStart.toLocalTime().isBefore(newOpen) || resEnd.toLocalTime().isAfter(newClose)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            if (pConn != null) db.releaseConnection(pConn);
+        }
+        return false;
     }
 }

@@ -64,6 +64,7 @@ public class Table_Controller {
 	                return new Message(MessageType.TABLE_OPERATION_FAILED, "Delete failed: Table number not found.");
 
 	            case GET_ALL_TABLES:
+	            	repo.init();
 	                return new Message(MessageType.RETURN_ALL_TABLES, Restaurant.getInstance().getTables());
 
 	            default:
