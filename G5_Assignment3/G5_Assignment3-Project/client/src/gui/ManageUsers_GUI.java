@@ -138,7 +138,7 @@ public class ManageUsers_GUI {
 				break;
 			case MessageType.ADD_USER_RESPONSE_ERR:
 			case MessageType.EDIT_USER_RESPONSE_ERR:
-				showError("Operation Failed.");
+				showError((String) msg.getContent());
 				break;
 			default:
 				break;

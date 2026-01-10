@@ -34,11 +34,12 @@ public class User_Repository {
         finally { if (pConn != null) db.releaseConnection(pConn); }
     }
 
-	public UserRecord getByUsername(String username, String password) { /* Patterned pool fetch... */ 
+	public UserRecord getByUsername(String username, String password) { 
         PooledConnection pConn = null;
         try {
             pConn = db.getConnection();
-            try (PreparedStatement pstmt = pConn.getConnection().prepareStatement("SELECT * FROM users WHERE Username = ? AND Password = ?")) {
+            try (PreparedStatement pstmt = pConn.getConnection().prepareStatement("SELECT * FROM users WHERE Username = ? AND Password = ?"
+            		+ "AND identity <> 'DELETED'")) {
                 pstmt.setString(1, username);
                 pstmt.setString(2, password);
                 try (ResultSet rs = pstmt.executeQuery()) {
@@ -82,9 +83,9 @@ public class User_Repository {
             String sql;
             
             if (hasEmail) {
-                sql = "SELECT 1 FROM users WHERE Email = ? LIMIT 1";
+                sql = "SELECT 1 FROM users WHERE Email = ? AND identity <> 'DELETED' LIMIT 1";
             } else {
-                sql = "SELECT 1 FROM users WHERE Phone = ? LIMIT 1";
+                sql = "SELECT 1 FROM users WHERE Phone = ? AND identity <> 'DELETED' LIMIT 1";
             }
             
             try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(sql)) {
@@ -113,7 +114,7 @@ public class User_Repository {
             String sql;
 
             sql = "SELECT ID, FirstName, LastName, Phone, Email,  Username, Password, subscriberCode, Identity"
-            		+ " FROM users WHERE ID = ? LIMIT 1";
+            		+ " FROM users WHERE ID = ? AND identity <> 'DELETED' LIMIT 1";
             
             try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(sql)) {
                 pstmt.setInt(1, id);
@@ -141,7 +142,9 @@ public class User_Repository {
             pConn = db.getConnection();
             String sql = "SELECT ID, FirstName, LastName, Phone, Email,  Username, Password, subscriberCode, Identity "
             		+ "FROM users "
-            		+ "ORDER BY LastName, FirstName;";
+            		+ "WHERE identity <> 'DELETED'"
+            		+ "ORDER BY LastName, FirstName";
+            		
             
             try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(sql)) {
 
@@ -189,12 +192,34 @@ public class User_Repository {
     }
 
 	public boolean existsByUsername(String username) {
-		// TODO Auto-generated method stub
-		return false;
+	    PooledConnection pConn = null;
+
+	    String sql =
+	        "SELECT 1 FROM users WHERE Username = ? AND identity LIMIT 1";
+
+	    try {
+	        pConn = db.getConnection();
+
+	        try (PreparedStatement ps =
+	                 pConn.getConnection().prepareStatement(sql)) {
+
+	            ps.setString(1, username);
+
+	            try (ResultSet rs = ps.executeQuery()) {
+	                return rs.next(); // true if a row exists
+	            }
+	        }
+
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    } finally {
+	        if (pConn != null) db.releaseConnection(pConn);
+	    }
+
+	    return false;
 	}
 
 	public boolean addNewUser(UserRecord user) {
-		// TODO Auto-generated method stub
 		
 		String sql = """
 		        INSERT INTO users
@@ -261,24 +286,6 @@ public class User_Repository {
 		return false;
 	}
 
-//	private void generateSubscriberCode(PreparedStatement ps) {
-//		int code;
-//		try (ResultSet rs = ps.getGeneratedKeys()) {
-//            if (rs.next()) {
-//                int generatedId = rs.getInt(1);
-//
-//                // ✅ THIS is the user's ID
-//                user.setId(generatedId);      // store it in the object
-//                pConn = db.getConnection();
-//                try (PreparedStatement ps2 = pConn.getConnection().prepareStatement(updateSql) {
-//                	
-//                }
-//                
-//            } else {
-//                throw new SQLException("User inserted but no ID returned.");
-//            }
-//        }
-//	}
 	
 	public boolean updateUser(UserRecord u) {
 	    PooledConnection pConn = null;
@@ -317,7 +324,7 @@ public class User_Repository {
 	public boolean deleteUserByID(UserRecord u) {
 	    PooledConnection pConn = null;
 
-	    String sql = "DELETE FROM users WHERE ID = ?";
+	    String sql = "UPDATE users SET identity = 'DELETED' WHERE ID = ?";
 
 	    try {
 	        pConn = db.getConnection();
@@ -346,7 +353,7 @@ public class User_Repository {
         PooledConnection pConn = null;
         try {
             pConn = db.getConnection();
-            String sql = "SELECT * FROM users WHERE subscriberCode = ? LIMIT 1";
+            String sql = "SELECT * FROM users WHERE subscriberCode = ? AND identity <> 'DELETED' LIMIT 1";
             
             try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(sql)) {
                 pstmt.setInt(1, code);

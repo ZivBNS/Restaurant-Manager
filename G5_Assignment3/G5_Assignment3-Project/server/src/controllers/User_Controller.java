@@ -24,24 +24,44 @@ public class User_Controller {
      */
     public Message handle(Message msg) {
         try {
-            return switch (msg.getType()) {
-            	case MessageType.FORGOT_CODE -> forgotCodeLogic((UserRecord) msg.getContent());
+        	Message response;
+            switch (msg.getType()) {
+            	case MessageType.FORGOT_CODE:
+            		response = forgotCodeLogic((UserRecord) msg.getContent());
+            		break;
             	
-                case MessageType.GET_ALL_USERS_REQUEST -> handleGetAll();
+                case MessageType.GET_ALL_USERS_REQUEST:
+                	response = handleGetAll();
+                	break;
 
-                case MessageType.ADD_USER_REQUEST -> handleAdd((UserRecord) msg.getContent());
+                case MessageType.ADD_USER_REQUEST:
+                	response = handleAdd((UserRecord) msg.getContent());
+                	break;
 
-                case MessageType.EDIT_USER_REQUEST -> handleUpdate((UserRecord) msg.getContent());
+                case MessageType.EDIT_USER_REQUEST:
+                	response = handleUpdate((UserRecord) msg.getContent());
+                	break;
 
-                case MessageType.DELETE_USER_REQUEST -> handleDelete((UserRecord) msg.getContent()); 
+                case MessageType.DELETE_USER_REQUEST:
+                	response = handleDelete((UserRecord) msg.getContent()); 
+                	break;
                 
-                case MessageType.UPDATE_USER_DETAILS_REQUEST -> handleUpdateAsUser((UserRecord) msg.getContent());
+                case MessageType.UPDATE_USER_DETAILS_REQUEST:
+                	response = handleUpdateAsUser((UserRecord) msg.getContent());
+                	break;
 
-                case MessageType.GET_USER_DETAILS -> handleGetUser((int) msg.getContent());
+                case MessageType.GET_USER_DETAILS:
+                	response = handleGetUser((int) msg.getContent());
+                	break;
                 
-                default -> new Message(MessageType.USERS_ERROR, "Unknown user action: " + msg.getType());
+                default:
+                	response = new Message(MessageType.USERS_ERROR, "Unknown user action: " + msg.getType());
             };
+            
+            return response;
+            
         } catch (ClassCastException e) {
+        	e.printStackTrace();
             return new Message(MessageType.USERS_ERROR, "Bad request (wrong data type).");
         } catch (Exception e) {
             e.printStackTrace();
@@ -84,8 +104,11 @@ public class User_Controller {
             System.out.println("Not a valid number");
         }
         
-        if (repo.getByEmailOrPhone(u.getEmail(), phone)) {
-            return new Message(MessageType.ADD_USER_RESPONSE_ERR, "Email or phone already exists.");
+        if (repo.getByEmailOrPhone(u.getEmail(), null)) {
+            return new Message(MessageType.ADD_USER_RESPONSE_ERR, "Email already exists.");
+        }
+        if (repo.getByEmailOrPhone(null, phone)) {
+            return new Message(MessageType.ADD_USER_RESPONSE_ERR, "Phone already exists.");
         }
 
         boolean ok = repo.addNewUser(u);
