@@ -1,7 +1,8 @@
 package gui;
 
 import javafx.application.Platform;
-
+import javafx.animation.PauseTransition;
+import javafx.util.Duration;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -13,6 +14,7 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.sql.Time;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
@@ -28,9 +30,10 @@ public class Terminal_GUI {
     public static Terminal_GUI instance;
     private UserRecord loggedInUser = null;
     private int confiCode=0;
-    private Bill currentBillToPay=null; 
+    private Bill currentBillToPay=null;
+    private Time closeTime=null; 
+    private int maxDinnersTableSize=0;
 
-    
     @FXML private BorderPane terminalRoot;
     @FXML private AnchorPane welcomeView;
     @FXML private VBox terminalView;
@@ -65,6 +68,8 @@ public class Terminal_GUI {
     @FXML private TableColumn<Reservation, Integer> colDiners;
     @FXML private TableColumn<Reservation, LocalDateTime> colStart;
     @FXML private TableColumn<Reservation, LocalDateTime> colEnd;
+    
+    @FXML private Label lblScanBarcode;
 
     @FXML
     public void initialize() {
@@ -73,12 +78,21 @@ public class Terminal_GUI {
         btnCancelRes.setText("CANCEL ORDER/\nEXIT WAITLIST");
         btnCancelRes.setStyle("-fx-text-alignment: center;");
         
-        // ---------------------------------------------------------
-        // FIX #3: Make "View Bill" button Blue
-        // ---------------------------------------------------------
         btnFetchBill.setStyle("-fx-background-color: #2980b9; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;");
         
         hlForgotCode.setVisible(false);
+
+        if (lblScanBarcode != null) {
+            lblScanBarcode.setOnMouseClicked(event -> {
+                lblScanBarcode.setText("Waiting for scan...");
+                PauseTransition pause = new PauseTransition(Duration.seconds(1));
+                pause.setOnFinished(e -> {
+                    ConnectToServer_GUI.clientController.sendSubscriberLoginRequest(new LoginData("a", "1"));
+                    lblScanBarcode.setText("Scan Barcode");
+                });
+                pause.play();
+            });
+        }
 
         setupReservationsTable();
 
@@ -204,7 +218,8 @@ public class Terminal_GUI {
                     forgotPhoneField.setStyle("-fx-border-color: #e74c3c; -fx-border-width: 2; -fx-border-radius: 5;");
                     forgotEmailField.setStyle("-fx-border-color: #e74c3c; -fx-border-width: 2; -fx-border-radius: 5;");
                 if (forgotStatusLabel != null) {
-                	forgotStatusLabel.setText("Please provide at least one: Phone or Email!");                    forgotStatusLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;"); 
+                    forgotStatusLabel.setText("Please provide at least one: Phone or Email!");
+                    forgotStatusLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;"); 
                     forgotStatusLabel.setVisible(true);
                 }
                 return;
@@ -222,6 +237,7 @@ public class Terminal_GUI {
             forgotCodeView.setVisible(false);
             forgotPhoneField.clear();
             forgotEmailField.clear();
+            forgotStatusLabel.setText("");
             forgotPhoneField.setStyle("");
             forgotEmailField.setStyle("");
             if (forgotStatusLabel != null) {
@@ -237,9 +253,6 @@ public class Terminal_GUI {
             String codeStr = payBillCodeField.getText().trim();            
             if (codeStr.isEmpty()) {
                 payBillStatusLabel.setText("Please enter a code.");
-                // ---------------------------------------------------------
-                // FIX #2: Make text RED if empty
-                // ---------------------------------------------------------
                 payBillStatusLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
                 payBillStatusLabel.setVisible(true);
                 return;
@@ -336,7 +349,7 @@ public class Terminal_GUI {
         payBillCodeField.clear();
         payBillCodeField.setEditable(true);
         currentBillToPay = null;
-        
+        forgotStatusLabel.setText("");
         checkInCodeField.clear();
         cancelCodeField.clear();
         
@@ -412,31 +425,18 @@ public class Terminal_GUI {
         ConnectToServer_GUI.clientController.sendCheckInRequest(confiCode);
     }
 
-    /*private void highlightButton(Button selected) {
-        Button[] btns = {btnCheckIn, btnInstantBooking, btnPayBill, btnCancelRes};
-        for (Button b : btns) b.setStyle("-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand;");
-        if (selected != null) {
-            selected.setStyle("-fx-background-color: #dcdde1; -fx-background-radius: 10; -fx-border-color: #34495e; -fx-border-width: 2;");
-        }
-    }*/
-    
-
     private void highlightButton(Button selected) {
         Button[] btns = {btnCheckIn, btnInstantBooking, btnPayBill, btnCancelRes};
         
         for (Button b : btns) {
-            // 1. איפוס הגודל
             b.setScaleX(1.0);
             b.setScaleY(1.0);
             
-            // 2. לוגיקת העמעום (Dimming)
             if (selected != null && b != selected) {
-                // כפתורים שלא נבחרו - דהויים וללא מסגרת
                 b.setOpacity(0.6); 
                 b.setEffect(null); 
                 b.setStyle("-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand; -fx-border-width: 0;");
             } else {
-                // כפתורים במצב רגיל (כשכלום לא נבחר) - בולטים עם צל רגיל
                 b.setOpacity(1.0); 
                 if (selected == null) {
                     b.setEffect(new javafx.scene.effect.DropShadow(5, javafx.scene.paint.Color.rgb(0, 0, 0, 0.2)));
@@ -446,25 +446,19 @@ public class Terminal_GUI {
         }
 
         if (selected != null) {
-            // 3. טיפול בכפתור הנבחר
-            
-            // הגדלה קלה
             selected.setScaleX(1.05);
             selected.setScaleY(1.05);
             
-            // זיהוי הצבע המתאים לפי הכפתור
-            String colorHex = "#34495e"; // ברירת מחדל
-            if (selected == btnCheckIn) colorHex = "#27ae60";        // ירוק
-            else if (selected == btnInstantBooking) colorHex = "#e67e22"; // כתום
-            else if (selected == btnPayBill) colorHex = "#2980b9";   // כחול
-            else if (selected == btnCancelRes) colorHex = "#c0392b"; // אדום
+            String colorHex = "#34495e"; 
+            if (selected == btnCheckIn) colorHex = "#27ae60";        
+            else if (selected == btnInstantBooking) colorHex = "#e67e22"; 
+            else if (selected == btnPayBill) colorHex = "#2980b9";   
+            else if (selected == btnCancelRes) colorHex = "#c0392b"; 
 
-            // עיצוב המסגרת: מסגרת בעובי 3 פיקסלים בצבע של הכפתור
             selected.setStyle("-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand; " +
                               "-fx-border-color: " + colorHex + "; " +
                               "-fx-border-width: 3; -fx-border-radius: 10;");
             
-            // אפקט זוהר בצבע של הכפתור (שקיפות 0.6)
             javafx.scene.effect.DropShadow glow = new javafx.scene.effect.DropShadow();
             glow.setColor(javafx.scene.paint.Color.web(colorHex, 0.6)); 
             glow.setRadius(20); 
@@ -509,14 +503,11 @@ public class Terminal_GUI {
     }
 
     private void handleForgotCodeClick() {
-        // ---------------------------------------------------------
-        // FIX #1: If logged in, redirect to Check-In with message
-        // ---------------------------------------------------------
         if (loggedInUser != null) {
             toggleForm(checkInForm);
             highlightButton(btnCheckIn);
             checkInStatusLabel.setText("You are logged in. Your confirmation codes for today are listed in the table above.");
-            checkInStatusLabel.setStyle("-fx-text-fill: #2980b9; -fx-font-weight: bold;"); // Blue info text
+            checkInStatusLabel.setStyle("-fx-text-fill: #2980b9; -fx-font-weight: bold;"); 
             checkInStatusLabel.setVisible(true);
             return;
         }
@@ -555,6 +546,7 @@ public class Terminal_GUI {
             if (userRecord != null) {
                 loggedInUser = userRecord;
                 showTerminal(loggedInUser.getFirstName());
+                ConnectToServer_GUI.clientController.sendGetDailyReservationsRequest(loggedInUser.getId());
             } else {
                 welcomeErrorLabel.setText("Invalid username or password.");
                 welcomeErrorLabel.setStyle("-fx-text-fill: #e74c3c;");
@@ -566,7 +558,6 @@ public class Terminal_GUI {
     public void onDailyReservationsReceived(List<Reservation> reservations) {
         Platform.runLater(() -> {
             if (reservations != null && !reservations.isEmpty()) {
-                // Sort by Start Time
                 reservations.sort(Comparator.comparing(Reservation::getOrderStartTime));
                 
                 todayReservationsTable.getItems().setAll(reservations);
@@ -590,6 +581,12 @@ public class Terminal_GUI {
         });
     }
 
+    public void getRefreshedOPAndMaxCapacity() {
+    	ConnectToServer_GUI.clientController.refreshOH();
+    	ConnectToServer_GUI.clientController.refreshMaxTableCapacity();
+    }
+
+    
     public void onInstantReservationFailedResponse(String s) {
         Platform.runLater(() -> {
             if (s == null) {
@@ -624,11 +621,9 @@ public class Terminal_GUI {
             confiCode=confirmationCode;
             toggleForm(checkInForm);
             
-            // HIDE TABLE to show full success message
             todayReservationsTable.setVisible(false);
             todayReservationsTable.setManaged(false);
 
-            // REFRESH DATA in background for next time
             if (loggedInUser != null) {
                 ConnectToServer_GUI.clientController.sendGetDailyReservationsRequest(loggedInUser.getId());
             }
@@ -644,7 +639,6 @@ public class Terminal_GUI {
         Platform.runLater(() -> {
             toggleForm(checkInForm);
             
-            // HIDE TABLE on check-in success as well to see the table number
             todayReservationsTable.setVisible(false);
             todayReservationsTable.setManaged(false);
             

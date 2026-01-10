@@ -141,8 +141,7 @@ public class Reservation_Repository {
 				db.releaseConnection(pConn);
 		}
 	}
-	String sql = "UPDATE reservations SET Status = 'Completed', ActualDepartureTime = NOW() WHERE ID = ?";
-
+	
 	public boolean updateReservationForCheckIn(int confCode, int TableId, ReservationStatus rs) {
 		// UserID INT, TableID INT, Phone VARCHAR(14), Email VARCHAR(35),
 		// ReservationStartTime DATETIME, ReservationEndTime DATETIME ,
@@ -175,7 +174,7 @@ public class Reservation_Repository {
 	}
 
 	public boolean updateReservationForCheckOut(int confCode, LocalDateTime actualFinishTime) {
-		String sql = "UPDATE reservations SET Status = 'Completed', ActualDepartureTime = ? WHERE ConfirmationCode = ?";
+		String sql = "UPDATE reservations SET Status = '"+ ReservationStatus.COMPLETED.toString()+"', ActualDepartureTime = ? WHERE ConfirmationCode = ?";
 		PooledConnection pConn = null;
 		try {
 			pConn = db.getConnection();
@@ -674,9 +673,9 @@ public class Reservation_Repository {
 	public List<Reservation> getExpiredActiveReservations(boolean isNotified) { //is notified halpes to find what reservations to mark as completed in watchdog
 		List<Reservation> expiredList = new ArrayList<>();
 		// Query: Status=ACTIVE, Time Passed, Not Reminded Yet
-		String sql = "SELECT * FROM reservations WHERE Status = 'ACTIVE' "
+		String sql = "SELECT * FROM reservations WHERE Status = '"+ReservationStatus.ACTIVE.toString()+"' "
 				+ "AND ReservationEndTime < ? AND RemindedDeparture = 0";
-		if (isNotified) sql = "SELECT * FROM reservations WHERE Status = 'ACTIVE' "
+		if (isNotified) sql = "SELECT * FROM reservations WHERE Status = '"+ReservationStatus.ACTIVE.toString()+"' "
 				+ "AND ReservationEndTime < ? AND RemindedDeparture = 1";
 		PooledConnection pConn = null;
 		try {
@@ -878,7 +877,7 @@ public class Reservation_Repository {
         return conflicts;
     }
     
-    //for forgot the cod logic(found in user controller- used by terminal)
+    //for forgot the code logic(found in user controller- used by terminal)
     public Reservation getClosestReservationByContact(String phone, String email) {
 
         String sql = "SELECT * FROM reservations "
