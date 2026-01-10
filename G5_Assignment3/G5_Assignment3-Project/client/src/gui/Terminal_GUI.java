@@ -1,6 +1,7 @@
 package gui;
 
 import javafx.application.Platform;
+
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -29,6 +30,7 @@ public class Terminal_GUI {
     private int confiCode=0;
     private Bill currentBillToPay=null; 
 
+    
     @FXML private BorderPane terminalRoot;
     @FXML private AnchorPane welcomeView;
     @FXML private VBox terminalView;
@@ -410,14 +412,67 @@ public class Terminal_GUI {
         ConnectToServer_GUI.clientController.sendCheckInRequest(confiCode);
     }
 
-    private void highlightButton(Button selected) {
+    /*private void highlightButton(Button selected) {
         Button[] btns = {btnCheckIn, btnInstantBooking, btnPayBill, btnCancelRes};
         for (Button b : btns) b.setStyle("-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand;");
         if (selected != null) {
             selected.setStyle("-fx-background-color: #dcdde1; -fx-background-radius: 10; -fx-border-color: #34495e; -fx-border-width: 2;");
         }
-    }
+    }*/
+    
 
+    private void highlightButton(Button selected) {
+        Button[] btns = {btnCheckIn, btnInstantBooking, btnPayBill, btnCancelRes};
+        
+        for (Button b : btns) {
+            // 1. איפוס הגודל
+            b.setScaleX(1.0);
+            b.setScaleY(1.0);
+            
+            // 2. לוגיקת העמעום (Dimming)
+            if (selected != null && b != selected) {
+                // כפתורים שלא נבחרו - דהויים וללא מסגרת
+                b.setOpacity(0.6); 
+                b.setEffect(null); 
+                b.setStyle("-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand; -fx-border-width: 0;");
+            } else {
+                // כפתורים במצב רגיל (כשכלום לא נבחר) - בולטים עם צל רגיל
+                b.setOpacity(1.0); 
+                if (selected == null) {
+                    b.setEffect(new javafx.scene.effect.DropShadow(5, javafx.scene.paint.Color.rgb(0, 0, 0, 0.2)));
+                    b.setStyle("-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand; -fx-border-width: 0;");
+                }
+            }
+        }
+
+        if (selected != null) {
+            // 3. טיפול בכפתור הנבחר
+            
+            // הגדלה קלה
+            selected.setScaleX(1.05);
+            selected.setScaleY(1.05);
+            
+            // זיהוי הצבע המתאים לפי הכפתור
+            String colorHex = "#34495e"; // ברירת מחדל
+            if (selected == btnCheckIn) colorHex = "#27ae60";        // ירוק
+            else if (selected == btnInstantBooking) colorHex = "#e67e22"; // כתום
+            else if (selected == btnPayBill) colorHex = "#2980b9";   // כחול
+            else if (selected == btnCancelRes) colorHex = "#c0392b"; // אדום
+
+            // עיצוב המסגרת: מסגרת בעובי 3 פיקסלים בצבע של הכפתור
+            selected.setStyle("-fx-background-color: white; -fx-background-radius: 10; -fx-cursor: hand; " +
+                              "-fx-border-color: " + colorHex + "; " +
+                              "-fx-border-width: 3; -fx-border-radius: 10;");
+            
+            // אפקט זוהר בצבע של הכפתור (שקיפות 0.6)
+            javafx.scene.effect.DropShadow glow = new javafx.scene.effect.DropShadow();
+            glow.setColor(javafx.scene.paint.Color.web(colorHex, 0.6)); 
+            glow.setRadius(20); 
+            glow.setSpread(0.2); 
+            selected.setEffect(glow);
+        }
+    }
+    
     private void showTerminal(String name) {
         lblUserGreeting.setText(name == null ? "Please choose an action" : "Hello, " + name);
         welcomeView.setVisible(false);
