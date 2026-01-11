@@ -86,7 +86,7 @@ public class Reports_GUI {
             stage.centerOnScreen();
 
             stage.show();
-            
+            instance=null;
         } catch (IOException e) {
             System.err.println("Error: Could not load Workers.fxml");
             e.printStackTrace();

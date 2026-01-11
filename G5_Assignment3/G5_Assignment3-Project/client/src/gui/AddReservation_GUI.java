@@ -301,6 +301,7 @@ public class AddReservation_GUI {
 			stage.setScene(new Scene(root));
 			stage.centerOnScreen();
 			stage.setTitle("Bistro");
+			instance=null;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

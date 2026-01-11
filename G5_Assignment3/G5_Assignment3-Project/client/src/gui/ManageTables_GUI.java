@@ -255,6 +255,7 @@ public class ManageTables_GUI {
 			stage.setScene(new Scene(root));
 			stage.centerOnScreen();
 			stage.centerOnScreen();
+			instance=null;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

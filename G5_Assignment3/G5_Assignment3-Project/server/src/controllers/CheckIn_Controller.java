@@ -1,5 +1,7 @@
 package controllers;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
 import Data.Bill_Repository;
@@ -55,6 +57,7 @@ public class CheckIn_Controller {
 		
         //step 3: search for empty space in the misada
         Integer tableID=tableRepository.findBestAvailableTable(now, now.plusHours(2), reservation.getNumberOfDiners());
+        if (!tableRepository.isCapacityAvailable(now, now.plusHours(2), reservation.getNumberOfDiners(), null)) tableID=null;
 		if (tableID==null) {
 			//if there is no place and the person reserved before, make him be first to be notified to get table(max 15 minutes wait)
 			if (reservation.getOrderStartTime().isBefore(now.plusHours(1)) && reservation.getOrderStartTime().isAfter(now.minusMinutes(15))) { //האם הזמין ונמצא בין שעה לפני לרבע שעה אחרי שעת ההזמנה המקורית
@@ -63,7 +66,7 @@ public class CheckIn_Controller {
 				WaitlistRepository.set(priorityWaitlist);
 				return new Message(MessageType.CHECK_IN_FAIL,"We are sorry for the delay, but the restaurant is full right now.\nYour table will be available in about fifteen minutes.\nWe will remind you when the table becomes available.");	
 				}
-			else return new Message(MessageType.CHECK_IN_FAIL,"the restaurant is full right now. You have reserved table for: "+reservation.getOrderStartTime().toString()+"\nIf you prefer, join waitlist or come back later. thank you");	
+			else return new Message(MessageType.CHECK_IN_FAIL,"the restaurant is full right now. You have reserved table for: "+reservation.getOrderStartTime().toLocalTime().toString()  +"\nIf you prefer, join waitlist or come back later. thank you");	
 		}
 		
 		//if there is free table then update order status and table
@@ -80,9 +83,10 @@ public class CheckIn_Controller {
 		if (!isBillCreated) return new Message(MessageType.CHECK_IN_FAIL,"System error");
 		
 		//if there is waitlist related to this order or the order was ordered to long time ago
-		if(w!=null || reservation.getOrderStartTime().isBefore(now.minusHours(1))) {
+		if(w!=null || reservation.getOrderStartTime().minusHours(1).isAfter(now)) {
 			if (w!=null) WaitlistRepository.updateStatusByReservationId(reservation.getId(), WaitlistStatus.COMPLETED.toString()); //waitlist ended
 			int roundedMinutes = (now.getMinute() / 30) * 30; //make the time round(example- from 10:10-12:10 to 10:00-12:00)
+			
 			LocalDateTime newArrivalTime = now.withMinute(roundedMinutes).withSecond(0).withNano(0);
 			reservation.setOrderStartTime(newArrivalTime);
 			reservation.setOrderEndTime(newArrivalTime.plusHours(2));
@@ -94,7 +98,17 @@ public class CheckIn_Controller {
 	}
 
 	private static boolean createBillWhenCheckedInSuccesfully(int id, boolean isSubscriber) {
-			Bill newBill = new Bill(id,isSubscriber);
-			return billRepository.set(newBill);
+		Bill newBill = new Bill(id,isSubscriber);
+	    double min = 0;
+	    double max = 100.0;
+	    double rawRandom = min + (Math.random() * (max - min));
+	    double baseAmount = BigDecimal.valueOf(rawRandom).setScale(1, RoundingMode.HALF_UP).doubleValue();
+	    newBill.setTotalAmount(baseAmount+5);
+	    newBill.setStatus("Unpaid");
+	    String details = String.format("Food & Drinks - %.1f$\nTips - 3$\nSitting - 2$", baseAmount);
+	    newBill.setBillDetails(details);
+
+	    return billRepository.set(newBill);
 	}
 }
+

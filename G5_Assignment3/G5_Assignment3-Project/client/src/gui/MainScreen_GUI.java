@@ -125,6 +125,7 @@ public class MainScreen_GUI {
             stage.centerOnScreen();
 
             stage.show();
+        	instance = null;
             System.out.println("Switched to Terminal Screen");
         } catch (IOException e) {
             System.out.println("Error loading Terminal.fxml");
@@ -277,6 +278,7 @@ public class MainScreen_GUI {
             stage.centerOnScreen();
             stage.setScene(scene);
             stage.show();
+        	instance = null;
             System.out.println("Switched to Manager Dashboard");
         } catch (IOException e) {
             System.out.println("Error loading Workers.fxml");
@@ -331,7 +333,7 @@ public class MainScreen_GUI {
 
             stage.setTitle("Bistro - Member Dashboard");
             stage.show();
-
+        	instance = null;
             System.out.println("MainScreen: Casual Session Started ");
 
         } catch (IOException e) {

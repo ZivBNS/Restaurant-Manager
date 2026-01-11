@@ -135,6 +135,7 @@ public class OrderHistory_GUI implements Initializable {
             stage.setScene(new Scene(root));
             stage.setTitle("Bistro Member Dashboard");
             stage.centerOnScreen();
+            instance=null;
         } catch (Exception e) {
             e.printStackTrace();
         }

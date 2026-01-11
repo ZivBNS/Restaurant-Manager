@@ -83,8 +83,7 @@ public class Bill {
      * * @return The final total after discount.
      */
     public double calculateFinalAmount() {
-        if (discountRate <= 0) return totalAmount;
-        return this.totalAmount * (1 - (discountRate / 100.0));
+        return this.totalAmount * (1.0 - (discountRate));
     }
 
     // --- Getters and Setters ---

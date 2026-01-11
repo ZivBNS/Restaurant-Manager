@@ -265,6 +265,7 @@ public class ManageUsers_GUI {
 			Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
 			stage.setScene(new Scene(root));
 			stage.centerOnScreen();
+			instance=null;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

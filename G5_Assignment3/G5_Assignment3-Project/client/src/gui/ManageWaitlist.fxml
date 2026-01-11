@@ -17,8 +17,8 @@
 <BorderPane stylesheets="/Theme/application.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.ManageWaitlist_GUI">
 
     <top>
-        <VBox alignment="CENTER" spacing="10" styleClass="page-header">
-            <padding><Insets bottom="25" top="25" /></padding>
+        <VBox alignment="CENTER" spacing="5" styleClass="page-header">
+            <padding><Insets bottom="15" top="15" /></padding>
             <children>
                 <Label styleClass="header-title" text="Waitlist Management" />
                 <Label style="-fx-text-fill: white; -fx-opacity: 0.7;" text="View and monitor active waiting list entries" />
@@ -30,15 +30,18 @@
     <center>
         <GridPane>
             <columnConstraints>
-                <ColumnConstraints percentWidth="15.0" /> <ColumnConstraints hgrow="ALWAYS" percentWidth="70.0" /> <ColumnConstraints percentWidth="15.0" /> </columnConstraints>
+                <ColumnConstraints percentWidth="10.0" /> 
+                <ColumnConstraints hgrow="ALWAYS" percentWidth="80.0" /> 
+                <ColumnConstraints percentWidth="10.0" /> 
+            </columnConstraints>
             <rowConstraints>
                 <RowConstraints vgrow="ALWAYS" />
             </rowConstraints>
             
             <children>
-                <VBox spacing="20" styleClass="card" GridPane.columnIndex="1">
-                    <padding><Insets bottom="30" left="30" right="30" top="25" /></padding>
-                    <GridPane.margin><Insets bottom="10" top="10" /></GridPane.margin>
+                <VBox spacing="15" styleClass="card" GridPane.columnIndex="1">
+                    <padding><Insets bottom="20" left="25" right="25" top="20" /></padding>
+                    <GridPane.margin><Insets bottom="10" top="5" /></GridPane.margin>
                     
                     <children>
                         <HBox alignment="CENTER_LEFT">
@@ -49,7 +52,7 @@
                             </children>
                         </HBox>
 
-                        <TableView fx:id="waitlistTable" VBox.vgrow="ALWAYS">
+                        <TableView fx:id="waitlistTable" VBox.vgrow="ALWAYS" minHeight="0">
                             <columns>
                                 <TableColumn fx:id="colConfCode" prefWidth="150.0" text="Confirmation Code" />
                                 <TableColumn fx:id="colGuests" prefWidth="100.0" text="Guests" />
@@ -61,7 +64,7 @@
 
                         <HBox alignment="CENTER_RIGHT">
                             <children>
-                                <Button fx:id="btnCancel" onAction="#onCancelClicked" prefHeight="45.0" prefWidth="220.0" styleClass="button, btn-danger" text="Cancel Selected Entry" />
+                                <Button fx:id="btnCancel" onAction="#onCancelClicked" prefHeight="40.0" prefWidth="220.0" styleClass="button, btn-danger" text="Cancel Selected Entry" />
                             </children>
                         </HBox>
                     </children>
@@ -71,12 +74,12 @@
     </center>
 
     <bottom>
-        <HBox alignment="CENTER_LEFT" prefHeight="80.0">
+        <HBox alignment="CENTER_LEFT" prefHeight="60.0">
             <padding>
                 <Insets left="40.0" /> 
             </padding>
             <children>
-                <Button onAction="#onBackClicked" prefHeight="40.0" prefWidth="160.0" styleClass="button, btn-secondary" text="Back to Menu" />
+                <Button onAction="#onBackClicked" prefHeight="35.0" prefWidth="160.0" styleClass="button, btn-secondary" text="Back to Menu" />
             </children>
         </HBox>
     </bottom>

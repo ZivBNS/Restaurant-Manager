@@ -62,6 +62,7 @@ public class Reservation_Controller {
     }
     
 	private static Message createInstantReservation(Message msg) {
+		
 		Message createInstantReservation = createReservation(msg);
 		if (createInstantReservation.getType().equals(MessageType.RESERVATION_CONFIRMED)) {
 			return new Message(MessageType.INSTANT_RESERVATION_SUCCESS,createInstantReservation.getContent());			

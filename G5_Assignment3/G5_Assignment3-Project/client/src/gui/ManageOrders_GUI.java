@@ -523,6 +523,7 @@ public class ManageOrders_GUI {
 			s.setScene(new Scene(loader.load()));
 			s.showAndWait();
 			refreshAdminData();
+			instance=null;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

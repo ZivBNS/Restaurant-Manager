@@ -135,7 +135,7 @@ public class Workers_GUI {
             stage.setMaximized(true);
             
             stage.show();
-
+            
             System.out.println("Navigated to: " + title);
 
         } catch (IOException e) {

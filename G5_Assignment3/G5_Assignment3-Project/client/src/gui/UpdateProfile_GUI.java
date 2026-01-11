@@ -96,6 +96,7 @@ public class UpdateProfile_GUI {
             Parent root = FXMLLoader.load(getClass().getResource(screen));
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
+            instance=null;
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -81,7 +81,6 @@ public class Server_Controller extends AbstractServer {
 		commands.put(MessageType.GET_BILL_BY_RESERVATION_ID, payCmd);
 		commands.put(MessageType.BILL_PAYMENT_REQUEST, payCmd);
 		commands.put(MessageType.GET_ALL_BILLS, payCmd);
-		commands.put(MessageType.CREATE_BILL, payCmd);
 		commands.put(MessageType.DELETE_BILL, payCmd);
 
 		// --- waitlists ---

@@ -86,7 +86,8 @@ public class Client_Controller implements ChatIF {
 						int userId=userRecord.getId();
 						sendComplexObject(new Message(MessageType.GET_RESERVATIONS_BY_USER,userId));
 					}
-				} else if (MainScreen_GUI.instance != null) {
+				}
+				else if (MainScreen_GUI.instance != null) {
 					MainScreen_GUI.instance.onSubLoginSuccess(userRecord);
 				}
 			}
@@ -122,7 +123,7 @@ public class Client_Controller implements ChatIF {
 				if (MainScreen_GUI.instance != null) {
 					MainScreen_GUI.instance.onSubLoginFailure();
 				}
-				else if (Terminal_GUI.instance!=null) Terminal_GUI.instance.handleMessageIfLoggedIn(null);
+				if (Terminal_GUI.instance!=null) Terminal_GUI.instance.handleMessageIfLoggedIn(null);
 			}
 		});
 		
@@ -132,6 +133,8 @@ public class Client_Controller implements ChatIF {
 				if (MainScreen_GUI.instance != null) {
 					MainScreen_GUI.instance.onEmployeeLoginFailure();
 				}
+				if (Terminal_GUI.instance!=null) Terminal_GUI.instance.handleMessageIfLoggedIn(null);
+
 			}
 		});
 
@@ -146,7 +149,7 @@ public class Client_Controller implements ChatIF {
 				if (ViewReservations_GUI.instance != null) {
 					ViewReservations_GUI.instance.updateTable(resList);
 				}
-				else if (Terminal_GUI.instance != null)
+				if (Terminal_GUI.instance != null)
 					Terminal_GUI.instance.onDailyReservationsReceived(resList);				
 			}
 		});
@@ -238,7 +241,8 @@ public class Client_Controller implements ChatIF {
 				int confirmationCode = (Integer) msg.getContent();
 				if (AddReservation_GUI.instance != null) {
 					AddReservation_GUI.instance.showSuccessAlert(confirmationCode);
-				} else if (ManageOrders_GUI.instance != null) {
+				}
+				if (ManageOrders_GUI.instance != null) {
 					ManageOrders_GUI.instance.showSuccessAlert(confirmationCode);
 				}
 			}
@@ -250,9 +254,11 @@ public class Client_Controller implements ChatIF {
 				LocalDateTime suggestedTime = (LocalDateTime) msg.getContent();
 				if (AddReservation_GUI.instance != null) {
 					AddReservation_GUI.instance.showNoTableAlert(suggestedTime);
-				} else if (ManageOrders_GUI.instance != null) {
+				}
+				if (ManageOrders_GUI.instance != null) {
 					ManageOrders_GUI.instance.showNoTableAlert(suggestedTime);
-				} else if (ViewReservations_GUI.instance != null) {
+				}
+				if (ViewReservations_GUI.instance != null) {
 					ViewReservations_GUI.instance.showNoTableAlert(suggestedTime);
 				}
 			}
@@ -263,9 +269,11 @@ public class Client_Controller implements ChatIF {
 			public void handle(Message msg) {
 				if (AddReservation_GUI.instance != null) {
 					AddReservation_GUI.instance.showNoTableAlert(null);
-				} else if (ViewReservations_GUI.instance != null) {
+				}
+				if (ViewReservations_GUI.instance != null) {
 					ViewReservations_GUI.instance.showNoTableAlert(null);
-				} else if (ManageOrders_GUI.instance != null) {
+				}
+				if (ManageOrders_GUI.instance != null) {
 					ManageOrders_GUI.instance.showNoTableAlert(null);
 				}
 			}
@@ -284,7 +292,7 @@ public class Client_Controller implements ChatIF {
 		    public void handle(Message msg) {
 		        Reservation r = (Reservation) msg.getContent();
 
-		        if (r != null) {
+		        if (r != null && r.getStatus().equals(ReservationStatus.ACTIVE.toString())) {
 		            sendComplexObject(new Message(MessageType.GET_BILL_BY_RESERVATION_ID, r.getId()));
 		        } else if (BillPayment_GUI.instance != null) {
 		            Platform.runLater(new Runnable() {
@@ -301,10 +309,7 @@ public class Client_Controller implements ChatIF {
 		    @Override
 		    public void handle(Message msg) {
 		        Reservation r = (Reservation) msg.getContent();
-		        System.out.println("[CLIENT DEBUG] Received response from server for email search.");
-
-		        if (r != null) {
-		            System.out.println("[CLIENT DEBUG] Reservation found! ID: " + r.getId());
+		        if (r != null && r.getStatus().equals(ReservationStatus.ACTIVE.toString())) {
 		            sendComplexObject(new Message(MessageType.GET_BILL_BY_RESERVATION_ID, r.getId()));
 		        } else if (BillPayment_GUI.instance != null) {
 		            Platform.runLater(new Runnable() {
@@ -325,29 +330,6 @@ public class Client_Controller implements ChatIF {
 		    @Override
 		    public void handle(Message msg) {
 		        Bill b = (Bill) msg.getContent();
-
-		        if (b != null) {
-		            // Logic: If total amount is 0, generate a random bill
-		            if (b.getTotalAmount() <= 0) {
-		                double baseAmount = 100 + (Math.random() * 400);
-		                baseAmount = Math.round(baseAmount * 100.0) / 100.0;
-		                
-		                double discountPercent = 0;
-		                // Apply subscriber discount if applicable
-		                if (User_Session.getLoggedInUser() != null) {
-		                    discountPercent = 10.0; 
-		                }
-
-		                b.setTotalAmount(baseAmount);
-		                b.setDiscountRate(discountPercent);
-		                b.setBillDetails("Dinner Service Selection");
-		                
-		                System.out.println("[CLIENT DEBUG] Generated Bill: " + baseAmount);
-		                // Persist the new bill to the server
-		                sendComplexObject(new Message(MessageType.CREATE_BILL, b));
-		                return; 
-		            }
-
 		            // Display the finalized bill in the GUI
 		            if (BillPayment_GUI.instance != null) {
 		                Platform.runLater(new Runnable() {
@@ -356,12 +338,12 @@ public class Client_Controller implements ChatIF {
 		                        BillPayment_GUI.instance.displayBill(b);
 		                    }
 		                });
-		            } else if (Terminal_GUI.instance != null) {
+		            }
+		            if (Terminal_GUI.instance != null) {
 		                Terminal_GUI.instance.onGetBillSuccess(b);
 		            }
 		        }
-		    }
-		});
+		    });
 
 		responseHandlers.put(MessageType.BILL_REQUEST_FAILED, new ResponseHandler() {
 			@Override
@@ -1183,14 +1165,6 @@ public class Client_Controller implements ChatIF {
 	  */
 	 public void sendGetAllBillsRequest() {
 	     sendComplexObject(new Message(MessageType.GET_ALL_BILLS, null));
-	 }
-	
-	 /**
-	  * Sends a request to create a new manual bill entry in the database.
-	  * @param bill The Bill object to be saved.
-	  */
-	 public void sendCreateBillRequest(Bill bill) {
-	     sendComplexObject(new Message(MessageType.CREATE_BILL, bill));
 	 }
 	
 	 /**

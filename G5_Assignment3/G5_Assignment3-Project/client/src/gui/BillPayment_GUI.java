@@ -54,7 +54,7 @@ public class BillPayment_GUI {
 
         currentBillId = bill.getId();
         double originalAmount = bill.getTotalAmount();
-        double discountPercent = bill.getDiscountRate();
+        double discountPercent = bill.getDiscountRate()*100;
         expectedAmount = bill.calculateFinalAmount();
 
         lblReservationId.setText(String.valueOf(bill.getReservationId()));
@@ -70,14 +70,14 @@ public class BillPayment_GUI {
             lblDiscountInfo.setVisible(true);
             lblDiscountInfo.setManaged(true);
 
-            lblTotalAmount.setText(String.format("₪%.2f", expectedAmount));
+            lblTotalAmount.setText(String.format("₪%.1f", expectedAmount));
         } else {
             lblOriginalAmount.setVisible(false);
             lblOriginalAmount.setManaged(false);
             lblDiscountInfo.setVisible(false);
             lblDiscountInfo.setManaged(false);
 
-            lblTotalAmount.setText(String.format("₪%.2f", originalAmount));
+            lblTotalAmount.setText(String.format("₪%.1f", originalAmount));
         }
 
         btnPay.setDisable("PAID".equalsIgnoreCase(bill.getStatus()));
@@ -98,6 +98,7 @@ public class BillPayment_GUI {
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.show();
+            instance=null;
         } catch (Exception e) {
             e.printStackTrace();
         }

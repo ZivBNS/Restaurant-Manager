@@ -119,6 +119,7 @@ public class ManageWaitlist_GUI {
             stage.setScene(new Scene(root));
             stage.centerOnScreen();
             stage.setTitle("Bistro - Worker Dashboard");
+            instance=null;
         } catch (IOException e) {
             e.printStackTrace();
         }

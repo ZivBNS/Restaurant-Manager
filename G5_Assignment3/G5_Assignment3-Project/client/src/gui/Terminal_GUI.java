@@ -14,7 +14,6 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.sql.Time;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -546,9 +545,9 @@ public class Terminal_GUI {
 
     private void loadScreen(String fxml) {
         try {
-            instance = null;
             Parent root = FXMLLoader.load(getClass().getResource(fxml));
             ((Stage) backBtn.getScene().getWindow()).setScene(new Scene(root));
+            instance=null;
         } catch (IOException e) { e.printStackTrace(); }
     }
 
@@ -558,9 +557,7 @@ public class Terminal_GUI {
             if (!isCanceled) cancelStatusLabel.setStyle("-fx-text-fill: #e74c3c;");
             else {
             	cancelStatusLabel.setStyle("-fx-text-fill: #27ae60;");
-            	if (loggedInUser != null) {
-                    ConnectToServer_GUI.clientController.sendGetDailyReservationsRequest(loggedInUser.getId());
-                }
+            	resetWithDelay();
             }
     
             cancelCodeField.clear(); 
@@ -581,7 +578,7 @@ public class Terminal_GUI {
             }
         });
     }
-    
+    /*
     public void onDailyReservationsReceived(List<Reservation> reservations) {
         Platform.runLater(() -> {
             if (reservations != null && !reservations.isEmpty()) {
@@ -607,7 +604,33 @@ public class Terminal_GUI {
             }
         });
     }
-
+    */
+    public void onDailyReservationsReceived(List<Reservation> reservations) {
+        Platform.runLater(() -> {
+            if (reservations != null && !reservations.isEmpty()) {
+                reservations.sort(Comparator.comparing(Reservation::getOrderStartTime));
+                todayReservationsTable.getItems().setAll(reservations);
+                
+                if (checkInForm.isVisible()) {
+                    todayReservationsTable.setVisible(true);
+                    todayReservationsTable.setManaged(true);
+                    
+                    checkInStatusLabel.setText("");
+                    checkInStatusLabel.setVisible(false);
+                }
+            }
+            else {
+                todayReservationsTable.setVisible(false);
+                todayReservationsTable.setManaged(false);
+                
+                if (checkInForm.isVisible()) {
+                    checkInStatusLabel.setText("You have no active reservations for today.");
+                    checkInStatusLabel.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold; -fx-font-size: 16px;");
+                    checkInStatusLabel.setVisible(true);
+                }
+            }
+        });
+    }
     public void refreshOHAndMaxCapacity() {    	
         try{
         	maxDinnersTableSize= ConnectToServer_GUI.clientController.refreshMaxTableCapacity();
@@ -666,10 +689,6 @@ public class Terminal_GUI {
             todayReservationsTable.setVisible(false);
             todayReservationsTable.setManaged(false);
 
-            if (loggedInUser != null) {
-                ConnectToServer_GUI.clientController.sendGetDailyReservationsRequest(loggedInUser.getId());
-            }
-
             highlightButton(btnCheckIn);
             checkInStatusLabel.setText("Reservation Approved! Auto-processing Check-In...");
             checkInStatusLabel.setStyle("-fx-text-fill: #2980b9; -fx-font-weight: bold;");
@@ -683,9 +702,6 @@ public class Terminal_GUI {
             
             todayReservationsTable.setVisible(false);
             todayReservationsTable.setManaged(false);
-            if (loggedInUser != null) {
-                ConnectToServer_GUI.clientController.sendGetDailyReservationsRequest(loggedInUser.getId());
-            }
             highlightButton(btnCheckIn);
             if (confiCode==0) checkInStatusLabel.setText( "Check-In Successful!" + "\nPlease proceed to Table Number: " + tableNumber);
             else checkInStatusLabel.setText("Reservation Approved! your code is: " + confiCode + "\nPlease proceed to Table Number: " + tableNumber);
@@ -693,6 +709,7 @@ public class Terminal_GUI {
             checkInStatusLabel.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold; -fx-font-size: 16px;");
             checkInStatusLabel.setVisible(true);
             checkInCodeField.clear();
+            resetWithDelay();
         });
     }
 
@@ -749,6 +766,7 @@ public class Terminal_GUI {
             instStatusLabel.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold; -fx-font-size: 15px;");
             instStatusLabel.setVisible(true);
             instStatusLabel.setManaged(true); 
+            resetWithDelay();
         });
     }
 
@@ -767,8 +785,10 @@ public class Terminal_GUI {
                 billDetailsBox.setVisible(false); 
                 billDetailsBox.setManaged(false);
             } else {
-                if(bill.getBillDetails()==null||bill.getBillDetails().isEmpty()) bill.setBillDetails("Pancakes - 4$");
-                payBillStatusLabel.setText(bill.getBillDetails() + "\nSitting - 3$\nTips - 3$" + "\n\nTotal to Pay: " + (bill.calculateFinalAmount()+6) + "$");
+                String finalAmount= String.format("%.1f", (bill.calculateFinalAmount()));
+                if (bill.getBillDetails()==null || bill.getBillDetails().isEmpty()) bill.setBillDetails("");
+                String isUser = (currentBillToPay.getDiscountRate()!=0)? "\nUser Discount - 10%": "";
+                payBillStatusLabel.setText(bill.getBillDetails() + isUser + "\n\nTotal to Pay: " + finalAmount + "$");
                 payBillStatusLabel.setStyle("-fx-text-fill: #2c3e50; -fx-font-size: 14px;");
                 payBillStatusLabel.setVisible(true);
                 
@@ -810,9 +830,7 @@ public class Terminal_GUI {
                 payBillStatusLabel.setVisible(true);
                 
                 currentBillToPay = null;
-                if (loggedInUser != null) {
-                    ConnectToServer_GUI.clientController.sendGetDailyReservationsRequest(loggedInUser.getId());
-                }
+                resetWithDelay();
             } else {
                 payBillStatusLabel.setText("Payment Failed. Please try again or contact staff.");
                 payBillStatusLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold; -fx-font-size: 14px;");
@@ -834,5 +852,11 @@ public class Terminal_GUI {
             forgotPhoneField.clear();
             forgotEmailField.clear();
         });
+    }
+    //function to reset to home screen after operation succeed
+    private void resetWithDelay() {
+        PauseTransition pause = new PauseTransition(Duration.seconds(3));
+        pause.setOnFinished(event -> resetToWelcome());
+        pause.play();
     }
 }
