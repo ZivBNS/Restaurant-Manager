@@ -3,6 +3,7 @@ package gui;
 import java.util.List;
 
 import entities.UserRecord;
+import javafx.animation.PauseTransition;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -19,6 +20,7 @@ import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import javafx.util.Duration;
 import messages.Message;
 import messages.MessageType;
 
@@ -115,6 +117,8 @@ public class ManageUsers_GUI {
 		saveBtn.setDisable(false);
 		updateBtn.setDisable(true);
 		deleteBtn.setDisable(true);
+		
+		formErrorLabel.setStyle("-fx-font-size: 40px;");
 
 		refreshData();
 	}
@@ -128,13 +132,16 @@ public class ManageUsers_GUI {
 				masterList.setAll(list);
 				break;
 			case MessageType.ADD_USER_RESPONSE_OK:
-				showError("User Added Successfully.");
 				refreshData();
 				onClear(); // Reset to add mode
+				showStatus("User Added Successfully.");
 				break;
 			case MessageType.EDIT_USER_RESPONSE_OK:
-				showError("User Updated Successfully.");
 				refreshData();
+				PauseTransition delay = new PauseTransition(Duration.seconds(0.1));
+			    delay.setOnFinished(e -> showStatus("User Updated Successfully."));
+			    delay.play();
+				showStatus("User Updated Successfully.");
 				break;
 			case MessageType.ADD_USER_RESPONSE_ERR:
 			case MessageType.EDIT_USER_RESPONSE_ERR:
@@ -234,6 +241,7 @@ public class ManageUsers_GUI {
 			ConnectToServer_GUI.clientController.sendRemoveUserRequest(selectedUser);
 			onClear(); // Reset form and buttons
 			refreshData();
+			showStatus("User deleted");
 		}
 	}
 
@@ -288,6 +296,13 @@ public class ManageUsers_GUI {
 
 	private void showError(String msg) {
 		formErrorLabel.setText(msg);
+		formErrorLabel.setStyle("-fx-text-fill: red;");
+		formErrorLabel.setVisible(true);
+	}
+	
+	private void showStatus(String msg) {
+		formErrorLabel.setText(msg);
+		formErrorLabel.setStyle("-fx-text-fill: green;");
 		formErrorLabel.setVisible(true);
 	}
 
