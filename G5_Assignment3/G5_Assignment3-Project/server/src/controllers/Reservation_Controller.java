@@ -130,6 +130,13 @@ public class Reservation_Controller {
             reservation.setConfirmationCode(reservationRepository.getNextConfirmationCode());
             reservation.setStatus("Pending");
             
+            //mid check: if invited less then 2 hours from closing then start his time from helf hour down
+            if (reservation.getOrderStartTime().toLocalTime().isAfter(Restaurant.getInstance().getOpeningHours().getRegularSchedule().get(LocalDateTime.now().getDayOfWeek()).getCloseTime().minusMinutes(90))) {
+            	int mnt = LocalDateTime.now().getMinute() / 30 * 30;
+            	reservation.setOrderStartTime(LocalDateTime.now().withMinute(mnt).withSecond(0).withNano(0));
+            	reservation.setOrderEndTime(LocalDateTime.now().withMinute(mnt).withSecond(0).withNano(0).plusHours(2));
+            }
+            
             // 6. Asynchronous Notification
             // Check if email exists before trying to send to prevent errors
             if (reservation.getEmail() != null && !reservation.getEmail().isEmpty()) {

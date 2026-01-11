@@ -1,6 +1,7 @@
 package controllers;
 
 import java.io.*;
+import java.sql.Time;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -1135,85 +1136,101 @@ public class Client_Controller implements ChatIF {
         sendComplexObject(new Message(MessageType.UPDATE_TABLE_REQUEST, table));
     }
 
- /**
-  * Requests the latest reservation/bill associated with a phone number.
-  * @param phone The customer's phone number string.
-  */
- public void sendGetLatestBillByPhoneRequest(String phone) {
-     // We use the specific MessageType the server expects for this lookup
-     sendComplexObject(new Message(MessageType.GET_LATEST_RESERVATION_BY_PHONE, phone));
- }
- 
- /**
-  * Requests the latest reservation/bill associated with a phone number.
-  * @param phone The customer's phone number string.
-  */
- public void sendGetLatestBillByEmailRequest(String email) {
-     // We use the specific MessageType the server expects for this lookup
-     sendComplexObject(new Message(MessageType.GET_LATEST_RESERVATION_BY_EMAIL, email));
- }
+	 /**
+	  * Requests the latest reservation/bill associated with a phone number.
+	  * @param phone The customer's phone number string.
+	  */
+	 public void sendGetLatestBillByPhoneRequest(String phone) {
+	     // We use the specific MessageType the server expects for this lookup
+	     sendComplexObject(new Message(MessageType.GET_LATEST_RESERVATION_BY_PHONE, phone));
+	 }
+	 
+	 /**
+	  * Requests the latest reservation/bill associated with a phone number.
+	  * @param phone The customer's phone number string.
+	  */
+	 public void sendGetLatestBillByEmailRequest(String email) {
+	     // We use the specific MessageType the server expects for this lookup
+	     sendComplexObject(new Message(MessageType.GET_LATEST_RESERVATION_BY_EMAIL, email));
+	 }
+	
+	 /**
+	  * Sends a request to finalize a payment for a specific bill ID.
+	  * @param billId The database ID of the bill.
+	  */
+	 public void sendBillPaymentRequest(int billId) {
+	     sendComplexObject(new Message(MessageType.BILL_PAYMENT_REQUEST, billId));
+	 }
+	
+	 /**
+	  * Sends a request to cancel a waitlist entry using its confirmation code.
+	  * @param confCode The 6-digit reservation code.
+	  */
+	 public void sendCancelWaitlistRequest(int confCode) {
+	     sendComplexObject(new Message(MessageType.CANCEL_WAITLIST_AND_RESERVATION_BY_CODE, confCode));
+	 }
+	
+	 /**
+	  * Sends a request to delete a table by its physical table number.
+	  * @param tableNumber The number assigned to the table.
+	  */
+	 public void sendDeleteTableRequest(int tableNumber) {
+	     sendComplexObject(new Message(MessageType.DELETE_TABLE_REQUEST, tableNumber));
+	 }
+	 
+	 /**
+	  * Requests the full list of bills from the server for the management table.
+	  */
+	 public void sendGetAllBillsRequest() {
+	     sendComplexObject(new Message(MessageType.GET_ALL_BILLS, null));
+	 }
+	
+	 /**
+	  * Sends a request to create a new manual bill entry in the database.
+	  * @param bill The Bill object to be saved.
+	  */
+	 public void sendCreateBillRequest(Bill bill) {
+	     sendComplexObject(new Message(MessageType.CREATE_BILL, bill));
+	 }
+	
+	 /**
+	  * Sends a request to delete a specific bill from the system.
+	  * @param billId The database ID of the bill record.
+	  */
+	 public void sendDeleteBillRequest(int billId) {
+	     sendComplexObject(new Message(MessageType.DELETE_BILL, billId));
+	 }
+	
+	 /**
+	  * Sends a request to mark a bill as paid.
+	  * @param billId The database ID of the bill.
+	  */
+	 public void sendMarkBillAsPaidRequest(int billId) {
+	     sendComplexObject(new Message(MessageType.BILL_PAYMENT_REQUEST, billId));
+	 }
+	 
+	 /**
+	  * Sends a request to cancel a reservation by its ID.
+	  * @param reservationId The ID of the reservation to remove.
+	  */
+	 public void sendCancelReservationRequest(int reservationId) {
+	     sendComplexObject(new Message(MessageType.CANCEL_RESERVATION, reservationId));
+	 }
 
- /**
-  * Sends a request to finalize a payment for a specific bill ID.
-  * @param billId The database ID of the bill.
-  */
- public void sendBillPaymentRequest(int billId) {
-     sendComplexObject(new Message(MessageType.BILL_PAYMENT_REQUEST, billId));
- }
+	 /**
+	  * asks for the restaurant entity to get the time of the close for today, to refresh at the terminal.
+	  * @return LocalTime the close time
+	  */
+	public LocalTime refreshOH() { 
+		return Restaurant.getInstance().getOpeningHours().getRegularSchedule().get(LocalDateTime.now().getDayOfWeek()).getCloseTime();
+	}
 
- /**
-  * Sends a request to cancel a waitlist entry using its confirmation code.
-  * @param confCode The 6-digit reservation code.
-  */
- public void sendCancelWaitlistRequest(int confCode) {
-     sendComplexObject(new Message(MessageType.CANCEL_WAITLIST_AND_RESERVATION_BY_CODE, confCode));
- }
-
- /**
-  * Sends a request to delete a table by its physical table number.
-  * @param tableNumber The number assigned to the table.
-  */
- public void sendDeleteTableRequest(int tableNumber) {
-     sendComplexObject(new Message(MessageType.DELETE_TABLE_REQUEST, tableNumber));
- }
- 
- /**
-  * Requests the full list of bills from the server for the management table.
-  */
- public void sendGetAllBillsRequest() {
-     sendComplexObject(new Message(MessageType.GET_ALL_BILLS, null));
- }
-
- /**
-  * Sends a request to create a new manual bill entry in the database.
-  * @param bill The Bill object to be saved.
-  */
- public void sendCreateBillRequest(Bill bill) {
-     sendComplexObject(new Message(MessageType.CREATE_BILL, bill));
- }
-
- /**
-  * Sends a request to delete a specific bill from the system.
-  * @param billId The database ID of the bill record.
-  */
- public void sendDeleteBillRequest(int billId) {
-     sendComplexObject(new Message(MessageType.DELETE_BILL, billId));
- }
-
- /**
-  * Sends a request to mark a bill as paid.
-  * @param billId The database ID of the bill.
-  */
- public void sendMarkBillAsPaidRequest(int billId) {
-     sendComplexObject(new Message(MessageType.BILL_PAYMENT_REQUEST, billId));
- }
- 
- /**
-  * Sends a request to cancel a reservation by its ID.
-  * @param reservationId The ID of the reservation to remove.
-  */
- public void sendCancelReservationRequest(int reservationId) {
-     sendComplexObject(new Message(MessageType.CANCEL_RESERVATION, reservationId));
- }
-
+	 /**
+	  * Sends a request to refresh max table size from terminal gui.
+	 * @return int the biggest table size
+	  */
+	public int refreshMaxTableCapacity() {
+	     return Restaurant.getBiggestTableSize();	
+	}
+	
 }
