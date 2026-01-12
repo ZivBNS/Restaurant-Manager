@@ -34,6 +34,14 @@ public class Client_Controller implements ChatIF {
 	// Reference to specific GUIs that need direct updates
 	private ManageUsers_GUI manageUsers_GUI;
 
+	   
+	/**
+	 * Constructor to create a Client_Controller with specified host and port.
+	 * 
+	 * @param host The server host address.
+	 * @param port The server port number.
+	 * @throws IOException If there is an error setting up the connection.
+	 */
 	public Client_Controller(String host, int port) throws IOException {
 		try {
 			System.out.println("Connecting to host: " + host);
@@ -581,6 +589,7 @@ public class Client_Controller implements ChatIF {
 			}
 		};
 
+		
 		responseHandlers.put(MessageType.GET_ALL_USERS_RESPONSE, userHandler);
 		responseHandlers.put(MessageType.ADD_USER_RESPONSE_OK, userHandler);
 		responseHandlers.put(MessageType.ADD_USER_RESPONSE_ERR, userHandler);
@@ -828,6 +837,7 @@ public class Client_Controller implements ChatIF {
         }
     }
 
+   
 	@Override
 	public void display(Object message) {
 		if (message instanceof byte[]) {
@@ -966,6 +976,7 @@ public class Client_Controller implements ChatIF {
 		sendComplexObject(new Message(MessageType.UPDATE_REGULAR_HOURS, batchData));
 	}
 
+	
 	public void sendUpdateReservationRequest(Reservation reservationToUpdate) {
 		sendComplexObject(new Message(MessageType.UPDATE_RESERVATION_REQUEST, reservationToUpdate));
 	}
@@ -993,6 +1004,9 @@ public class Client_Controller implements ChatIF {
 		sendComplexObject(new Message(MessageType.GET_ALL_PENDING_AND_ACTIVE_RESERVATIONS, null));
 	}
 
+	/**
+	 * Sends a complex object to the server by serializing it with Kryo.
+	 */
 	public void sendComplexObject(Object obj) {
 		try {
 			byte[] payload = KryoUtil.serialize(obj);
@@ -1002,55 +1016,115 @@ public class Client_Controller implements ChatIF {
 		}
 	}
 
+	/**
+	 * Logs out the current user and closes the client connection.
+	 * 
+	 */
 	public void logout() {
 		sendComplexObject(new Message(MessageType.LOGOUT_REQUEST, null));
 		client.quit();
 	}
 
+	/**
+	 * Sends a login request for a subscriber user.
+	 * @param loginData The login credentials.
+	 */
 	public void sendSubscriberLoginRequest(LoginData loginData) {
 		sendComplexObject(new Message(MessageType.LOGIN_REQUEST_SUB, loginData));
 	}
 	
+	/**
+	 * Sends a login request for an employee user.
+	 * @param loginData The login credentials.
+	 * 
+	 */
 	public void sendEmployeeLoginRequest(LoginData loginData) {
 		sendComplexObject(new Message(MessageType.LOGIN_REQUEST_EMP, loginData));
 	}
 
+	/**
+	 * Sends a login request for a guest user.
+	 * @param loginData The login credentials.
+	 */
 	public void sendGuestLoginRequest(LoginData loginData) {
 		sendComplexObject(new Message(MessageType.LOGIN_REQUEST_GUEST, loginData));
 	}
-
+	// ----------------------------------------------------------------------
+	// User Management Request Methods
+	// ----------------------------------------------------------------------
+	
+	/**
+	 * Sends a request to fetch all user records from the server.
+	 * 
+	 */
 	public void sendGetAllUsersRequest() {
 		sendComplexObject(new Message(MessageType.GET_ALL_USERS_REQUEST));
 	}
-
+	
+	/**
+	 * Sends a request to add a new user record to the server.
+	 * @param newUser The new user record to add.
+	 */
 	public void sendAddUserRequest(UserRecord newUser) {
 		sendComplexObject(new Message(MessageType.ADD_USER_REQUEST, newUser));
 	}
 
+	/**
+	 * Sends a request to edit an existing user record on the server.
+	 * @param user The user record with updated details.
+	 */
 	public void sendEditUserRequest(UserRecord user) {
 		sendComplexObject(new Message(MessageType.EDIT_USER_REQUEST, user));
 	}
 
+	/**
+	 * Sends a request to remove a user record from the server.
+	 * @param user The user record to remove.
+	 */
 	public void sendRemoveUserRequest(UserRecord user) {
 		sendComplexObject(new Message(MessageType.DELETE_USER_REQUEST, user));
 	}
 
+	// ----------------------------------------------------------------------
+	// Additional Request Methods
+	// ----------------------------------------------------------------------
+	
+	/**
+	 * Sends a cancellation request for a reservation or waitlist entry from the terminal.
+	 * @param code The 6-digit reservation/waitlist code.
+	 */
 	public void sendCancelReservationOrWaitlistRequestFromTerminal(int code) {
 		sendComplexObject(new Message(MessageType.CANCEL_WAITLIST_AND_RESERVATION_BY_CODE, code));
 	}
 
+	/**
+	 * Sends a check-in request for a reservation using its confirmation code.
+	 * @param confiCode The 6-digit reservation confirmation code.
+	 */
 	public void sendCheckInRequest(int confiCode) {
 		sendComplexObject(new Message(MessageType.CHECK_IN_REQUEST, confiCode));
 	}
 
+	/**
+	 * Sends a join waitlist request to the server.
+	 * @param waitlistReq The reservation object containing waitlist details.
+	 */
 	public void sendJoinWaitlistRequest(Reservation waitlistReq) {
 		sendComplexObject(new Message(MessageType.JOIN_WAITLIST, waitlistReq));
 	}
 
+	/**
+	 * Sends a request to fetch a bill by its unique code.
+	 * @param code The unique bill code.
+	 */
 	public void sendGetBillRequest(int code) {
 		sendComplexObject(new Message(MessageType.BILL_REQUEST, code));
 	}
-
+	
+	/**
+	 * Sends a request to pay a specific bill.
+	 * @param currentBillToPay The bill object to be paid.
+	 */
 	public void sendPayBillRequest(Bill currentBillToPay) {
 		sendComplexObject(new Message(MessageType.BILL_PAYMENT_REQUEST, currentBillToPay.getId()));
 	}
@@ -1072,10 +1146,20 @@ public class Client_Controller implements ChatIF {
 		sendComplexObject(new Message(MessageType.GET_USER_DETAILS, userId));
 	}
 
+	/**
+	 * Sends a request to recover reservation codes using phone and/or email.
+	 * 
+	 * @param phone The user's phone number.
+	 * @param email The user's email address.
+	 */
 	public void sendRecoverCodesRequest(String phone, String email) {
 		sendComplexObject(new Message(MessageType.FORGOT_CODE,new UserRecord(phone,email)));		
 	}
 
+	/**
+	 * Sends a request to get daily reservations for a specific user.
+	 * @param userId The subscriber ID.
+	 */
 	public void sendGetDailyReservationsRequest(int userId) {
 		sendComplexObject(new Message(MessageType.GET_RESERVATIONS_BY_USER,userId));
 	}

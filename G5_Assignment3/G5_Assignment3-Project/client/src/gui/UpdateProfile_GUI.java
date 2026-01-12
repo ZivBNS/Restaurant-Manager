@@ -15,6 +15,10 @@ import messages.Message;
 import messages.MessageType;
 import utils.User_Session;
 
+/**
+ * Controller for the Update Profile screen.
+ * Allows users to update their personal details.
+ */
 public class UpdateProfile_GUI {
 
     public static String previousScreen;
@@ -29,6 +33,10 @@ public class UpdateProfile_GUI {
     @FXML private PasswordField txtPassword;
     @FXML private Label lblError;
     
+    /**
+ 	 * Called automatically when the FXML is loaded.
+ 	 * Initializes the controller and sets the current user details in the form.
+     */
     @FXML
     public void initialize() {
     	instance = this;
@@ -36,6 +44,10 @@ public class UpdateProfile_GUI {
     }
     
 
+    /**
+ 	 * Sets the current user details in the form fields.
+ 	 * @param user The user whose details are to be displayed and edited.
+     */
     public void setUser(UserRecord user) {
         this.currentUser = user;
 
@@ -48,6 +60,10 @@ public class UpdateProfile_GUI {
     }
     
 
+    /**
+ 	 * Handles the action when the Save button is clicked.
+ 	 * Validates input and sends an update request to the server.
+     */
     @FXML
     private void onSaveClicked(ActionEvent event) {
 
@@ -60,16 +76,6 @@ public class UpdateProfile_GUI {
             return;
         }
 
-//        currentUser.setFirstName(txtFirstName.getText());
-//        currentUser.setLastName(txtLastName.getText());
-//        currentUser.setPhone(txtPhone.getText());
-//        currentUser.setEmail(txtEmail.getText());
-//        currentUser.setUsername(txtUsername.getText());
-        
-
-//        if (!txtPassword.getText().isEmpty()) {
-//            currentUser.setPassword(txtPassword.getText());
-//        }
 
         System.out.println( currentUser);
         System.out.println( currentUser.getSubscriberCode());
@@ -86,6 +92,10 @@ public class UpdateProfile_GUI {
     
 
 
+    /**
+ 	 * Handles the action when the Back button is clicked.
+ 	 * Navigates back to the previous screen.
+     */
     @FXML
     private void onBackClicked(ActionEvent event) {
         try {
@@ -102,6 +112,11 @@ public class UpdateProfile_GUI {
         }
     }
     
+    /**
+ 	 * Called when the profile update is successful.
+ 	 * Updates the form with the latest user details and shows a success message.
+ 	 * 
+     */
     public void onRefresh() {
     	
     	setUser(User_Session.getLoggedInUser());
@@ -110,6 +125,10 @@ public class UpdateProfile_GUI {
         lblError.setVisible(true);
     }
     
+    /**
+ 	 * Called when there is an error updating the profile.
+ 	 * Displays an error message.
+     */
     public void onError() {
         lblError.setText("Error");
         lblError.setStyle("-fx-text-fill: red;");

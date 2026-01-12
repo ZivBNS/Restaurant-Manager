@@ -14,6 +14,10 @@ import utils.User_Session;
 import entities.Bill;
 import javafx.event.ActionEvent;
 
+/**
+ * Controller class for the Bill Payment GUI.
+ * Handles displaying bill details and processing payments.
+ */
 public class BillPayment_GUI {
 
     public static BillPayment_GUI instance;
@@ -28,6 +32,7 @@ public class BillPayment_GUI {
     @FXML private Label lblOriginalAmount;
     @FXML private Label lblDiscountInfo;
 
+    
     @FXML
     public void initialize() {
         instance = this;
@@ -46,6 +51,10 @@ public class BillPayment_GUI {
         }
     }
     
+	/**
+	 * Displays the bill details on the GUI.
+	 * @param bill The bill object containing the details to display.
+	 */
     public void displayBill(Bill bill) {
         if (bill == null) {
             showAlert("Error", "No bill found.");
@@ -83,12 +92,20 @@ public class BillPayment_GUI {
         btnPay.setDisable("PAID".equalsIgnoreCase(bill.getStatus()));
     }
 
+	/**
+	 * Handles the action when the pay button is clicked.
+	 * @param event The action event triggered by clicking the pay button.
+	 */
     @FXML
     private void onPay(ActionEvent event) {
         if (currentBillId == -1) return;
-        ConnectToServer_GUI.clientController.sendBillPaymentRequest(currentBillId);
+        ConnectToServer_GUI.clientController.sendBillPaymentRequest(currentBillId);	// Send payment request to server
     }
 
+	/**
+	 * Handles the action when the back button is clicked.
+	 * @param event The action event triggered by clicking the back button.
+	 */
     @FXML
     private void onBackClicked(ActionEvent event) {
         try {
@@ -104,8 +121,13 @@ public class BillPayment_GUI {
         }
     }
 
+	/**
+	 * Displays an alert dialog with the given title and message.
+	 * @param title The title of the alert dialog.
+	 * @param msg The message to display in the alert dialog.
+	 */
     private void showAlert(String title, String msg) {
-        Platform.runLater(() -> {
+        Platform.runLater(() -> { // Ensure dialog is shown on JavaFX Application Thread
             Alert a = new Alert(Alert.AlertType.INFORMATION);
             a.setTitle(title);
             a.setHeaderText(null);
@@ -114,11 +136,19 @@ public class BillPayment_GUI {
         });
     }
     
+	/**
+	 * Handles the action when the payment is successful.
+	 * Displays a success message and disables the pay button.
+	 */
     public void onPaymentSuccess() {
         showAlert("Success", "Payment completed successfully!");
         btnPay.setDisable(true);
     }
 
+	/**
+	 * Handles the action when no reservation is found.
+	 * Displays an error message.
+	 */
     public void showNoReservationFound() {
         showAlert("No Reservation Found", "No active reservation found.");
     }

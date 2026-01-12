@@ -89,13 +89,21 @@ public class ManageWaitlist_GUI {
             }
         });
     }
-
+    
+    /**
+     * Refreshes the waitlist data by sending a request to the server.
+     * Called on initialization and when the refresh button is clicked.
+     */
     private void refreshData() {
         if (ConnectToServer_GUI.clientController != null) {
             ConnectToServer_GUI.clientController.sendGetAllActiveWaitlistsRequest();
         }
     }
-
+    
+    /**
+     * Updates the table with new waitlist data received from the server.
+     * @param list The list of waitlist entries as Maps.
+     */
     public void updateTable(final List<Map<String, Object>> list) {
         Platform.runLater(new Runnable() {
             @Override
@@ -104,12 +112,20 @@ public class ManageWaitlist_GUI {
             }
         });
     }
-
+    
+    /**
+     * Handles the refresh button click event to reload waitlist data.
+     * @param event The action event triggered by clicking the refresh button.
+     */
     @FXML
     void onRefreshClicked(ActionEvent event) {
         refreshData();
     }
-
+    
+    /**
+	 * Handles the back button click event to return to the Workers dashboard.
+	 * @param event The action event triggered by clicking the back button.
+	 */
     @FXML
     void onBackClicked(ActionEvent event) {
         instance = null;
@@ -125,6 +141,10 @@ public class ManageWaitlist_GUI {
         }
     }
 
+    /**
+     * Displays a warning alert with the given title and content.
+     * @param title The title of the warning alert.
+     */
     private void showWarning(String title, String content) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle(title);

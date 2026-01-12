@@ -20,7 +20,6 @@ public class User_Session {
      */
     public static boolean isSubscriber() {
         if (loggedInUser == null) return false;
-        // בדיקה אם המחרוזת של סוג המשתמש מכילה את המילה "SUB"
         return loggedInUser.toString().toUpperCase().contains("SUB");
     }
 
@@ -32,15 +31,24 @@ public class User_Session {
     public static String getCasualPhone() { return casualPhone; }
     public static String getCasualEmail() { return casualEmail; }
     
- // בתוך מחלקת User_Session
+    
+	/**
+	 * Returns the active phone number for the session.
+	 * If a user is logged in, returns their phone number.
+	 * Otherwise, returns the casual customer's phone number.
+	 * @return The active phone number as a String.
+	 */
     public static String getActivePhone() {
-        // אם מחובר מנוי, ניקח את הטלפון מהפרופיל שלו
         if (loggedInUser != null) {
-            return loggedInUser.getPhone(); // וודא שב-UserRecord יש getPhone()
+            return loggedInUser.getPhone(); 
         }
-        // אם לא, ניקח את הטלפון שהוזן ידנית
         return casualPhone;
     }
+	/**
+	 * Returns the casual customer's identifier (phone or email).
+	 * Gives priority to phone if both are available.
+	 * @return The casual customer's phone number or email, or null if neither is set.
+	 */
     public static String getCasualIdentifier() {
         if (casualPhone != null && !casualPhone.isEmpty()) {
             return casualPhone;

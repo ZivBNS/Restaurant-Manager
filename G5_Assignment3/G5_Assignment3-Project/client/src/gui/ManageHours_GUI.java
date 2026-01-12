@@ -131,7 +131,11 @@ public class ManageHours_GUI {
             cb.getItems().add(String.format("%02d:30", h));
         }
     }
-
+    
+    /**
+     * Gathers the batch update data from the UI and sends it to the server.
+     * Validates input before sending.
+     */
     private void onSaveBatch() {
         Map<DayOfWeek, Object[]> batchData = new HashMap<DayOfWeek, Object[]>();
         for (Map.Entry<DayOfWeek, DayRowControls> entry : dayControlsMap.entrySet()) {
@@ -150,7 +154,11 @@ public class ManageHours_GUI {
         this.updatePending = true;
         ConnectToServer_GUI.clientController.sendBatchUpdateHours(batchData);
     }
-
+    
+    /**
+     * Refreshes the UI with the latest Opening_Hours data. 
+     * @param oh The Opening_Hours object containing the latest schedule data.
+     */
     public void refreshUI(final Opening_Hours oh) {
         Platform.runLater(new Runnable() {
             @Override
@@ -160,7 +168,11 @@ public class ManageHours_GUI {
             }
         });
     }
-
+    
+    /**
+     * Updates the regular hours section of the UI.
+     * @param oh The Opening_Hours object containing the regular schedule.
+     */
     private void updateRegularHoursUI(Opening_Hours oh) {
         vboxRegularHours.getChildren().clear();
         dayControlsMap.clear();
@@ -170,6 +182,7 @@ public class ManageHours_GUI {
             DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY
         };
 
+        // Create rows for each day in custom order
         for (final DayOfWeek day : customOrder) {
             HBox row = new HBox(10);
             row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
@@ -211,7 +224,11 @@ public class ManageHours_GUI {
             dayControlsMap.put(day, new DayRowControls(cbOpen, cbClose, cbActive));
         }
     }
-
+    
+    /**
+	 * Updates the special hours table with the latest exception schedule.
+	 * @param oh The Opening_Hours object containing the exception schedule.
+	 */
     private void updateSpecialHoursTable(Opening_Hours oh) {
         ObservableList<SpecialHourRow> specialRows = FXCollections.observableArrayList();
         for (Map.Entry<LocalDate, TimeRange> entry : oh.getExceptionSchedule().entrySet()) {
@@ -225,7 +242,11 @@ public class ManageHours_GUI {
         }
         tableSpecialHours.setItems(specialRows);
     }
-
+    
+    /**
+     * Gathers the special hour data from the UI and sends an add request to the server.
+	 * Validates input and checks for duplicate dates before sending.
+     */
     private void onAddSpecialHour() {
         try {
             LocalDate date = dpSpecialDate.getValue();
@@ -255,7 +276,11 @@ public class ManageHours_GUI {
             showAlert("Error", "Invalid selection."); 
         }
     }
-
+    
+    /**
+     * Gathers the selected special hour from the table and sends a delete request to the server.
+     * Validates selection before sending.
+     */
     private void onDeleteSpecialHour() {
         SpecialHourRow selected = tableSpecialHours.getSelectionModel().getSelectedItem();
         if (selected != null) {
@@ -266,7 +291,10 @@ public class ManageHours_GUI {
             showAlert("Missing Selection", "Select a Special Hour(row) to delete.");
         }
     }
-
+    
+    /**
+     * Configures the table columns to map to SpecialHourRow properties.
+     */
     private void setupTableColumns() {
         colDate.setCellValueFactory(new PropertyValueFactory<SpecialHourRow, String>("date"));
         colOpen.setCellValueFactory(new PropertyValueFactory<SpecialHourRow, String>("open"));
@@ -274,6 +302,10 @@ public class ManageHours_GUI {
         colDesc.setCellValueFactory(new PropertyValueFactory<SpecialHourRow, String>("description"));
     }
     
+    /**
+     * Handles the action when the back button is clicked.
+     * @param event The action event triggered by clicking the back button.
+     */
     private void onBackClicked(ActionEvent event) {
         try {
             Parent root = FXMLLoader.load(getClass().getResource("/gui/Workers.fxml"));
@@ -283,7 +315,10 @@ public class ManageHours_GUI {
         	instance = null;
         } catch (Exception e) { e.printStackTrace(); }
     }
-
+    
+    /**
+     * Clears the special hour input form.
+     */
     private void clearSpecialForm() {
         dpSpecialDate.setValue(null);
         cbSpecialOpen.setValue(null);
@@ -291,7 +326,12 @@ public class ManageHours_GUI {
         txtSpecialDesc.clear();
         btnMarkClosed.setDisable(true);
     }
-
+    
+    /**
+     * Displays an alert dialog with the given title and content.
+     * @param title The title of the alert dialog.
+     * @param content The content message of the alert dialog.
+     */
     private void showAlert(String title, String content) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
@@ -300,6 +340,10 @@ public class ManageHours_GUI {
         alert.showAndWait();
     }
 
+    /**
+     * Helper class to group controls for each day's row.
+     * Contains ComboBoxes for open/close times and a CheckBox for active status.
+     */
     private static class DayRowControls {
         ComboBox<String> open, close;
         CheckBox active;
@@ -307,7 +351,12 @@ public class ManageHours_GUI {
             this.open = o; this.close = c; this.active = a;
         }
     }
-
+    
+    /**
+	 * Data model for a row in the Special Hours table.
+	 * Contains date, open time, close time, and description.
+	 * Used for TableView display and data binding.
+	 */
     public static class SpecialHourRow {
         private String date, open, close, description;
         public SpecialHourRow(String d, String o, String c, String desc) {

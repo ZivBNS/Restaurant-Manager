@@ -40,6 +40,9 @@ public class Reports_GUI {
     @FXML private ComboBox<String> monthPicker;
     @FXML private ComboBox<Integer> yearPicker;
 
+    /**
+     * Initializes the controller class. sets up the month and year pickers with appropriate values.
+     */
     @FXML
     public void initialize() {
         instance = this;
@@ -104,6 +107,10 @@ public class Reports_GUI {
         });
     }
 
+    /**
+     * Populates the time-related bar chart with average lateness and overstay data.
+     * @param dataList List of TimeDailyData for the month.
+     */
     @SuppressWarnings("unchecked")
 	private void populateTimeChart(List<TimeDailyData> dataList) {
         timeBarChart.getData().clear();
@@ -123,6 +130,10 @@ public class Reports_GUI {
         timeBarChart.getData().addAll(latenessSeries, overstaySeries);
     }
 
+    /**
+	 * Populates the subscriber-related line chart with total orders and waiting list entries.
+	 * @param dataList List of SubscriberDailyData for the month.
+	 */
     @SuppressWarnings("unchecked")
 	private void populateSubscriberChart(List<SubscriberDailyData> dataList) {
         ordersLineChart.getData().clear();

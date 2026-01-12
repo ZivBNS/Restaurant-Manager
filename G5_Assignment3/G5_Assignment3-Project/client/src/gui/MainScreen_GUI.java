@@ -252,6 +252,12 @@ public class MainScreen_GUI {
         
     }
     
+    /**
+     * Validates that the username and password fields are not empty and within length limits.
+     * @param username The entered username.
+     * @param password The entered password.
+     * @return true if both fields are valid; false otherwise.
+     */
     private boolean checkFieldsValid(String username, String password) {
         if (username.isEmpty() || password.isEmpty() ||username.length()>=20 || password.length()>=20) {
             return false;
@@ -259,6 +265,10 @@ public class MainScreen_GUI {
 		return true;
     }
     
+    /**
+	 * Checks if the client controller is initialized and connected to the server.
+	 * @return true if connected; false otherwise.
+	 */
     private boolean checkConnectionToServer() {
         if (ConnectToServer_GUI.clientController == null) {
             return false;
@@ -266,7 +276,10 @@ public class MainScreen_GUI {
 		return true;
     }
     
-    
+    /**
+     * Handles successful employee login by navigating to the Employee Dashboard.
+     * @param user The authenticated UserRecord of the employee.
+     */
     public void onEmployeeLoginSuccess(UserRecord user) {
         try {
             // Note: Changed file name to Workers.fxml based on your previous code
@@ -286,11 +299,16 @@ public class MainScreen_GUI {
         }
     }
     
+    /**
+     * Handles failed employee login by displaying an error message.
+     */
     public void onEmployeeLoginFailure() {
     	showLoginError();
     }
-    
-  
+    /**
+	 * Handles successful subscriber login by navigating to the Subscriber Dashboard.
+	 * @param user The authenticated UserRecord of the subscriber.
+	 */
     public void onSubLoginSuccess(UserRecord user) {
     	try {
         	
@@ -316,10 +334,16 @@ public class MainScreen_GUI {
         }
     } 
     
+    /**
+	 * Handles failed subscriber login by displaying an error message.
+	 */
     public void onSubLoginFailure() {
     	showLoginError();
     }
     
+    /**
+     * Handles successful guest login by navigating to the Casual Customer Dashboard.
+     */
     public void onGuestLoginSuccess() {
     	try {
         	
@@ -344,6 +368,10 @@ public class MainScreen_GUI {
         }
     } 
     
+    /**
+     * Handles failed guest login by displaying an error message.
+     * @param msg The message containing the error details.
+     */
     public void onGuestLoginFailure(Message msg) {
     	String errorMsg;
     	if (msg.getContent() == null) {
@@ -354,6 +382,9 @@ public class MainScreen_GUI {
     	casualErrorLabel.setVisible(true);
     }
     
+    /**
+     * Displays a login error alert.
+     */
     private void showLoginError() {
     	Alert alert = new Alert(AlertType.ERROR);
         alert.setTitle("Login Failed");

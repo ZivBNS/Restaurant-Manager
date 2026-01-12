@@ -20,7 +20,13 @@ public class Barcode_GUI {
 	
 	@FXML
     private Label errorLabel;
-
+	
+	/**
+	 * Initializes the controller class. This method is automatically called
+	 * after the FXML file has been loaded.
+	 * It loads the barcode image from the resources and sets it to the ImageView.
+	 * If the image is not found, it displays an error message.
+	 */
     @FXML
     public void initialize() {
         // Load barcode image from resources
@@ -42,7 +48,10 @@ public class Barcode_GUI {
     }
 
 
-    
+	/**
+	 * Handles the action when the back button is clicked.
+	 * @param event The action event triggered by clicking the back button.
+	 */
     @FXML
     private void onBackClicked(ActionEvent event) {
         try {

@@ -80,6 +80,12 @@ public class ManageTables_GUI {
         setEditMode(false);
         refreshData();
     }
+    /**
+	 * Sets the GUI to either Edit mode or New Entry mode.
+	 * In Edit mode, Update and Delete buttons are enabled, Save New is disabled.
+	 * In New Entry mode, Save New is enabled, Update and Delete are disabled.
+	 * @param isEdit true for Edit mode, false for New Entry mode.
+	 */
     private void setEditMode(boolean isEdit) {
         if (btnSaveNew != null) {
             btnSaveNew.setDisable(isEdit); 
@@ -247,6 +253,10 @@ public class ManageTables_GUI {
         refreshData();
     }
 
+    /**
+	 * Handles the action when the back button is clicked.
+	 * Navigates back to the Workers screen.
+	 */
     @FXML
     private void onBackClicked(ActionEvent event) {
     	try {
@@ -261,6 +271,10 @@ public class ManageTables_GUI {
 		}
     }
 
+    /**
+     * Displays an alert dialog with the given message.
+     * @param msg The message to display in the alert dialog.
+     */
     private void showAlert(String msg) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error");
@@ -270,7 +284,10 @@ public class ManageTables_GUI {
     }
     
     
-    
+    /**
+	 * Loads the list of tables into the TableView.
+	 * @param tables The list of Restaurant_Table objects to display.
+	 */
     public void loadTables(List<Restaurant_Table> tables) {
         tablesTable.getItems().setAll(tables);
     }

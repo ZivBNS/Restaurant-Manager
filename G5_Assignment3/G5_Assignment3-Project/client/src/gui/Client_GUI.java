@@ -6,12 +6,26 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+/**
+ * Main application class for the Bistro Client GUI.
+ * Launches the JavaFX application and initializes the connection screen.
+ */
 public class Client_GUI extends Application {
 
+	/**
+	 * The main entry point for the JavaFX application.
+	 * @param args Command line arguments.
+	 */
     public static void main(String[] args) {
         launch(args);
     }
 
+    
+	/**
+	 * Starts the JavaFX application by loading the initial connection screen.
+	 * @param primaryStage The primary stage for this application.
+	 * @throws Exception If an error occurs during loading the FXML file.
+	 */
     @Override
     public void start(Stage primaryStage) {
         try {

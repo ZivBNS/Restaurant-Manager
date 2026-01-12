@@ -75,6 +75,11 @@ public class ManageOrders_GUI {
 
 	private ObservableList<Reservation> masterData = FXCollections.observableArrayList();
 
+    /**
+     * Initializes the controller class. Sets up the admin reservations table,
+     * date picker restrictions, user ID listener, combo box styling, and guests spinner.
+     * Also requests opening hours and table data from the server.
+     */
 	@FXML
 	public void initialize() {
 		instance = this;
@@ -133,7 +138,10 @@ public class ManageOrders_GUI {
 			}
 		});
 	}
-
+	
+    /**
+     * Sets up the guests spinner with a value factory and focus listener to ensure valid input.
+     */
 	private void setupGuestsSpinner() {
 		SpinnerValueFactory<Integer> valueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 10, 2);
 		spGuests.setValueFactory(valueFactory);
@@ -147,7 +155,12 @@ public class ManageOrders_GUI {
 			}
 		});
 	}
-
+	
+	/**
+	 * Updates the maximum capacity for the guests spinner based on real-time table data
+	 * 
+	 * @param realMax The actual maximum capacity calculated from current table configurations.
+	 */
 	public void updateMaxCapacity(int realMax) {
 		this.maxRestaurantCapacity = realMax;
 		if (spGuests != null) {
@@ -157,7 +170,9 @@ public class ManageOrders_GUI {
 			}
 		}
 	}
-
+	/**
+	 * Applies dark theme styling to the time selection ComboBox.
+	 */
 	private void setupComboBoxStyling() {
 		timeCombo.setCellFactory(new Callback<ListView<String>, ListCell<String>>() {
 			@Override
@@ -190,7 +205,10 @@ public class ManageOrders_GUI {
 			}
 		});
 	}
-
+	
+	/**
+	 * Sets up a listener on the User ID text field to fetch user details when ENTER is pressed.
+	 */
 	private void setupUserIDListener() {
 		txtUserID.setOnKeyPressed(new EventHandler<KeyEvent>() {
 			@Override
@@ -210,7 +228,13 @@ public class ManageOrders_GUI {
 			}
 		});
 	}
-
+	
+	/**
+	 * Fills in user details (Phone and Email) based on the retrieved UserRecord.
+	 * If no user is found, clears the fields and shows an alert.
+	 * 
+	 * @param user The UserRecord object containing user details, or null if not found.
+	 */
 	public void fillUserDetails(final UserRecord user) {
 		Platform.runLater(new Runnable() {
 			@Override
@@ -228,7 +252,10 @@ public class ManageOrders_GUI {
 			}
 		});
 	}
-
+	
+	/**
+	 * Configures the admin reservations table with column bindings and data source.
+	 */
 	private void setupAdminTable() {
 		adminTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
 		colCode.setCellValueFactory(new PropertyValueFactory<Reservation, Integer>("confirmationCode"));
@@ -242,7 +269,11 @@ public class ManageOrders_GUI {
 		colStatus.setCellValueFactory(new PropertyValueFactory<Reservation, String>("status"));
 		adminTable.setItems(masterData);
 	}
-
+	
+	/**
+	 * Restricts the DatePicker to only allow dates from today up to one month in the future.
+	 * Disabled dates are styled with a dark background and white text.
+	 */
 	private void restrictDatePickerRange() {
 		final LocalDate minDate = LocalDate.now();
 		final LocalDate maxDate = LocalDate.now().plusMonths(1);
@@ -265,7 +296,11 @@ public class ManageOrders_GUI {
 			}
 		});
 	}
-
+	
+    /**
+     * Populates the form fields with data from the selected reservation.
+     * @param res The Reservation object containing the data to populate the form.
+     */
 	private void populateForm(Reservation res) {
 		txtOrderID.setText(String.valueOf(res.getConfirmationCode()));
 		txtUserID.setText(res.getUserId() != null ? String.valueOf(res.getUserId()) : "");
@@ -288,6 +323,10 @@ public class ManageOrders_GUI {
 		loadDynamicHours(res.getOrderStartTime().toLocalDate(), timeStr);
 	}
 
+    /**
+     * Clears the form fields and resets the state to allow for new reservation entry.
+	 * @param event The action event triggered by clicking the clear button.
+     */
 	@FXML
 	void onClearClicked(ActionEvent event) {
 		adminTable.getSelectionModel().clearSelection();
@@ -305,7 +344,11 @@ public class ManageOrders_GUI {
 		loadDynamicHours(LocalDate.now(), null);
 		setEditMode(false);
 	}
-
+	
+    /**
+     * Enables or disables form fields and buttons based on whether the form is in edit mode.
+     * @param isEdit True to enable edit mode, false to disable.
+     */
 	private void setEditMode(boolean isEdit) {
 		btnUpdate.setDisable(!isEdit);
 		btnCancel.setDisable(!isEdit);
@@ -313,6 +356,9 @@ public class ManageOrders_GUI {
 		btnAdd.setDisable(isEdit);
 	}
 
+    /**
+     * Handles the action when the Add button is clicked to create a new reservation.
+     */
 	@FXML
 	void onAddClicked(ActionEvent event) {
 		if (!validateInput())
@@ -335,7 +381,10 @@ public class ManageOrders_GUI {
 			showAlert("Error", "Failed to create: " + e.getMessage());
 		}
 	}
-
+	
+	/**
+	 * Handles the action when the Update button is clicked to modify an existing reservation.
+	 */
 	@FXML
 	void onUpdateClicked(ActionEvent event) {
 		Reservation selected = adminTable.getSelectionModel().getSelectedItem();
@@ -365,6 +414,9 @@ public class ManageOrders_GUI {
 		}
 	}
 
+	/**
+	 * Handles the action when the Cancel button is clicked to delete an existing reservation.
+	 */
 	@FXML
 	void onDeleteClicked(ActionEvent event) {
 		final Reservation selected = adminTable.getSelectionModel().getSelectedItem();
@@ -412,7 +464,11 @@ public class ManageOrders_GUI {
 
 		return true;
 	}
-
+	
+	/**
+	 * Constructs a Reservation object from the form inputs.
+	 * @return A Reservation object populated with form data.
+	 */
 	private Reservation buildReservationFromForm() {
 		String idText = txtUserID.getText();
 		if (idText != null && !idText.trim().isEmpty() && activeInternalUserId == null) {
@@ -441,6 +497,11 @@ public class ManageOrders_GUI {
 				spGuests.getValue());
 	}
 
+	/**
+	 * Loads available time slots dynamically based on the selected date and restaurant hours.
+	 * @param selectedDate The date for which to load available time slots.
+	 * @param timeToSelect An optional time string to pre-select in the ComboBox.
+	 */
 	public void loadDynamicHours(final LocalDate selectedDate, final String timeToSelect) {
 		Platform.runLater(new Runnable() {
 			@Override
@@ -498,6 +559,11 @@ public class ManageOrders_GUI {
 		});
 	}
 
+	/**
+	 * Rounds the given time up to the next 30-minute interval.
+	 * @param time The LocalTime to round.
+	 * @return A LocalTime rounded to the next 30-minute mark.
+	 */
 	private LocalTime roundToNext30Min(LocalTime time) {
 		int min = time.getMinute();
 		if (min == 0)
@@ -507,11 +573,17 @@ public class ManageOrders_GUI {
 		return time.plusHours(1).withMinute(0).withSecond(0).withNano(0);
 	}
 
+	/**
+	 * Refreshes the admin reservation data by requesting the latest from the server.
+	 */
 	@FXML
 	public void refreshAdminData() {
 		ConnectToServer_GUI.clientController.sendGetAllPendingAndActiveReservationsRequest();
 	}
 
+	/**
+	 * Handles the action when the Create Bill button is clicked to open the Bill Manager.
+	 */
 	@FXML
 	void onCreateBillClicked(ActionEvent event) {
 		try {
@@ -529,6 +601,9 @@ public class ManageOrders_GUI {
 		}
 	}
 
+	/**
+	 * Handles the action when the Back button is clicked to return to the Workers screen.
+	 */
 	@FXML
 	private void onBackClicked(ActionEvent event) {
 		try {
@@ -541,7 +616,11 @@ public class ManageOrders_GUI {
 			e.printStackTrace();
 		}
 	}
-
+	
+	/**
+	 * Updates the admin UI with the latest list of reservations.
+	 * @param list The list of reservations to display.
+	 */
 	public void updateAdminUI(final List<Reservation> list) {
 		Platform.runLater(new Runnable() {
 			@Override
@@ -551,6 +630,13 @@ public class ManageOrders_GUI {
 		});
 	}
 
+	// --- Error Alerts ---
+	
+    /**
+     * Displays an alert dialog with the specified title and content message.
+     * @param title   The title of the alert dialog.
+     * @param content The content message to display in the alert dialog.
+     */
 	private void showAlert(final String title, final String content) {
 		Platform.runLater(new Runnable() {
 			@Override
@@ -562,6 +648,10 @@ public class ManageOrders_GUI {
 
 	// --- Success Alerts ---
 
+    /**
+     * Displays a success alert when a reservation is created successfully.
+     * @param code The confirmation code of the newly created reservation.
+     */
 	public void showSuccessAlert(final int code) {
 		Platform.runLater(new Runnable() {
 			@Override
@@ -575,6 +665,9 @@ public class ManageOrders_GUI {
 	}
 
 	// NEW: Called when an update is successful
+    /**
+     * Displays a success alert when a reservation is updated successfully.
+     */
 	public void showUpdateSuccessAlert() {
 		Platform.runLater(new Runnable() {
 			@Override
@@ -586,6 +679,11 @@ public class ManageOrders_GUI {
 		});
 	}
 
+	/**
+	 * Displays an alert when no tables are available for the selected date/time.
+	 * Offers to update the form with a suggested alternative time if provided.
+	 * @param suggested The suggested LocalDateTime for the nearest available slot, or null if none.
+	 */
 	public void showNoTableAlert(final LocalDateTime suggested) {
 		Platform.runLater(new Runnable() {
 			@Override

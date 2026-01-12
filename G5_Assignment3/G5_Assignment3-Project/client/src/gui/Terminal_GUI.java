@@ -71,6 +71,11 @@ public class Terminal_GUI {
     
     @FXML private Label lblScanBarcode;
 
+    /**
+     *
+     * Initializes the controller class.
+     * Sets up event handlers, UI components, and initial states.
+     */
     @FXML
     public void initialize() {
         instance = this;
@@ -163,6 +168,10 @@ public class Terminal_GUI {
             toggleForm(checkInForm);
             highlightButton(btnCheckIn);
         });
+        
+        // Instant Booking Button Handler
+        // Fills in phone/email if logged in, otherwise clears fields
+        // Also checks for closing time to disable new reservations
         btnInstantBooking.setOnAction(event -> {
             toggleForm(instantForm);
             highlightButton(btnInstantBooking);
@@ -297,6 +306,9 @@ public class Terminal_GUI {
         });
     }
 
+    /**
+     * Sets up the reservations table with appropriate cell value factories, styles, and formatting.
+     */
     private void setupReservationsTable() {        
         colCode.setCellValueFactory(new PropertyValueFactory<>("confirmationCode"));
         colDiners.setCellValueFactory(new PropertyValueFactory<>("numberOfDiners"));
@@ -346,6 +358,10 @@ public class Terminal_GUI {
         });
     }
 
+    /**
+     * Toggles the visibility of the specified form and resets other forms and fields.
+     * @param formToShow The form VBox to show; if null, hides all forms.
+     */
     private void toggleForm(VBox formToShow) {
     	refreshOHAndMaxCapacity();
     	VBox[] forms = {checkInForm, instantForm, payBillForm, cancelForm};
@@ -399,6 +415,10 @@ public class Terminal_GUI {
         cancelStatusLabel.setVisible(false);
     }
 
+    /**
+     * Handles the submission of an instant booking request.
+     * Validates input and sends the request to the server.
+     */
     private void handleInstantBookingSubmit() {
         int diners = instDinersSpinner.getValue();
         String phone = (loggedInUser == null) ? instPhoneField.getText().trim() : loggedInUser.getPhone();
@@ -418,7 +438,13 @@ public class Terminal_GUI {
             instStatusLabel.setText("Error processing request.");
         }
     }
-
+    
+    /**
+	 * Handles the submission of a check-in request.
+	 * Validates input and sends the request to the server.
+	 * @param field The TextField containing the confirmation code.
+	 * @param statusLabel The Label to display status messages.
+	 */
     private void submitCheckIn(TextField field, Label statusLabel) {
         String code = field.getText().trim();
         if (code.isEmpty() ) {
@@ -436,7 +462,11 @@ public class Terminal_GUI {
         int confiCode = Integer.parseInt(code);
         ConnectToServer_GUI.clientController.sendCheckInRequest(confiCode);
     }
-
+    
+    /**
+	 * Highlights the selected button and resets styles for others.
+	 * @param selected The button to highlight; if null, resets all buttons.
+	 */
     private void highlightButton(Button selected) {
         Button[] btns = {btnCheckIn, btnInstantBooking, btnPayBill, btnCancelRes};
         
@@ -479,6 +509,10 @@ public class Terminal_GUI {
         }
     }
     
+    /**
+     * Displays the terminal view with a greeting.
+     * @param name The name of the logged-in user; if null, shows a generic greeting.
+     */
     private void showTerminal(String name) {
         lblUserGreeting.setText(name == null ? "Please choose an action" : "Hello, " + name);
         welcomeView.setVisible(false);
@@ -488,7 +522,10 @@ public class Terminal_GUI {
         highlightButton(btnCheckIn);
         hlForgotCode.setVisible(true);
     }
-
+    
+    /**
+     * Resets the terminal to the welcome view, clearing user data and forms.
+     */
     private void resetToWelcome() {
         loggedInUser = null;
         todayReservationsTable.getItems().clear();
@@ -502,7 +539,10 @@ public class Terminal_GUI {
         welcomeErrorLabel.setVisible(false);
         hlForgotCode.setVisible(false);
     }
-
+    
+    /**
+     * Handles the subscriber login process.
+     */
     private void handleSubscriberLogin() {
         String username = welcomeUserField.getText().trim();
         String password = welcomePassField.getText().trim();
@@ -514,6 +554,9 @@ public class Terminal_GUI {
         ConnectToServer_GUI.clientController.sendSubscriberLoginRequest(new LoginData(username, password));
     }
 
+    /**
+     * Handles the "Forgot Code" link click event.
+     */
     private void handleForgotCodeClick() {
         if (loggedInUser != null) {
         	if (!todayReservationsTable.getItems().isEmpty()) {
@@ -543,6 +586,11 @@ public class Terminal_GUI {
         btnSubmitForgot.setVisible(!isSubscriber);
     }
 
+    
+    /**
+     * Loads a new screen based on the provided FXML file.
+     * @param fxml The FXML file to load.
+     */
     private void loadScreen(String fxml) {
         try {
             Parent root = FXMLLoader.load(getClass().getResource(fxml));
@@ -550,7 +598,11 @@ public class Terminal_GUI {
             instance=null;
         } catch (IOException e) { e.printStackTrace(); }
     }
-
+    
+    /**
+     * Resets the cancellation status label after a short delay.
+     * Used to clear messages after displaying them.
+     */
     public void onCancellationResponse(String response, boolean isCanceled) {
         Platform.runLater(() -> {
             cancelStatusLabel.setText(response);
@@ -565,6 +617,10 @@ public class Terminal_GUI {
         });
     }
     
+    /**
+     * Resets the terminal view after a short delay.
+     * Used after successful cancellation to return to the welcome screen.
+     */
     public void handleMessageIfLoggedIn(UserRecord userRecord) {
         Platform.runLater(() -> {
             if (userRecord != null) {
@@ -605,6 +661,10 @@ public class Terminal_GUI {
         });
     }
     */
+    /**
+     * Handles the reception of daily reservations from the server.
+     * @param reservations The list of reservations for the day.
+     */
     public void onDailyReservationsReceived(List<Reservation> reservations) {
         Platform.runLater(() -> {
             if (reservations != null && !reservations.isEmpty()) {
@@ -631,6 +691,11 @@ public class Terminal_GUI {
             }
         });
     }
+    
+    /**
+     * Resets opening hours and max table capacity from the server.
+     * Used after successful operations to return to the welcome screen.
+     */
     public void refreshOHAndMaxCapacity() {    	
         try{
         	maxDinnersTableSize= ConnectToServer_GUI.clientController.refreshMaxTableCapacity();
@@ -651,7 +716,10 @@ public class Terminal_GUI {
         }
     }
 
-    
+    /**
+     *  handles the response for a failed instant reservation attempt.
+     *  @param s The error message; if null, indicates waitlist proposal.
+     */
     public void onInstantReservationFailedResponse(String s) {
         Platform.runLater(() -> {
             if (s == null) {
@@ -681,6 +749,10 @@ public class Terminal_GUI {
         });
     }
     
+    /**
+     * Handles the response for a successful instant reservation attempt.
+     * @param confirmationCode The confirmation code for the reservation.
+     */
     public void onInstantReservationSuccessResponse(int confirmationCode) {
         Platform.runLater(() -> {
             confiCode=confirmationCode;
@@ -696,6 +768,10 @@ public class Terminal_GUI {
         });
     }
 
+    /**
+ 	 * Handles the response for a successful check-in attempt.
+ 	 * @param tableNumber The assigned table number for the check-in.
+     */
     public void onCheckInSuccessResponse(int tableNumber) {
         Platform.runLater(() -> {
             toggleForm(checkInForm);
@@ -713,6 +789,10 @@ public class Terminal_GUI {
         });
     }
 
+    /**
+ 	 * Handles the response for a failed check-in attempt.
+ 	 * @param s The error message to display.
+     */
     public void onCheckInFailedResponse(String s) {
         Platform.runLater(() -> {
             checkInStatusLabel.setText(s);
@@ -722,6 +802,10 @@ public class Terminal_GUI {
         });
     }
 
+    /**
+ 	 * Handles the response for a failed waitlist join attempt.
+ 	 * @param msg The error message to display.
+     */
     public void onJoinWaitlistFailedResponse(String msg) {
         Platform.runLater(() -> {
             if (waitlistProposalBox != null) {
@@ -740,6 +824,10 @@ public class Terminal_GUI {
         });
     }
 
+    /**
+ 	 * Handles the response for a successful waitlist join attempt.
+ 	 * @param content The confirmation code for the waitlist entry.
+     */
     public void onJoinWaitlistSucceedResponse(int content) {
         Platform.runLater(() -> {
             if (waitlistProposalBox != null) {
@@ -770,6 +858,10 @@ public class Terminal_GUI {
         });
     }
 
+    /**
+ 	 * Handles the response for a successful bill retrieval.
+ 	 * @param bill The retrieved Bill object.
+     */
     public void onGetBillSuccess(Bill bill) {
         Platform.runLater(() -> {
             this.currentBillToPay = bill;
@@ -798,6 +890,10 @@ public class Terminal_GUI {
         });
     }
 
+    /**
+ 	 * Handles the response for a failed bill retrieval.
+ 	 * @param reason The reason for the failure.
+     */
     public void onGetBillFailure(String reason) {
         Platform.runLater(() -> {
             billDetailsBox.setVisible(false);
@@ -813,6 +909,10 @@ public class Terminal_GUI {
         });
     }
 
+    /**
+ 	 * Handles the response for a bill payment attempt.
+ 	 * @param success True if payment was successful, false otherwise.
+     */
     public void onPaymentSuccessResponse(boolean success) {
         Platform.runLater(() -> {
             if (success) {
@@ -842,6 +942,10 @@ public class Terminal_GUI {
         });
     }
 
+    /**
+ 	 * Handles the response for a "Forgot Code" request.
+ 	 * @param response The response message to display.
+     */
     public void onForgotCodeHandle(String response, boolean isFound) {
         Platform.runLater(() -> {
             forgotStatusLabel.setText(response);
@@ -853,7 +957,10 @@ public class Terminal_GUI {
             forgotEmailField.clear();
         });
     }
-    //function to reset to home screen after operation succeed
+    
+    /**
+ 	 * Resets the terminal view to the welcome screen.
+     */
     private void resetWithDelay() {
         PauseTransition pause = new PauseTransition(Duration.seconds(3));
         pause.setOnFinished(event -> resetToWelcome());

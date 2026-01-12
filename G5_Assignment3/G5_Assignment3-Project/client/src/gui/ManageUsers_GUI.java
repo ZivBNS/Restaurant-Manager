@@ -299,12 +299,14 @@ public class ManageUsers_GUI {
 		formErrorLabel.setText(msg);
 		formErrorLabel.setStyle("-fx-text-fill: red;");
 		formErrorLabel.setVisible(true);
+		formErrorLabel.setManaged(true);
 	}
 	
 	private void showStatus(String msg) {
 		formErrorLabel.setText(msg);
 		formErrorLabel.setStyle("-fx-text-fill: green;");
 		formErrorLabel.setVisible(true);
+		formErrorLabel.setManaged(true);
 	}
 
 	// Validation Helpers
