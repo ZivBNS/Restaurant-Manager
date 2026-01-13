@@ -11,6 +11,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  * Controller for managing a custom Database Connection Pool.
  * Implements the Singleton pattern to provide a centralized access point for 
  * database connections while optimizing performance through reuse.
+ * Uses a thread-safe BlockingQueue to manage pooled connections.
  */
 public class DB_Controller {
     
@@ -47,10 +48,11 @@ public class DB_Controller {
 
     /**
      * Retrieves a connection from the pool. 
-     * If the pool is empty, a new physical connection is created. 
+     * If the pool is empty, it attempts to create a new physical connection by iterating
+     * through a list of potential passwords.
      * If a connection is retrieved from the pool, its usage timestamp is updated.
      * * @return A PooledConnection object ready for database operations.
-     * @throws SQLException If a database access error occurs during physical connection creation.
+     * @throws SQLException If a database access error occurs or all provided passwords fail.
      */
     public PooledConnection getConnection() throws SQLException {
         // Attempt to retrieve a connection from the queue
@@ -109,6 +111,7 @@ public class DB_Controller {
             }
         }
     }
+
     /**
      * Closes all physical connections currently stored in the pool.
      * This should be called when the server is shutting down to ensure
@@ -130,7 +133,4 @@ public class DB_Controller {
         }
         System.out.println("[Pool] All connections closed successfully.");
     }
-    
-    
-
 }

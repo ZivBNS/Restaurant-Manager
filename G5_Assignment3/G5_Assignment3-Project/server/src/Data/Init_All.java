@@ -21,6 +21,7 @@ public class Init_All {
     /**
      * Entry point for database initialization.
      * This will wipe the existing database schema and recreate it from scratch.
+     * * @param args command line arguments.
      */
     public static void main(String[] args) {
         Statement stmt;
@@ -58,6 +59,8 @@ public class Init_All {
     /**
      * Drops all existing tables in the database to ensure a clean state.
      * Foreign key checks are disabled during this process to avoid dependency errors.
+     * * @param con  the database connection.
+     * @param stmt the statement object for executing SQL.
      */
     private static void dropExistingTables(Connection con, Statement stmt) {
         try {
@@ -95,11 +98,13 @@ public class Init_All {
 
     /**
      * Creates all necessary tables for the restaurant system.
+     * * @param con  the database connection.
+     * @param stmt the statement object for executing SQL.
      */
     private static void createTables(Connection con, Statement stmt) {
         try {
             System.out.println("Creating tables...");
-            stmt.executeUpdate("CREATE TABLE Users (ID INT PRIMARY KEY AUTO_INCREMENT, FirstName VARCHAR(25),LastName VARCHAR(25), Phone VARCHAR(14), Email VARCHAR(35), Username VARCHAR(20) UNIQUE , Password VARCHAR(20), subscriberCode INT, Identity ENUM('Subscriber', 'Manager', 'Employee', 'DELETED') NOT NULL);");
+            stmt.executeUpdate("CREATE TABLE Users (ID INT PRIMARY KEY AUTO_INCREMENT, FirstName VARCHAR(25),LastName VARCHAR(25), Phone VARCHAR(14), Email VARCHAR(35), Username VARCHAR(20) UNIQUE , Password VARCHAR(20), subscriberCode INT, Identity ENUM('Subscriber', 'Manager', 'Employee', 'Deleted') NOT NULL);");
             stmt.executeUpdate("CREATE TABLE Tables (ID INT PRIMARY KEY AUTO_INCREMENT, TableNumber INT , Size INT , IsActive BOOLEAN DEFAULT TRUE);");
             stmt.executeUpdate("CREATE TABLE OpeningHours (DayOfWeek ENUM('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday') NOT NULL, OpenTime TIME, CloseTime TIME,IsActive BOOLEAN DEFAULT TRUE, PRIMARY KEY (DayOfWeek, OpenTime));");
             stmt.executeUpdate("CREATE TABLE SpecialHours (Date DATE PRIMARY KEY, OpenTime TIME, CloseTime TIME, Description TEXT);");
@@ -129,6 +134,8 @@ public class Init_All {
 
     /**
      * Initializes default opening hours for a standard week.
+     * * @param con  the database connection.
+     * @param stmt the statement object for executing SQL.
      */
     private static void initOpeningHours(Connection con, Statement stmt) {
         try {
@@ -146,6 +153,8 @@ public class Init_All {
 
     /**
      * Initializes default restaurant tables with varying capacities.
+     * * @param con  the database connection.
+     * @param stmt the statement object for executing SQL.
      */
     private static void initTables(Connection con, Statement stmt) {
         try {
@@ -164,9 +173,12 @@ public class Init_All {
             e.printStackTrace();
         }
     }
+
     /**
      * Generates bills for all 'Completed' reservations.
      * Applies a 15% discount if the customer is a Subscriber.
+     * * @param con  the database connection.
+     * @param stmt the statement object for executing SQL.
      */
     private static void initBills(Connection con, Statement stmt) {
         // Query to join Reservations with Users to identify subscribers for discount logic
@@ -221,8 +233,11 @@ public class Init_All {
             e.printStackTrace();
         }
     }
+
     /**
-     * Initializes a set of dummy subscribers for the system.
+     * Initializes a set of dummy users, including subscribers and employees.
+     * * @param con  the database connection.
+     * @param stmt the statement object for executing SQL.
      */
     private static void initUsers(Connection con, Statement stmt) {
         String[] firstNames = { "Oshri", "Dor", "Daniel", "Ziv", "John", "Jennifer", "Michael", "Linda", "William", "Elizabeth", "David", "Barbara", "Richard", "Susan", "Joseph", "Jessica", "Thomas", "Sarah", "Charles", "Karen" };
@@ -250,6 +265,11 @@ public class Init_All {
         }
     }
 
+    /**
+     * Initializes various types of reservations: Historical (Completed), Future (Pending), and Live (Active).
+     * * @param con  the database connection.
+     * @param stmt the statement object for executing SQL.
+     */
     private static void initReservations(Connection con, Statement stmt) {
         int lastCode = 200000;
         List<Integer> userIds = new ArrayList<Integer>();
@@ -367,6 +387,11 @@ public class Init_All {
         }
     }
 
+    /**
+     * Initializes historical and active waitlist records.
+     * * @param con  the database connection.
+     * @param stmt the statement object for executing SQL.
+     */
     private static void initWaitlists(Connection con, Statement stmt) {
         // 1. Insert Completed Waitlist Records (Historical)
         String selectSql = "SELECT ID, ReservationStartTime FROM Reservations " +
@@ -422,8 +447,11 @@ public class Init_All {
             System.out.println("Waitlist: Initialized (Historical & Active).");
         } catch (SQLException e) { e.printStackTrace(); }
     }
+
     /**
-     * Pre-generates historical report data for October and November.
+     * Pre-generates historical report data for specified months.
+     * * @param con  the database connection.
+     * @param stmt the statement object for executing SQL.
      */
     private static void initMonthlyReports(Connection con, Statement stmt) {
         try {

@@ -27,32 +27,6 @@ public class Waitlist_Repository {
     public static Waitlist_Repository getInstance() {
         return waitlistRepositoryInstance;
     }
-
-    public void init() {
-    	/*   String sql = "SELECT ID, ReservationID, Status, creationTime, TableFreedTime " +
-                     "FROM Waitlist " +
-                     "WHERE TableFreedTime IS NULL AND Status = '"+WaitlistStatus.WAITING.toString() +"' " +
-                     "ORDER BY ID ASC";
-
-        PooledConnection pConn = null;
-       try {
-            pConn = db.getConnection();
-            Connection conn = pConn.getConnection();
-
-            try (Statement stmt = conn.createStatement();
-                 ResultSet rs = stmt.executeQuery(sql)) {
-
-                activeWaitlist.clear();
-                while (rs.next()) {
-                    activeWaitlist.add(extractWaitlistFromResultSet(rs));
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            if (pConn != null) db.releaseConnection(pConn);
-        }*/
-    }
     
     public boolean set(Waitlist objToSet) {
         String creationTimeStr = Timestamp.valueOf(LocalDateTime.now()).toString();

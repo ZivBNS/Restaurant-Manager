@@ -20,7 +20,8 @@ import entities.Restaurant_Table;
 
 /**
  * Repository class for managing Table data and simulating seating capacity.
- * Updated to support "Soft Delete" (Marking tables as inactive instead of deleting).
+ * Supports "Soft Delete" functionality by marking tables as inactive instead of 
+ * removing them from the database, and provides a simulation engine for capacity validation.
  */
 public class Table_Repository {
     
@@ -29,15 +30,18 @@ public class Table_Repository {
 
     private Table_Repository() {}
 
+    /**
+     * Retrieves the singleton instance of the Table_Repository.
+     * @return The active Table_Repository instance.
+     */
     public static Table_Repository getInstance() {
         return TableRepositoryInstance;
     }
 
     /**
-     * Initializes the restaurant table configuration.
-     * UPDATE: Loads ONLY active tables (IsActive = 1).
-     * This ensures "Deleted" (Inactive) tables are hidden from the GUI and 
-     * excluded from capacity calculations in memory.
+     * Initializes the restaurant table configuration by loading ONLY active tables (IsActive = 1) from the database.
+     * This ensures that deactivated tables are excluded from the GUI and memory-based capacity calculations.
+     * Updates the Restaurant singleton cache and tracks the largest table size.
      */
     public void init() {
         int maxTableSize = 0;
@@ -81,10 +85,10 @@ public class Table_Repository {
     }
 
     /**
-     * Performs a "Soft Delete" on a table.
-     * UPDATE: Instead of DELETE, we UPDATE the status to inactive (0).
-     * * @param tableNumber The logical number of the table to deactivate.
-     * @return true if the update was successful.
+     * Performs a "Soft Delete" on a table by updating its status to inactive (0) in the database.
+     * After a successful update, it reloads the internal cache to reflect the change immediately.
+     * @param tableNumber The logical number of the table to deactivate.
+     * @return true if the deactivation was successful, false otherwise.
      */
     public boolean deleteById(int tableNumber) {
         // SQL CHANGE: Update IsActive instead of Delete
@@ -121,9 +125,13 @@ public class Table_Repository {
     }
 
     /**
-     * Advanced capacity check.
-     * Since 'init()' now only loads Active tables into 'Restaurant.getInstance().getTables()',
-     * this function automatically ignores soft-deleted tables for capacity checks.
+     * Performs an advanced capacity check for a specific time slot and group size.
+     * Uses a simulation that considers existing overlapping reservations and only active tables.
+     * @param start     Starting time of the requested slot.
+     * @param end       Ending time of the requested slot.
+     * @param guests    Number of diners in the current request.
+     * @param excludeId Optional reservation ID to ignore (used when updating an existing reservation).
+     * @return true if there is enough physical capacity to accommodate all groups in that slot.
      */
     public boolean isCapacityAvailable(LocalDateTime start, LocalDateTime end, int guests, Integer excludeId) {
         
@@ -157,8 +165,12 @@ public class Table_Repository {
     }
 
     /**
-     * Finds the best physical table ID for a specific slot.
-     * UPDATE: Ensures the SQL explicitly checks IsActive = 1.
+     * Finds the best physical table ID for a specific time slot based on group size.
+     * Prioritizes the smallest available active table that fits the group (Best Fit strategy).
+     * @param start  Starting time.
+     * @param end    Ending time.
+     * @param guests Group size.
+     * @return The database ID of the best available table, or null if no table is available.
      */
     public Integer findBestAvailableTable(LocalDateTime start, LocalDateTime end, int guests) {
         String sql = "SELECT ID FROM tables " 
@@ -190,8 +202,13 @@ public class Table_Repository {
         return null;
     }
 
-    // --- Standard Helper Methods (No Logic Changes Needed, but kept for completeness) ---
-
+    /**
+     * Internal simulation logic to determine if a set of reservations can fit into available tables.
+     * Sorts groups by size (descending) and tables by capacity (ascending) to optimize seating.
+     * @param reservations    List of reservation groups to be seated.
+     * @param availableTables List of tables currently in use for the simulation.
+     * @return true if all groups can be assigned a seat.
+     */
     private boolean runSeatingSimulation(List<Reservation> reservations, List<Restaurant_Table> availableTables) {
         // Sort Groups DESCENDING
         Collections.sort(reservations, new Comparator<Reservation>() {
@@ -225,6 +242,13 @@ public class Table_Repository {
         return true;
     }
 
+    /**
+     * Retrieves all reservations that overlap with a given time range and are not cancelled.
+     * @param start     The start time of the range.
+     * @param end       The end time of the range.
+     * @param excludeId An optional ID to exclude (e.g., the reservation being modified).
+     * @return A list of overlapping Reservation objects.
+     */
     public List<Reservation> getOverlappingReservationsList(LocalDateTime start, LocalDateTime end, Integer excludeId) {
         List<Reservation> conflicts = new ArrayList<Reservation>();
         StringBuilder sql = new StringBuilder();
@@ -258,12 +282,14 @@ public class Table_Repository {
         }
         return conflicts;
     }
+
     /**
      * Simulation Engine: Tries to seat a list of reservations into a list of tables.
-     * Strategy: Largest groups get priority (Best Fit).
-     * * @param reservations List of people needing seats.
-     * @param availableTables List of tables available.
-     * @return List of reservations that failed to find a seat.
+     * Strategy: Largest groups get priority (Best Fit) to minimize fragmentation.
+     * Processes both reservations with specific assigned tables and floating reservations.
+     * @param reservations    List of groups needing seats.
+     * @param availableTables List of tables available for seating.
+     * @return List of reservations that could not be seated in the current scenario.
      */
     private List<Reservation> getUnseatableReservations(List<Reservation> reservations, List<Restaurant_Table> availableTables) {
         List<Reservation> failedReservations = new ArrayList<>();
@@ -333,9 +359,14 @@ public class Table_Repository {
         
         return failedReservations;
     }
+
     /**
-     * Identifies reservations that will be harmed if a table is modified or deleted.
-     * FIX: Compares by TableNumber (since ID might be missing in request) and resolves ID for direct checks.
+     * Identifies reservations that will be negatively impacted if a table is modified or deleted.
+     * Runs a "Before vs After" simulation to determine which groups would become "homeless" 
+     * due to the proposed table change.
+     * @param targetTable       The table being modified or deleted.
+     * @param isDeleteOperation Set to true if simulating a deletion, false for an update.
+     * @return A list of Reservations that would no longer fit in the restaurant after the change.
      */
     public List<Reservation> findImpactedReservations(Restaurant_Table targetTable, boolean isDeleteOperation) {
         List<Reservation> impacted = new ArrayList<>();
@@ -431,7 +462,10 @@ public class Table_Repository {
         return impacted;
     }
 
-
+    /**
+     * Fetches all reservations with status 'Pending' or 'Active' that end after the current time.
+     * @return List of future relevant reservations.
+     */
     private List<Reservation> getAllFutureReservations() {
         List<Reservation> list = new ArrayList<>();
         String sql = "SELECT * FROM reservations WHERE Status IN ('Pending', 'Active') AND ReservationEndTime > NOW()";
@@ -450,6 +484,11 @@ public class Table_Repository {
         return list;
     }
 
+    /**
+     * Inserts a new table record into the database and refreshes the cache.
+     * @param table The Restaurant_Table object to add.
+     * @return true if the insertion was successful.
+     */
     public boolean set(Restaurant_Table table) {
         String sql = "INSERT INTO Tables (TableNumber, Size, IsActive) VALUES (?, ?, ?)";
         PooledConnection pConn = null;
@@ -471,6 +510,11 @@ public class Table_Repository {
         }
     }
 
+    /**
+     * Updates an existing table's details in the database and refreshes the cache.
+     * @param table The Restaurant_Table object containing updated data.
+     * @return true if at least one row was updated.
+     */
     public boolean update(Restaurant_Table table) {
         String sql = "UPDATE Tables SET TableNumber = ?, Size = ?, IsActive = ? WHERE ID = ?";
         PooledConnection pConn = null;
@@ -492,7 +536,12 @@ public class Table_Repository {
         }
     }
 
-    // --- Private Helpers ---
+    /**
+     * Utility method to check if a list of reservations contains a specific ID.
+     * @param list The list to search.
+     * @param id   The ID to find.
+     * @return true if the ID exists in the list.
+     */
     private boolean containsId(List<Reservation> list, int id) {
         for (Reservation r : list) {
             if (r.getId() == id) return true;
@@ -500,6 +549,12 @@ public class Table_Repository {
         return false;
     }
 
+    /**
+     * Helper method to map a ResultSet row to a Reservation object.
+     * @param rs The SQL result set cursor.
+     * @return A populated Reservation object.
+     * @throws SQLException If a database error occurs.
+     */
     private Reservation extractReservationFromResultSet(ResultSet rs) throws SQLException {
         return new Reservation(rs.getInt("ID"), (Integer) rs.getObject("UserID"), (Integer) rs.getObject("TableID"),
                 rs.getString("Phone"), rs.getString("Email"), rs.getTimestamp("ReservationStartTime").toLocalDateTime(),
@@ -511,6 +566,11 @@ public class Table_Repository {
                 rs.getBoolean("RemindedDeparture"));
     }
 
+    /**
+     * Retrieves a table record by its unique internal database ID.
+     * @param id The table's primary key ID.
+     * @return The Restaurant_Table object if found, otherwise null.
+     */
     public Restaurant_Table getById(int id) {
 
         String sql =

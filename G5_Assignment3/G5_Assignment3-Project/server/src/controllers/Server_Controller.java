@@ -11,15 +11,27 @@ import messages.MessageType;
 import ocsf.server.AbstractServer;
 import ocsf.server.ConnectionToClient;
 
+/**
+ * The central controller for the server, extending the OCSF AbstractServer.
+ * It manages client connections, deserializes incoming messages using Kryo, 
+ * and dispatches them to specific command handlers using a Command Pattern.
+ */
 public class Server_Controller extends AbstractServer {
 
+	/** The default port on which the server listens. */
 	final public static int DEFAULT_PORT = 5555;
 	private Server_GUI gui;
 	private final User_Controller userController;
 	private ServerWatchdog watchdog;
+    /** The mapping of MessageTypes to their corresponding Command execution objects. */
 	// The Command Map
 	private Map<MessageType, Command> commands;
 
+	/**
+	 * Constructs the server controller and initializes internal components.
+	 * * @param port The port to listen on.
+	 * @param gui  The graphical user interface for logging server events.
+	 */
 	public Server_Controller(int port, Server_GUI gui) {
 		super(port);
 		this.gui = gui;
@@ -30,6 +42,9 @@ public class Server_Controller extends AbstractServer {
 
 	/**
 	 * Registers all command handlers in the HashMap.
+	 * Groups commands by category: Authentication, Check-in, Reservations, Tables, 
+	 * Users, Payment, Waitlists, Reporting, and Opening Hours.
+	 * Includes a special lambda handler for logout requests.
 	 */
 	private void initializeCommands() {
 		commands = new HashMap<>();
@@ -112,6 +127,13 @@ public class Server_Controller extends AbstractServer {
 		});
 	}
 
+	/**
+	 * Handles raw byte arrays received from clients.
+	 * Deserializes the data into a Message object, executes the corresponding command, 
+	 * and sends the serialized response back to the client.
+	 * * @param msg    The serialized byte array received from the client.
+	 * @param client The connection to the client that sent the message.
+	 */
 	@Override
 	protected void handleMessageFromClient(Object msg, ConnectionToClient client) {
 		// 1. Deserialization
@@ -151,6 +173,10 @@ public class Server_Controller extends AbstractServer {
 		}
 	}
 
+	/**
+	 * Triggered when the server starts listening.
+	 * Initializes the watchdog monitor and the report scheduler.
+	 */
 	@Override
 	protected void serverStarted() {
 		log("Server listening for connections on port " + getPort());
@@ -160,6 +186,10 @@ public class Server_Controller extends AbstractServer {
 		ServerScheduler.startReportScheduler();
 	}
 
+	/**
+	 * Triggered when the server stops listening.
+	 * Gracefully stops the watchdog monitor and the report scheduler.
+	 */
 	@Override
 	protected void serverStopped() {
 		log("Server has stopped listening for connections.");
@@ -169,11 +199,20 @@ public class Server_Controller extends AbstractServer {
 		ServerScheduler.stopScheduler();
 	}
 
+	/**
+	 * Triggered when a new client connects to the server.
+	 * * @param client The connection to the newly connected client.
+	 */
 	@Override
 	protected void clientConnected(ConnectionToClient client) {
 		log("Client connected: " + client);
 	}
 
+	/**
+	 * Internal helper for logging messages.
+	 * Routes logs to the Server_GUI if available; otherwise, prints to the standard system output.
+	 * * @param message The string message to log.
+	 */
 	private void log(String message) {
 		if (gui != null) {
 			gui.appendLog(message);

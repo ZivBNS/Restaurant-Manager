@@ -11,16 +11,19 @@ import Reports.SubscriberDailyData;
 import Reports.TimeDailyData;
 
 /**
- * Data Access Object for handling Report-related database operations.
- * Updated to calculate net average (including negative values for early arrivals/departures).
+ * Data Access Object (DAO) for handling Report-related database operations.
+ * This class manages the retrieval, existence checks, and automated generation 
+ * of monthly reports. It has been updated to calculate net average values, 
+ * which include negative values for early arrivals and early departures.
  */
 public class Reports_Repository {
 
     /**
-     * Retrieves a complete monthly report from the database.
-     * @param month The month (1-12).
-     * @param year  The year (e.g., 2026).
-     * @return A MonthlyFullReportData object, or null if not found.
+     * Retrieves a complete monthly report from the database by aggregating 
+     * data from management, time details, and subscriber details tables.
+     * * @param month The month to retrieve (1-12).
+     * @param year  The year to retrieve (e.g., 2026).
+     * @return A MonthlyFullReportData object containing all daily stats, or null if the report does not exist.
      */
     public static MonthlyFullReportData getMonthlyReport(int month, int year) {
         int reportId = -1;
@@ -80,6 +83,12 @@ public class Reports_Repository {
         }
     }
 
+    /**
+     * Checks whether a report for the specified month and year already exists in the system.
+     * * @param month The month to check.
+     * @param year  The year to check.
+     * @return true if the report entry exists, false otherwise.
+     */
     public static boolean isReportExists(int month, int year) {
         String sql = "SELECT report_id FROM reports_management WHERE report_month = ? AND report_year = ?";
         try (Connection con = DB_Controller.getInstance().getConnection().getConnection();
@@ -93,6 +102,10 @@ public class Reports_Repository {
         }
     }
 
+    /**
+     * Periodically checks if the report for the previous month has been generated.
+     * If the report is missing, it triggers the generation process.
+     */
     public static void checkAndGenerateReport() {
         LocalDate today = LocalDate.now();
         LocalDate lastMonthDate = today.minusMonths(1);
@@ -109,8 +122,12 @@ public class Reports_Repository {
     }
 
     /**
-     * Generates the report by aggregating raw data.
-     * UPDATED: Calculation now includes negative values (early arrivals/departures) for a net average.
+     * Generates the report by aggregating raw reservation and waitlist data.
+     * The calculation includes negative values for lateness and overstaying 
+     * (representing early arrivals or early departures) to provide a net average.
+     * This method uses a transaction to ensure data integrity across multiple tables.
+     * * @param month The month for which to generate the report.
+     * @param year  The year for which to generate the report.
      */
     private static void generateReport(int month, int year) {
         Connection con = null;

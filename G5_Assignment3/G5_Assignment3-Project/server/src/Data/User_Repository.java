@@ -1,5 +1,6 @@
 package Data;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -9,19 +10,37 @@ import java.util.ArrayList;
 import java.util.List;
 import entities.UserRecord;
 
+/**
+ * Repository class for managing User entities in the database.
+ * Implements the Singleton pattern and provides methods for authentication, 
+ * user registration, and profile management for both customers and employees.
+ */
 public class User_Repository {
 	
     private DB_Controller db = DB_Controller.getInstance();
     private static User_Repository userRepositoryInstance = new User_Repository();
+    /** Generator for unique user/subscriber codes. */
     private static int userCodeGenerator = 100;  //added this to create unique user code for each
 
     private User_Repository() {}
 
+    /**
+     * Retrieves the singleton instance of the User_Repository.
+     * @return The active User_Repository instance.
+     */
     public static User_Repository getInstance() { return userRepositoryInstance; }
     
+    /**
+     * Generates the next unique user code in a thread-safe manner.
+     * @return A unique integer user code.
+     */
     //added this to create unique user code for each
     public synchronized int getNextUserCode() { return userCodeGenerator++; }
 
+    /**
+     * Initializes the repository by synchronizing the user code generator 
+     * with the highest existing subscriber code in the database.
+     */
     public void init() { /* Same logic using Pool and MAX(ConfirmationCode) */ 
         PooledConnection pConn = null;
         try {
@@ -34,12 +53,19 @@ public class User_Repository {
         finally { if (pConn != null) db.releaseConnection(pConn); }
     }
 
+    /**
+     * Authenticates a user by username and password.
+     * Filters out users with the 'Deleted' identity.
+     * @param username The login username.
+     * @param password The login password.
+     * @return A populated UserRecord if credentials are valid, or null otherwise.
+     */
 	public UserRecord getByUsername(String username, String password) { 
         PooledConnection pConn = null;
         try {
             pConn = db.getConnection();
             try (PreparedStatement pstmt = pConn.getConnection().prepareStatement("SELECT * FROM users WHERE Username = ? AND Password = ?"
-            		+ "AND identity <> 'DELETED'")) {
+            		+ "AND identity <> 'Deleted'")) {
                 pstmt.setString(1, username);
                 pstmt.setString(2, password);
                 try (ResultSet rs = pstmt.executeQuery()) {
@@ -52,6 +78,12 @@ public class User_Repository {
         return null;
     }
 	
+    /**
+     * Authenticates an employee or manager by username and password.
+     * @param username The login username.
+     * @param password The login password.
+     * @return A UserRecord if the user exists and has an 'Employee' or 'Manager' identity.
+     */
 	public UserRecord getEmpByUsername(String username, String password) { 
         PooledConnection pConn = null;
         try {
@@ -72,6 +104,13 @@ public class User_Repository {
         return null;
     } 
 	
+    /**
+     * Checks if a user exists with the specified email or phone number.
+     * Used to prevent duplicate registrations.
+     * @param email The email address to check.
+     * @param phone The phone number to check.
+     * @return true if a non-deleted user matches either contact detail.
+     */
 	public boolean getByEmailOrPhone(String email, String phone) {
         PooledConnection pConn = null;
         
@@ -83,9 +122,9 @@ public class User_Repository {
             String sql;
             
             if (hasEmail) {
-                sql = "SELECT 1 FROM users WHERE Email = ? AND identity <> 'DELETED' LIMIT 1";
+                sql = "SELECT 1 FROM users WHERE Email = ? AND identity <> 'Deleted' LIMIT 1";
             } else {
-                sql = "SELECT 1 FROM users WHERE Phone = ? AND identity <> 'DELETED' LIMIT 1";
+                sql = "SELECT 1 FROM users WHERE Phone = ? AND identity <> 'Deleted' LIMIT 1";
             }
             
             try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(sql)) {
@@ -106,6 +145,11 @@ public class User_Repository {
         return false;
     }
 	
+    /**
+     * Retrieves a user record based on their internal database ID.
+     * @param id The primary key ID of the user.
+     * @return The UserRecord object or null if not found or deleted.
+     */
 	public UserRecord getByID(int id) {
         PooledConnection pConn = null;
         
@@ -114,7 +158,7 @@ public class User_Repository {
             String sql;
 
             sql = "SELECT ID, FirstName, LastName, Phone, Email,  Username, Password, subscriberCode, Identity"
-            		+ " FROM users WHERE ID = ? AND identity <> 'DELETED' LIMIT 1";
+            		+ " FROM users WHERE ID = ? AND identity <> 'Deleted' LIMIT 1";
             
             try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(sql)) {
                 pstmt.setInt(1, id);
@@ -133,6 +177,10 @@ public class User_Repository {
         return null;
     }
 	
+    /**
+     * Fetches all active (non-deleted) users from the database.
+     * @return A list of all UserRecord objects, sorted by name.
+     */
 	public List<UserRecord> getAllSubscribedCustomers() {
 		
 		List<UserRecord> results = new ArrayList<>();
@@ -142,7 +190,7 @@ public class User_Repository {
             pConn = db.getConnection();
             String sql = "SELECT ID, FirstName, LastName, Phone, Email,  Username, Password, subscriberCode, Identity "
             		+ "FROM users "
-            		+ "WHERE identity <> 'DELETED'"
+            		+ "WHERE identity <> 'Deleted'"
             		+ "ORDER BY LastName, FirstName";
             		
             
@@ -176,6 +224,12 @@ public class User_Repository {
 		return results;
 	}
 	
+    /**
+     * Maps a single row from a ResultSet into a UserRecord object.
+     * @param rs The ResultSet cursor.
+     * @return A populated UserRecord.
+     * @throws SQLException If a database error occurs.
+     */
 	private UserRecord mapRowToUser(ResultSet rs) throws SQLException {
         return new UserRecord(
 
@@ -191,11 +245,16 @@ public class User_Repository {
         );
     }
 
+    /**
+     * Checks if a username is already taken.
+     * @param username The username string to verify.
+     * @return true if the username exists in the database.
+     */
 	public boolean existsByUsername(String username) {
 	    PooledConnection pConn = null;
 
 	    String sql =
-	        "SELECT 1 FROM users WHERE Username = ? AND identity LIMIT 1";
+	        "SELECT 1 FROM users WHERE Username = ? LIMIT 1";
 
 	    try {
 	        pConn = db.getConnection();
@@ -219,6 +278,12 @@ public class User_Repository {
 	    return false;
 	}
 
+    /**
+     * Inserts a new user into the database and generates their unique subscriber code.
+     * The process involves an initial insert followed by an update to set the subscriberCode.
+     * @param user The UserRecord containing new account details.
+     * @return true if the user was successfully registered.
+     */
 	public boolean addNewUser(UserRecord user) {
 		
 		String sql = """
@@ -286,7 +351,11 @@ public class User_Repository {
 		return false;
 	}
 
-	
+	/**
+     * Updates an existing user record in the database.
+     * @param u The UserRecord containing updated information.
+     * @return true if the update affected exactly one row.
+     */
 	public boolean updateUser(UserRecord u) {
 	    PooledConnection pConn = null;
 
@@ -321,10 +390,15 @@ public class User_Repository {
 	    }
 	}
 	
+    /**
+     * Performs a soft delete by changing the user's identity to 'Deleted'.
+     * @param u The user record to deactivate.
+     * @return true if the operation was successful.
+     */
 	public boolean deleteUserByID(UserRecord u) {
 	    PooledConnection pConn = null;
 
-	    String sql = "UPDATE users SET identity = 'DELETED' WHERE ID = ?";
+	    String sql = "UPDATE users SET identity = 'Deleted' WHERE ID = ?";
 
 	    try {
 	        pConn = db.getConnection();
@@ -345,15 +419,18 @@ public class User_Repository {
 
 	    return false;
 	}
+    
 	/**
      * Retrieves a user by their unique Subscriber Code (e.g., 100001).
      * Useful for manual entry forms.
+     * @param code The numeric subscriber code.
+     * @return The UserRecord if found and not deleted, or null otherwise.
      */
     public UserRecord getBySubscriberCode(int code) {
         PooledConnection pConn = null;
         try {
             pConn = db.getConnection();
-            String sql = "SELECT * FROM users WHERE subscriberCode = ? AND identity <> 'DELETED' LIMIT 1";
+            String sql = "SELECT * FROM users WHERE subscriberCode = ? AND identity <> 'Deleted' LIMIT 1";
             
             try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(sql)) {
                 pstmt.setInt(1, code);

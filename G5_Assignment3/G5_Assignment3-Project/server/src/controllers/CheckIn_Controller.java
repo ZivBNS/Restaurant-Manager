@@ -16,6 +16,12 @@ import entities.Waitlist;
 import entities.WaitlistStatus;
 import messages.Message;
 import messages.MessageType;
+
+/**
+ * Controller responsible for managing the check-in process.
+ * Handles reservation verification, table assignment, waitlist status updates, and bill creation.
+ * Supported waitlist states: PWAITING, WAITING, NOTIFIED, COMPLETED, CANCELED.
+ */
 /*******************************************************************
  * waitlist states are: PWAITING, WAITING, NOTIFIED, COMPLETED, CANCELED
  *******************************************************************/
@@ -25,6 +31,11 @@ public class CheckIn_Controller {
     private static final Waitlist_Repository WaitlistRepository = Waitlist_Repository.getInstance();
     private static final Bill_Repository billRepository = Bill_Repository.getInstance();
 
+    /**
+     * Routes the incoming message to the appropriate check-in logic based on its type.
+     * * @param msg The message received from the client.
+     * @return A Message object containing the response or result of the check-in attempt.
+     */
     public static Message handleMessage(Message msg) {
         switch (msg.getType()) {
         	case CHECK_IN_REQUEST: return checkInRequest(msg);
@@ -32,6 +43,17 @@ public class CheckIn_Controller {
         }
     }
 
+	/**
+	 * Processes a check-in request. 
+	 * The process includes:
+	 * 1. Verifying the confirmation code and reservation relevance.
+	 * 2. Blocking waitlisted users who haven't been notified yet.
+	 * 3. Searching for available capacity and assigning the best table.
+	 * 4. Handling priority waitlist placement if the restaurant is full.
+	 * 5. Initializing a new bill upon successful check-in.
+	 * * @param msg Message containing the confirmation code.
+	 * @return Message indicating CHECK_IN_COMPLETED with table ID on success, or CHECK_IN_FAIL with a reason.
+	 */
 	private static Message checkInRequest(Message msg) {
 		int confCode= (int) msg.getContent();
 		Restaurant_Table rt;
@@ -97,6 +119,13 @@ public class CheckIn_Controller {
         return new Message(MessageType.CHECK_IN_COMPLETED, tableID);
 	}
 
+	/**
+	 * Creates a new bill record for the reservation upon successful check-in.
+	 * Generates a random base amount for simulation purposes and adds fixed costs.
+	 * * @param id           The reservation ID associated with the bill.
+	 * @param isSubscriber Whether the customer is a registered subscriber.
+	 * @return true if the bill was successfully saved in the repository, false otherwise.
+	 */
 	private static boolean createBillWhenCheckedInSuccesfully(int id, boolean isSubscriber) {
 		Bill newBill = new Bill(id,isSubscriber);
 	    double min = 0;
@@ -111,4 +140,3 @@ public class CheckIn_Controller {
 	    return billRepository.set(newBill);
 	}
 }
-

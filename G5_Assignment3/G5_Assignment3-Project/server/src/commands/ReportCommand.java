@@ -10,6 +10,13 @@ import ocsf.server.ConnectionToClient;
  */
 public class ReportCommand implements Command {
 
+	/**
+	 * Executes the report command.
+	 * Performs a direct call to the business logic controller to handle the report message.
+	 * * @param msg    The message containing the report request.
+	 * @param client The connection from the client.
+	 * @return A Message object with the report data or response.
+	 */
     @Override
     public Message execute(Message msg, ConnectionToClient client) {
         // Direct call to the business logic controller

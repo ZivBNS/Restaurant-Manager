@@ -1,11 +1,6 @@
 package Data;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -16,8 +11,9 @@ import entities.Reservation;
 import entities.ReservationStatus;
 
 /**
- * Repository for reservation data. Updated to support Logical Seating
- * simulation by storing TableID as NULL.
+ * Repository class for managing Reservation entities in the database.
+ * Supports "Logical Seating" simulation where TableID remains NULL until check-in.
+ * Handles confirmation code generation, lifecycle status updates, and reminder tracking.
  */
 public class Reservation_Repository {
 
@@ -28,12 +24,18 @@ public class Reservation_Repository {
 	private Reservation_Repository() {
 	}
 
+	/**
+	 * Retrieves the singleton instance of the Reservation_Repository.
+	 * @return The active Reservation_Repository instance.
+	 */
 	public static Reservation_Repository getInstance() {
 		return reservationRepositoryInstance;
 	}
 
 	/**
 	 * Fetches a reservation by its unique confirmation code.
+	 * @param code The unique confirmation code assigned to the reservation.
+	 * @return A populated Reservation object, or null if no match is found.
 	 */
 	public Reservation getByConfirmationCode(int code) {
 		String sql = "SELECT * FROM reservations WHERE ConfirmationCode = ?";
@@ -56,6 +58,10 @@ public class Reservation_Repository {
 		return null;
 	}
 
+	/**
+	 * Synchronizes the internal confirmation code generator with the database.
+	 * Finds the current maximum confirmation code and sets the generator to the next value.
+	 */
 	public void init() { /* Same logic using Pool and MAX(ConfirmationCode) */
 		PooledConnection pConn = null;
 		try {
@@ -73,13 +79,20 @@ public class Reservation_Repository {
 		}
 	}
 
+	/**
+	 * Generates the next unique confirmation code in a thread-safe manner.
+	 * @return A unique integer confirmation code.
+	 */
 	public synchronized int getNextConfirmationCode() {
 		return confirmationCodeGenerator++;
 	}
 
 	/**
-	 * Saves a new reservation to the database. TableID is explicitly set to NULL on
-	 * creation. Reminder flags are initialized to 0 (false).
+	 * Saves a new reservation to the database. 
+	 * Implements "Logical Seating" by explicitly setting TableID to NULL upon creation.
+	 * Initializes reminder flags (Pre-Arrival and Departure) to false.
+	 * @param res The Reservation object to persist.
+	 * @return true if the insertion was successful, false otherwise.
 	 */
 	public boolean set(Reservation res) {
 		String sql = "INSERT INTO reservations (UserID, TableID, Phone, Email, ReservationStartTime, "
@@ -120,6 +133,11 @@ public class Reservation_Repository {
 		}
 	}
 
+	/**
+	 * Updates the basic details of an existing reservation.
+	 * @param res The Reservation object containing updated information.
+	 * @return true if the update affected at least one row, false otherwise.
+	 */
 	public boolean update(Reservation res) {
 		String sql = "UPDATE reservations SET NumberOfDiners = ?, ReservationStartTime = ?, "
 				+ "ReservationEndTime = ?, Status = ? WHERE ID = ?";
@@ -142,6 +160,14 @@ public class Reservation_Repository {
 		}
 	}
 	
+	/**
+	 * Updates a reservation record during the check-in process.
+	 * Assigns a specific TableID and records the actual arrival time.
+	 * @param confCode The confirmation code for the reservation.
+	 * @param TableId  The ID of the table assigned to the guest.
+	 * @param rs       The new reservation status (e.g., Active).
+	 * @return true if all updates were successful.
+	 */
 	public boolean updateReservationForCheckIn(int confCode, int TableId, ReservationStatus rs) {
 		// UserID INT, TableID INT, Phone VARCHAR(14), Email VARCHAR(35),
 		// ReservationStartTime DATETIME, ReservationEndTime DATETIME ,
@@ -173,6 +199,12 @@ public class Reservation_Repository {
 		}
 	}
 
+	/**
+	 * Marks a reservation as completed and records the actual departure time.
+	 * @param confCode          The unique confirmation code.
+	 * @param actualFinishTime  The timestamp when the guest left.
+	 * @return true if the record was updated.
+	 */
 	public boolean updateReservationForCheckOut(int confCode, LocalDateTime actualFinishTime) {
 		String sql = "UPDATE reservations SET Status = '"+ ReservationStatus.COMPLETED.toString()+"', ActualDepartureTime = ? WHERE ConfirmationCode = ?";
 		PooledConnection pConn = null;
@@ -194,6 +226,12 @@ public class Reservation_Repository {
 		}
 	}
 
+	/**
+	 * Performs a comprehensive update of a reservation by an employee.
+	 * Allows manual assignment of tables and contact information changes.
+	 * @param res The Reservation object with updated staff-managed fields.
+	 * @return true if the update was successful.
+	 */
 	public boolean updateByEmployee(Reservation res) {
 		String sql = "UPDATE reservations SET NumberOfDiners = ?, ReservationStartTime = ?, "
 				+ "ReservationEndTime = ?, Status = ?, TableID = ?, Phone = ?, Email = ? WHERE ID = ?";
@@ -224,9 +262,9 @@ public class Reservation_Repository {
 
 	/**
 	 * Retrieves all reservations associated with a specific subscriber ID that are
-	 * currently 'Pending' or 'Active'. * @param userId The unique subscriber code.
-	 * 
-	 * @return A list of filtered reservations.
+	 * currently 'Pending' or 'Active'.
+	 * @param userId The unique subscriber ID.
+	 * @return A list of filtered reservations for the customer.
 	 */
 	public List<Reservation> getByUserId(int userId) {
 		List<Reservation> results = new ArrayList<Reservation>();
@@ -254,10 +292,9 @@ public class Reservation_Repository {
 
 	/**
 	 * Retrieves all reservations for a casual customer by phone or email that are
-	 * currently 'Pending' or 'Active'. * @param contact The phone number or email
-	 * string.
-	 * 
-	 * @return A list of filtered reservations.
+	 * currently 'Pending' or 'Active'.
+	 * @param contact The phone number or email string used for the search.
+	 * @return A list of filtered reservations for the casual customer.
 	 */
 	public List<Reservation> getByContactInfo(String contact) {
 		List<Reservation> results = new ArrayList<Reservation>();
@@ -285,10 +322,9 @@ public class Reservation_Repository {
 	}
 
 	/**
-	 * Retrieves all reservations with 'Pending' status. Used by admin staff to view
-	 * new reservation requests.
-	 * 
-	 * @return List of pending reservations.
+	 * Retrieves all reservations currently in 'Pending' status.
+	 * Used primarily by admin staff to monitor upcoming arrivals.
+	 * @return A list of pending reservations.
 	 */
 	public List<Reservation> getAllPendingReservations() {
 		List<Reservation> results = new ArrayList<>();
@@ -307,10 +343,11 @@ public class Reservation_Repository {
 		}
 		return results;
 	}
+
 	/**
 	 * Retrieves all reservations that are either in 'Pending' or 'Active' status.
 	 * This is used by the server to monitor current and upcoming restaurant activity.
-	 * * @return A list of Reservation objects with Pending or Active status.
+	 * @return A list of Reservation objects with Pending or Active status.
 	 */
 	public List<Reservation> getPendingAndActiveReservations() {
 	    List<Reservation> results = new ArrayList<>();
@@ -342,11 +379,12 @@ public class Reservation_Repository {
 	    }
 	    return results;
 	}
+
 	/**
-	 * Hard deletes a reservation from the database. RESERVED FOR ADMIN USE ONLY.
-	 * * @param id The reservation ID to delete.
-	 * 
-	 * @return true if deleted.
+	 * Hard deletes a reservation from the database. 
+	 * RESERVED FOR ADMIN USE ONLY.
+	 * @param id The internal database ID of the reservation to delete.
+	 * @return true if the deletion affected a row.
 	 */
 	public boolean deleteById(int id) {
 		PooledConnection pConn = null;
@@ -366,11 +404,10 @@ public class Reservation_Repository {
 	}
 
 	/**
-	 * Helper method to map a SQL ResultSet row to a Reservation object. Updated to
-	 * include the reminder flags.
-	 * 
-	 * @param rs The result set cursor.
-	 * @return A populated Reservation object.
+	 * Helper method to map a SQL ResultSet row to a Reservation object.
+	 * Includes support for reminder flags and arrival/departure timestamps.
+	 * @param rs The result set cursor pointing to a valid row.
+	 * @return A fully populated Reservation object.
 	 * @throws SQLException If a database access error occurs.
 	 */
 	private Reservation extractReservationFromResultSet(ResultSet rs) throws SQLException {
@@ -388,10 +425,9 @@ public class Reservation_Repository {
 	}
 
 	/**
-	 * Updates only the status of a specific reservation. Used for cancellations,
-	 * check-ins, and completions. * @param reservationId The ID of the reservation.
-	 * 
-	 * @param newStatus The new status enum value.
+	 * Updates the status of a specific reservation identified by its internal ID.
+	 * @param reservationId The database ID of the reservation.
+	 * @param newStatus     The new status enum value.
 	 * @return true if the update was successful.
 	 */
 	public boolean updateStatusByID(int reservationId, ReservationStatus newStatus) {
@@ -414,10 +450,8 @@ public class Reservation_Repository {
 	}
 
 	/**
-	 * Updates only the status of a specific reservation by its confirmation code.
-	 * Used for cancellations, check-ins, and completions.
-	 * 
-	 * @param confCode  The unique confirmation code of the reservation.
+	 * Updates the status of a specific reservation identified by its confirmation code.
+	 * @param confCode  The unique confirmation code.
 	 * @param newStatus The new status enum value.
 	 * @return true if the update was successful.
 	 */
@@ -443,10 +477,9 @@ public class Reservation_Repository {
 	}
 
 	/**
-	 * Retrieves the status of a reservation by its confirmation code.
-	 * 
-	 * @param confCode The unique confirmation code of the reservation.
-	 * @return The status string or null if not found.
+	 * Retrieves the current status string of a reservation by its confirmation code.
+	 * @param confCode The unique confirmation code.
+	 * @return The status string (e.g., "Active"), or null if not found.
 	 */
 	public String getStatusByConfirmationCode(int confCode) {
 		String sql = "SELECT Status FROM Reservations WHERE ConfirmationCode = " + confCode;
@@ -473,7 +506,7 @@ public class Reservation_Repository {
 
 	/**
 	 * Retrieves the latest active reservation for a given phone number.
-	 * 
+	 * Used during check-in or terminal interactions.
 	 * @param phone The phone number to search for.
 	 * @return The latest active Reservation or null if none found.
 	 */
@@ -509,8 +542,8 @@ public class Reservation_Repository {
 	}
 	
 	/**
-	 * Retrieves the latest active reservation for a given email address.
-	 * * @param email The email address to search for.
+	 * Retrieves the latest active reservation associated with a specific email address.
+	 * @param email The email address to search for.
 	 * @return The latest active Reservation or null if none found.
 	 */
 	public Reservation getLatestReservationByEmail(String email) {
@@ -555,6 +588,11 @@ public class Reservation_Repository {
 	    return null;
 	}
 
+	/**
+	 * Finalizes a reservation session. 
+	 * Sets status to 'Completed' and records the current timestamp as ActualDepartureTime.
+	 * @param reservationId The internal database ID of the reservation.
+	 */
 	public void markReservationAsCompleted(int reservationId) {
 		String sql = "UPDATE reservations SET Status = 'Completed', ActualDepartureTime = NOW() WHERE ID = ?";
 
@@ -579,10 +617,9 @@ public class Reservation_Repository {
 	}
 
 	/**
-	 * Retrieves a reservation by its unique internal ID.
-	 * 
-	 * @param id The reservation ID.
-	 * @return The Reservation object or null if not found.
+	 * Retrieves a single reservation by its unique internal database ID.
+	 * @param id The primary key ID.
+	 * @return The populated Reservation object or null if not found.
 	 */
 	public Reservation getById(int id) {
 		String sql = "SELECT * FROM reservations WHERE ID = ?";
@@ -610,6 +647,12 @@ public class Reservation_Repository {
 		return null; // Not found
 	}
 
+	/**
+	 * Assigns a specific table to a reservation identified by its confirmation code.
+	 * @param confCode The reservation confirmation code.
+	 * @param tableId  The internal ID of the table to assign.
+	 * @return true if the update affected a row.
+	 */
 	public boolean updateTableByConfirmationCode(int confCode, int tableId) {
 		String sql = "UPDATE reservations SET TableID = ? WHERE ConfirmationCode = ?";
 
@@ -637,10 +680,9 @@ public class Reservation_Repository {
 	/**
 	 * Updates only the Actual Arrival Time of a reservation identified by its
 	 * confirmation code.
-	 * 
-	 * @param confCode    The unique confirmation code of the reservation.
-	 * @param arrivalTime The new actual arrival time to set.
-	 * @return true if the update was successful, false otherwise.
+	 * @param confCode    The unique confirmation code.
+	 * @param arrivalTime The timestamp to record as the actual arrival time.
+	 * @return true if the update was successful.
 	 */
 	public boolean updateActualArrivalTimeOnly(int confCode, LocalDateTime arrivalTime) {
 		String sql = "UPDATE Reservations SET ActualArrivalTime = ? WHERE ConfirmationCode = ?";
@@ -665,10 +707,10 @@ public class Reservation_Repository {
 	}
 
 	/**
-	 * Fetches ACTIVE reservations that have exceeded their time limit AND have not
-	 * been reminded yet.
-	 * 
-	 * @return List of overdue reservations.
+	 * Fetches ACTIVE reservations that have exceeded their time limit.
+	 * Used by the Watchdog service to send departure reminders or auto-complete sessions.
+	 * @param isNotified If true, fetches reservations that have already received a reminder 15 minutes ago.
+	 * @return A list of overdue reservations.
 	 */
 	public List<Reservation> getExpiredActiveReservations(boolean isNotified) { //is notified halpes to find what reservations to mark as completed in watchdog
 		List<Reservation> expiredList = new ArrayList<>();
@@ -698,10 +740,9 @@ public class Reservation_Repository {
 	}
 
 	/**
-	 * Fetches reservations scheduled to start within the next 2 hours (approx) that
-	 * have NOT received a reminder yet.
-	 * 
-	 * @return List of upcoming reservations.
+	 * Fetches reservations scheduled to start within the next 2 hours that
+	 * have not yet received a pre-arrival reminder.
+	 * @return A list of upcoming reservations for the reminder service.
 	 */
 	public List<Reservation> getUpcomingReservationsForReminder() {
 		List<Reservation> upcomingList = new ArrayList<>();
@@ -733,10 +774,9 @@ public class Reservation_Repository {
 	}
 
 	/**
-	 * Updates the database to indicate a reminder email has been sent.
-	 * 
-	 * @param reservationId The ID to update.
-	 * @param type          "PRE" for Pre-Arrival, "DEP" for Departure.
+	 * Updates the database to indicate that a reminder notification has been successfully sent.
+	 * @param reservationId The internal ID to update.
+	 * @param type          "PRE" for Pre-Arrival reminder, "DEP" for Departure reminder.
 	 */
 	public void markAsReminded(int reservationId, String type) {
 		String column = type.equals("PRE") ? "RemindedPreArrival" : "RemindedDeparture";
@@ -757,6 +797,11 @@ public class Reservation_Repository {
 		}
 	}
 
+	/**
+	 * Retrieves reservations where guests have stayed longer than the permitted time.
+	 * @param hours The number of hours threshold to consider as overstaying.
+	 * @return A list of active reservations that exceeded the threshold.
+	 */
 	// FOR TIMER
 	public List<Reservation> getOverstayingReservations(int hours) {
 		List<Reservation> lateReservations = new ArrayList<>();
@@ -797,6 +842,11 @@ public class Reservation_Repository {
 		return lateReservations;
 	}
 
+	/**
+	 * Retrieves reservations where guests failed to show up after their scheduled time.
+	 * @param minutes The grace period in minutes before a reservation is considered a 'no-show'.
+	 * @return A list of pending reservations that exceeded the grace period.
+	 */
 	// FOR TIMER-WATCHDOG uses it
 	public List<Reservation> getNoShowCandidates(int minutes) {
 		List<Reservation> noShowReservations = new ArrayList<>();
@@ -837,7 +887,14 @@ public class Reservation_Repository {
 		return noShowReservations;
 	}
 	
-	
+	/**
+	 * Fetches all reservations that overlap with a specific time range.
+	 * Used for capacity validation and conflict detection during booking.
+	 * @param start     The start of the time range.
+	 * @param end       The end of the time range.
+	 * @param excludeId An optional ID to exclude from the check (e.g., when updating an existing reservation).
+	 * @return A list of overlapping reservations.
+	 */
     public List<Reservation> getOverlappingReservationsList(LocalDateTime start, LocalDateTime end, Integer excludeId) {
         List<Reservation> conflicts = new ArrayList<Reservation>();
         
@@ -864,7 +921,7 @@ public class Reservation_Repository {
 
                 ResultSet rs = pstmt.executeQuery();
                 while (rs.next())
-                	conflicts.add(extractReservationFromResultSet(rs));                    	
+                	conflicts.add(extractReservationFromResultSet(rs)); 	
             }
             
         } catch (SQLException e) {
@@ -877,6 +934,13 @@ public class Reservation_Repository {
         return conflicts;
     }
     
+    /**
+     * Finds the closest pending or active reservation for a contact to facilitate "Forgot Code" recovery.
+     * Prioritizes 'Active' reservations and sorts by temporal proximity to the current time.
+     * @param phone The contact phone number.
+     * @param email The contact email address.
+     * @return The most relevant Reservation object or null if none found.
+     */
     //for forgot the code logic(found in user controller- used by terminal)
     public Reservation getClosestReservationByContact(String phone, String email) {
 
@@ -911,9 +975,12 @@ public class Reservation_Repository {
 
         return null;
     }
+
     /**
-     * Retrieves only COMPLETED reservations for a specific subscriber ID,
-     * including the associated Bill.
+     * Retrieves all completed reservations for a specific subscriber, joined with their bill data.
+     * Used to display the dining history in the customer's personal area.
+     * @param userId The subscriber ID.
+     * @return A list of historical Reservation objects, each containing its associated Bill entity.
      */
     public List<Reservation> getHistoryByUserId(int userId) {
         List<Reservation> results = new ArrayList<>();
@@ -962,13 +1029,14 @@ public class Reservation_Repository {
         }
         return results;
     }
+
     /**
-     * Checks if a proposed change to Regular Hours conflicts with existing reservations.
-     * @param dayOfWeek The day being updated.
-     * @param newOpen Proposed opening time.
-     * @param newClose Proposed closing time.
-     * @param isActive Proposed status (false = closed).
-     * @return The latest conflicting reservation date, or null if safe.
+     * Checks if a proposed change to regular weekly hours conflicts with future reservations.
+     * @param dayOfWeek The day of the week being updated.
+     * @param newOpen   The proposed opening time.
+     * @param newClose  The proposed closing time.
+     * @param isActive  The proposed status (false if the restaurant plans to close on that day).
+     * @return The date of the furthest conflicting reservation, or null if no conflicts exist.
      */
     public LocalDate findConflictForRegularUpdate(DayOfWeek dayOfWeek, LocalTime newOpen, LocalTime newClose, boolean isActive) {
         // We only care about future reservations
@@ -1025,11 +1093,11 @@ public class Reservation_Repository {
     }
 
     /**
-     * Checks if a new Special Hour (Exception) conflicts with reservations on that specific date.
-     * @param date The special date.
-     * @param newOpen New Open time (null if closed).
-     * @param newClose New Close time.
-     * @return True if a conflict exists.
+     * Checks if a new special schedule (exception date) conflicts with reservations on that date.
+     * @param date     The specific date to check.
+     * @param newOpen  The new opening time for that date (null if the restaurant is to be closed).
+     * @param newClose The new closing time for that date.
+     * @return true if at least one reservation conflicts with the new hours, false otherwise.
      */
     public boolean hasConflictForSpecialDate(LocalDate date, LocalTime newOpen, LocalTime newClose) {
         String sql = "SELECT ReservationStartTime, ReservationEndTime FROM reservations " +

@@ -30,15 +30,10 @@ public class OpeningHours_Controller {
      */
     public static Message handle(Message msg) {
         switch (msg.getType()) {
-            case GET_OPENING_HOURS:
-                return getOpeningHours();
-            case UPDATE_REGULAR_HOURS:
-                return handleBatchUpdate(msg);
-            case ADD_SPECIAL_HOUR:
-                return handleAddSpecialHour(msg);
-            case DELETE_SPECIAL_HOUR:
-                return handleDeleteSpecialHour(msg);
-
+            case GET_OPENING_HOURS: return getOpeningHours();
+            case UPDATE_REGULAR_HOURS: return handleBatchUpdate(msg);
+            case ADD_SPECIAL_HOUR: return handleAddSpecialHour(msg);
+            case DELETE_SPECIAL_HOUR: return handleDeleteSpecialHour(msg);
             default:
                 return new Message(MessageType.ERROR_RESPONSE, "Unknown Opening Hours request.");
         }

@@ -7,14 +7,19 @@ import Data.Reports_Repository;
 
 /**
  * Utility class to manage scheduled background tasks on the server.
+ * This class handles periodic maintenance and automated operations, 
+ * such as report generation.
  */
 public class ServerScheduler {
 
+    /** The executor service responsible for managing the background thread. */
     private static ScheduledExecutorService scheduler;
 
     /**
      * Starts a service that checks for the need to generate a monthly report.
-     * Runs once every 24 hours.
+     * The service runs once every 24 hours.
+     * It triggers the repository logic to verify if the previous month's report exists 
+     * and generates it if it is missing.
      */
     public static void startReportScheduler() {
         if (scheduler != null && !scheduler.isShutdown()) {
@@ -40,7 +45,8 @@ public class ServerScheduler {
     }
 
     /**
-     * Shuts down the scheduling service.
+     * Shuts down the scheduling service gracefully.
+     * Stops any further execution of scheduled tasks.
      */
     public static void stopScheduler() {
         if (scheduler != null) {

@@ -11,7 +11,8 @@ import entities.Reservation;
 
 /**
  * Service class for all email communications.
- * Centralizes messaging logic for confirmations and departure reminders.
+ * Centralizes messaging logic for confirmations, reminders, and waitlist notifications.
+ * All emails are sent asynchronously in separate threads to avoid blocking the main execution.
  */
 
 //username: bistro5dodz@gmail.com
@@ -26,8 +27,8 @@ public class EmailService {
 
     /**
      * Sends a polite departure reminder when the dining time slot has ended.
-     * Centralizes the professional phrasing within the service.
-     * @param res The Reservation entity for the customer being notified.
+     * Centralizes the professional phrasing within the service to encourage guests to settle their bill.
+     * * @param res The Reservation entity for the customer being notified.
      */
     public static void sendDepartureReminder(final Reservation res) {
         if (res == null || res.getEmail() == null || res.getEmail().isEmpty()) return;
@@ -70,8 +71,8 @@ public class EmailService {
 
 	/**
 	 * Sends a reservation confirmation email to the customer.
-	 * 
-	 * @param res The Reservation entity containing details for the confirmation.
+	 * Includes the reservation date, time, number of guests, and the unique confirmation code.
+	 * * @param res The Reservation entity containing details for the confirmation.
 	 */
     public static void sendConfirmationEmail(final Reservation res) {
         if (res == null || res.getEmail() == null || res.getEmail().isEmpty()) return;
@@ -105,9 +106,11 @@ public class EmailService {
         });
         emailThread.start();
     }
+
     /**
      * Sends a reminder email 2 hours before the reservation starts.
-     * @param res The reservation details.
+     * Notifies the customer that their table is being prepared.
+     * * @param res The reservation details.
      */
     public static void sendPreArrivalReminder(final Reservation res) {
         if (res == null || res.getEmail() == null || res.getEmail().isEmpty()) return;
@@ -144,7 +147,10 @@ public class EmailService {
         emailThread.start();
     }
     
-    /** Helper to centralize SMTP configuration. */
+    /** * Helper to centralize SMTP configuration. 
+     * Configures authentication, TLS, host, and port for Gmail SMTP services.
+     * * @return A configured Session object.
+     */
     private static Session createSession() {
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
@@ -161,9 +167,11 @@ public class EmailService {
             }
         });
     }
+
     /**
      * Sends an urgent email notification to a customer on the waitlist, informing them that a table has become available.
      * The email includes the confirmation code for check-in and warns that the reservation will expire if they do not arrive within 15 minutes.
+     * * @param res The Reservation entity for the customer being notified.
      */
     public static void sendTableReadyNotification(final Reservation res) {
         if (res == null || res.getEmail() == null || res.getEmail().isEmpty()) return;
@@ -205,11 +213,11 @@ public class EmailService {
     }
 
     /**
-     * in case someone click on "forgot code", it sends the code by phone/email
-     * @param email 
-     * @param confirmationCode
+     * Sends a reminder of the confirmation code in case a customer clicked "forgot code".
+     * Sends the code via the provided email address.
+     * * @param email The customer's email address.
+     * @param confirmationCode The code to send to the customer.
      */
-    
 	public static void sendForgotCodeNotification(String email,int confirmationCode) {
         Thread emailThread = new Thread(new Runnable() {
             @Override
@@ -226,7 +234,7 @@ public class EmailService {
 
                     String content = "Hello,\n\n" +
                                      "The Email will help you to restore your code\n"+
-                    				 "Your code is: " + confirmationCode + "\n\n" +
+                                     "Your code is: " + confirmationCode + "\n\n" +
                                      "We hope you are enjoying our service,\n" +
                                      "The Bistro Team";
                                      

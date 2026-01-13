@@ -12,10 +12,12 @@ import integration.EmailService;
 import messages.Message;
 
 /**
- * Background thread monitoring reservations.
- * Handles:
+ * Background thread service that monitors reservations and waitlist statuses.
+ * The watchdog performs periodic checks to handle:
  * 1. Pre-arrival reminders (2 hours before).
- * 2. Departure reminders (Time expired).
+ * 2. Departure reminders (When time expires).
+ * 3. Automatic completion of sessions exceeding the maximum allowed time.
+ * 4. Cleanup of expired waitlist notifications and no-show reservations.
  */
 public class ServerWatchdog implements Runnable {
 
@@ -25,6 +27,9 @@ public class ServerWatchdog implements Runnable {
     private final Waitlist_Repository waitlistRepo;
     private final Bill_Repository billRepo;
 
+    /**
+     * Constructs a new ServerWatchdog and initializes access to the necessary repositories.
+     */
     public ServerWatchdog() {
         this.reservationRepo = Reservation_Repository.getInstance();
         this.waitlistRepo = Waitlist_Repository.getInstance();
@@ -32,6 +37,10 @@ public class ServerWatchdog implements Runnable {
         this.isRunning = false;
     }
 
+    /**
+     * Starts the watchdog service. 
+     * If the service is not already running, it initializes a new background thread.
+     */
     public void start() {
         if (!isRunning) {
             isRunning = true;
@@ -40,11 +49,22 @@ public class ServerWatchdog implements Runnable {
         }
     }
 
+    /**
+     * Stops the watchdog service gracefully by flagging the execution loop to terminate.
+     */
     public void stop() {
         isRunning = false;
         System.out.println("[Watchdog] Service Stopped.");
     }
 
+    /**
+     * The main execution loop of the watchdog thread.
+     * Iterates every minute to perform automated system tasks including:
+     * - Sending pre-arrival emails.
+     * - Sending departure reminders.
+     * - Auto-completing reservations after 2:15 hours of activity.
+     * - Canceling waitlist spots and reservations for no-shows (15-minute threshold).
+     */
     @Override
     public void run() {
         while (isRunning) {

@@ -16,12 +16,19 @@ import entities.UserRecord;
 
 /**
  * Controller responsible for handling all reservation-related logic on the server side.
+ * Manages the lifecycle of a reservation including creation, updates, cancellations, 
+ * and smart availability suggestions.
  */
 public class Reservation_Controller {
 
     private static final Reservation_Repository reservationRepository = Reservation_Repository.getInstance();
     private static final Table_Repository tableRepository = Table_Repository.getInstance();
 
+    /**
+     * Routes incoming reservation messages to the appropriate logic handler.
+     * * @param msg The message containing the reservation request and type.
+     * @return A Message object with the result of the operation, or null if type is unknown.
+     */
     public static Message handleMessage(Message msg) {
     	
         switch (msg.getType()) {
@@ -40,12 +47,23 @@ public class Reservation_Controller {
         }
     }
 
+    /**
+     * Retrieves the most recent reservation associated with a specific phone number.
+     * * @param msg Message containing the phone number as a String.
+     * @return A Message containing the found Reservation or null.
+     */
     private static Message getLatestReservationById(Message msg) {
     	String phone = (String) msg.getContent();
         Reservation r = Reservation_Repository.getInstance().getLatestReservationByPhone(phone);
         return new Message(
                 MessageType.RETURN_LATEST_RESERVATION_BY_PHONE,r);
 	}
+
+    /**
+     * Retrieves the most recent reservation associated with a specific email address.
+     * * @param msg Message containing the email address as a String.
+     * @return A Message containing the found Reservation or null.
+     */
     private static Message getLatestReservationByEmail(Message msg) {
         String email = (String) msg.getContent();
         System.out.println("[SERVER DEBUG] Incoming request: GET_LATEST_RESERVATION_BY_EMAIL for: " + email);
@@ -61,6 +79,12 @@ public class Reservation_Controller {
         return new Message(MessageType.RETURN_LATEST_RESERVATION_BY_EMAIL, r);
     }
     
+    /**
+     * Handles requests for immediate seating (Instant Reservation).
+     * Reuses the standard reservation logic but returns specific instant-success/fail types.
+     * * @param msg Message containing the reservation details.
+     * @return A Message indicating INSTANT_RESERVATION_SUCCESS or INSTANT_RESERVATION_FAILED.
+     */
 	private static Message createInstantReservation(Message msg) {
 		
 		Message createInstantReservation = createReservation(msg);
@@ -76,6 +100,7 @@ public class Reservation_Controller {
 	/**
      * Handles the creation of a new reservation for both Casual and Subscribed customers.
      * Includes logic to identify subscribers via userId and ensure data integrity.
+     * Processes validation, capacity checks, alternative slot suggestions, and email notifications.
      * * @param msg The message containing the Reservation object from the client.
      * @return A Message indicating success (with confirmation code) or failure.
      */
@@ -165,7 +190,7 @@ public class Reservation_Controller {
     /**
      * Searches for the next available time slot if the requested time is full.
      * Increments the time by 30 minutes and checks capacity until closing time.
-     * Fix: Handles "Midnight Crossing" AND "24-Hour Shifts" (e.g., 08:00 to 08:00).
+     * Handles "Midnight Crossing" and "24-Hour Shifts" logic.
      * * @param requestedTime The original time requested by the user.
      * @param guests The number of diners.
      * @param excludeId The ID to exclude (for updates).
@@ -222,6 +247,12 @@ public class Reservation_Controller {
         return null; 
     }
 
+    /**
+     * Updates an existing reservation with new details.
+     * Re-validates capacity for the new time slot and suggests alternatives if needed.
+     * * @param msg Message containing the updated Reservation object.
+     * @return Message indicating RESERVATION_UPDATE_SUCCESS, or RESERVATION_FAILED_NO_TABLE with a suggestion.
+     */
     private static Message updateReservation(Message msg) {
         try {
             Reservation updatedInfo = (Reservation) msg.getContent();
@@ -244,6 +275,11 @@ public class Reservation_Controller {
         }
     }
 
+    /**
+     * Fetches reservations for a user based on different identification methods (ID, UserRecord, or Contact Info).
+     * * @param msg Message containing an Integer, UserRecord, or String (phone/email).
+     * @return Message containing the list of found reservations.
+     */
     private static Message getReservationsByUser(Message msg) {
         try {
             List<Reservation> reservations;
@@ -266,19 +302,41 @@ public class Reservation_Controller {
         }
     }
 
+    /**
+     * Cancels a reservation by changing its status in the repository.
+     * * @param msg Message containing the reservation ID to cancel.
+     * @return Message indicating success or failure of the cancellation.
+     */
     private static Message cancelReservation(Message msg) {
         int reservationId = (int) msg.getContent();
         boolean success = reservationRepository.updateStatusByID(reservationId, ReservationStatus.CANCELED);
         return new Message(success ? MessageType.RESERVATION_CANCELED : MessageType.RESERVATION_CANCEL_FAILED, reservationId);
     }
 
+    /**
+     * Retrieves all reservations currently in "Pending" status.
+     * * @param msg The request message.
+     * @return Message containing the list of pending reservations.
+     */
     private static Message fetchAllPending(Message msg) {
         return new Message(MessageType.RETURN_ALL_PENDING_RESERVATIONS, reservationRepository.getAllPendingReservations());
     }
+
+    /**
+     * Retrieves all reservations that are either "Pending" or "Active".
+     * * @param msg The request message.
+     * @return Message containing the list of filtered reservations.
+     */
     private static Message fetchAllPendingAndActive(Message msg) {
         return new Message(MessageType.GET_ALL_PENDING_AND_ACTIVE_RESERVATIONS, reservationRepository.getPendingAndActiveReservations());
     }
 
+    /**
+     * Processes a reservation update initiated by an administrator/employee.
+     * Unlike regular updates, this may follow different business rules or bypass certain checks.
+     * * @param msg Message containing the Reservation object to update.
+     * @return Message indicating ADMIN_UPDATE_SUCCESS or an error response.
+     */
     private static Message processAdminUpdate(Message msg) {
         Reservation updatedRes = (Reservation) msg.getContent();
         updatedRes.setOrderEndTime(updatedRes.getOrderStartTime().plusHours(2));
@@ -286,6 +344,7 @@ public class Reservation_Controller {
             new Message(MessageType.ADMIN_UPDATE_SUCCESS, null) : 
             new Message(MessageType.ERROR_RESPONSE, "Update failed.");
     }
+
     /**
      * Handles the request to fetch reservation history for a user.
      * * @param msg The message containing the User ID (Integer).

@@ -16,8 +16,10 @@ import integration.EmailService;
 
 /**
  * Controller responsible for handling all reservation-related logic on the server side.
+ * Manages the waitlist lifecycle including joining, canceling, and notifying customers 
+ * when tables become available.
+ * Supported waitlist states: PWAITING, WAITING, NOTIFIED, COMPLETED, CANCELED.
  */
-
 /*******************************************************************
  * waitlist states are: PWAITING, WAITING, NOTIFIED, COMPLETED, CANCELED
  *******************************************************************/
@@ -26,6 +28,11 @@ public class Waitlist_Controller {
     private static final Reservation_Repository reservationRepository = Reservation_Repository.getInstance();
     private static final Waitlist_Repository waitlistRepository = Waitlist_Repository.getInstance();
 
+    /**
+     * Routes incoming waitlist messages to the appropriate logic handler.
+     * * @param msg The message containing the waitlist-related command and data.
+     * @return A Message object with the result of the operation, or null if type is unknown.
+     */
     public static Message handleMessage(Message msg) {
         switch (msg.getType()) {
         	case CANCEL_WAITLIST_AND_RESERVATION_BY_CODE: 
@@ -39,7 +46,13 @@ public class Waitlist_Controller {
         }
     }
     
-    
+    /**
+     * Handles a request to join the waitlist.
+     * Checks if the customer is already in the waitlist, creates a new reservation entry,
+     * and initializes a waitlist record.
+     * * @param msg Message containing the Reservation details for the waitlist.
+     * @return WAITLIST_JOINED_SUCCESS with confirmation code on success, or WAITLIST_JOINED_FAILED with error details.
+     */
     private static Message joinWaitlist(Message msg) {
 		Reservation createResForWaitlist = (Reservation)msg.getContent();
 		if (waitlistRepository.isCustomerAlreadyInWaitlist(createResForWaitlist.getPhone(), createResForWaitlist.getEmail())) {
@@ -57,7 +70,12 @@ public class Waitlist_Controller {
 		return new Message(MessageType.WAITLIST_JOINED_SUCCESS, createResForWaitlist.getConfirmationCode());
 	}
 
-    
+    /**
+     * Cancels both a waitlist entry and its associated reservation based on a confirmation code.
+     * Validates the status of the reservation before allowing cancellation (e.g., cannot cancel if Active or Completed).
+     * * @param msg Message containing the confirmation code (Integer).
+     * @return WAITLIST_AND_RESERVATION_CANCELED on success, or CANCEL_WAITLIST_AND_RESERVATION_FAILED with a reason.
+     */
 	private static Message CancelWitlistAndReservationByCode(Message msg) {
         int confirmationCode = (int) msg.getContent();
         //STEP 1- get reservation
@@ -96,15 +114,17 @@ public class Waitlist_Controller {
         }
         return new Message(MessageType.CANCEL_WAITLIST_AND_RESERVATION_FAILED, "System error");
     }
-    
 	
-	
+	/**
+	 * Triggered when a table is released in the restaurant.
+	 * Finds the first matching candidate in the waitlist based on the available capacity 
+	 * and sends them a notification.
+	 * * @param capacity The number of diners that can now be accommodated.
+	 */
     public static void onTableReleased(int capacity) {
-        System.out.println("-> [WAITLIST_CONTROLLER] [Event] Table with " + " (" + capacity + " seats) is FREE. Checking Waitlist...");
         try {
             Waitlist candidate = waitlistRepository.findFirstMatch(capacity);     
             if (candidate != null) {
-                System.out.println("->[WAITLIST_CONTROLLER] Match Found! WaitlistID: " + candidate.getId());              
                 waitlistRepository.markAsNotified(candidate.getId());
                 sendNotificationToCustomer(reservationRepository.getById(candidate.getReservation()));
             }
@@ -115,6 +135,10 @@ public class Waitlist_Controller {
         }
     }
 
+    /**
+     * Sends a "Table Ready" notification to the customer via email and logs the action.
+     * * @param reservation The reservation associated with the waitlist candidate.
+     */
 	private static void sendNotificationToCustomer(Reservation reservation) {
 		if (reservation.getPhone()!=null) System.out.println("WAITLIST CONTROLLER - messaging number: "+ reservation.getPhone() + "with reminder");
 		if (reservation.getUserId()==null) return;
@@ -125,6 +149,7 @@ public class Waitlist_Controller {
 		if (phone!=null && !phone.isEmpty()) System.out.println("WAITLIST CONTROLLER - messaging number: "+ phone + "with reminder");;
 
 	}
+
 	/**
      * Fetches all active waitlist entries from the repository.
      * These entries include aggregated data from both 'waitlist' and 'reservations' tables.

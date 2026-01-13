@@ -21,6 +21,10 @@ import Data.Reservation_Repository;
 import Data.Table_Repository;
 import Data.Waitlist_Repository;
 
+/**
+ * GUI class for the Bistro System server management.
+ * Provides a user interface for starting the server, monitoring logs, and managing connections.
+ */
 public class Server_GUI extends Application {
 
     private Server_Controller serverController;
@@ -29,6 +33,11 @@ public class Server_GUI extends Application {
     private Button connectBtn;
     private Button exitBtn;
 
+    /**
+     * Initializes and displays the primary stage with the server control panel.
+     * Sets up the UI components, styling, and event handlers.
+     * * @param primaryStage the primary stage for this application.
+     */
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Bistro System | Server Management");
@@ -120,6 +129,9 @@ public class Server_GUI extends Application {
 
     // --- Logic Methods (ללא שינוי) ---
 
+    /**
+     * Safely shuts down the server, closes the database connection pool, and exits the application.
+     */
     private void closeProgram() {
         if (serverController != null) {
             try {
@@ -134,6 +146,11 @@ public class Server_GUI extends Application {
         System.exit(0); 
     }
 
+    /**
+     * Processes the connection attempt. Validates the port number, starts the server,
+     * and initializes all system repositories.
+     * * @param e the action event triggered by the connection button.
+     */
     private void handleConnectAction(ActionEvent e) {
         int port;
         try {
@@ -152,7 +169,6 @@ public class Server_GUI extends Application {
             portField.setDisable(true);
                         
             OpeningHours_Repository.getInstance().init();
-            Waitlist_Repository.getInstance().init();
             Reservation_Repository.getInstance().init();
             Table_Repository.getInstance().init();
             
@@ -164,6 +180,11 @@ public class Server_GUI extends Application {
         }
     }
 
+    /**
+     * Appends a given string to the server log area with a timestamp.
+     * This method is thread-safe and can be called from non-UI threads.
+     * * @param str the message to append to the log.
+     */
     public void appendLog(final String str) {
         Platform.runLater(new Runnable() {
             @Override
@@ -174,6 +195,10 @@ public class Server_GUI extends Application {
         });
     }
 
+    /**
+     * Main entry point of the application.
+     * * @param args command line arguments.
+     */
     public static void main(String[] args) {
         launch(args);
     }

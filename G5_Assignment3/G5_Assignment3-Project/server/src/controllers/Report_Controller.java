@@ -21,13 +21,6 @@ public class Report_Controller {
             
             case GET_MONTHLY_REPORT:
                 return getMonthlyReport(msg.getContent());
-                
-            /* כאן תוכל להוסיף מקרים נוספים בעתיד, למשל:
-               case GENERATE_NEW_REPORT:
-                   return generateReport(msg.getContent());
-               case DELETE_REPORT:
-                   return deleteReport(msg.getContent());
-            */
 
             default:
                 return new Message(MessageType.REPORT_ERROR, "Unknown report operation.");
@@ -36,6 +29,9 @@ public class Report_Controller {
 
     /**
      * Internal logic for fetching a specific monthly report.
+     * Parses the month and year from the content and fetches compiled data from the repository.
+     * * @param content The parameters for the report, expected as an int array [month, year].
+     * @return A Message object containing MonthlyFullReportData on success, or a REPORT_ERROR on failure.
      */
     private static Message getMonthlyReport(Object content) {
         try {
