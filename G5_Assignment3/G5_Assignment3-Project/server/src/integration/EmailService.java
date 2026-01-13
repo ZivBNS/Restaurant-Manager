@@ -204,6 +204,12 @@ public class EmailService {
         emailThread.start();
     }
 
+    /**
+     * in case someone click on "forgot code", it sends the code by phone/email
+     * @param email 
+     * @param confirmationCode
+     */
+    
 	public static void sendForgotCodeNotification(String email,int confirmationCode) {
         Thread emailThread = new Thread(new Runnable() {
             @Override
