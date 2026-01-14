@@ -235,6 +235,35 @@
     -fx-opacity: 0;
 }
 
+/* --- BUTTON PRESS FEEDBACK --- */
+
+.button:pressed, .button:armed {
+    -fx-translate-y: 2px; /* nudge down */
+    -fx-effect: innershadow(gaussian, rgba(0,0,0,0.45), 6, 0, 0, 3);
+    -fx-opacity: 0.98;    /* subtle dim */
+}
+
+/* Make primary buttons darker when pressed */
+.btn-primary:pressed, .btn-success:pressed {
+    -fx-background-color: linear-gradient(to bottom, #b89a4a 0%, #a2772d 100%); /* darker gold gradient */
+    -fx-text-fill: #0f0f0f;
+}
+
+/* Danger button pressed state - stronger red */
+.btn-danger:pressed {
+    -fx-background-color: linear-gradient(to bottom, rgba(239,68,68,0.65) 0%, rgba(190,40,40,0.9) 100%);
+    -fx-text-fill: white;
+}
+
+/* Keep hover visuals intact but make sure pressed state overrides hover */
+.button:hover:pressed {
+    -fx-effect: innershadow(gaussian, rgba(0,0,0,0.45), 6, 0, 0, 3);
+}
+
+
+/* End of button press feedback */
+
+
 /* --- Individual Tab Styling --- */
 .tab-pane .tab {
     -fx-background-color: #2D2D2D;
