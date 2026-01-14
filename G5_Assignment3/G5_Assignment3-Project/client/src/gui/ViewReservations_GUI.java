@@ -455,7 +455,7 @@ public class ViewReservations_GUI {
 	}
 
 	/** Requests the initial reservation list from the server based on the current user session */
-	private void refreshTableData() {
+	public void refreshTableData() {
         Object id = User_Session.getLoggedInUser();
 
         if (id == null) {

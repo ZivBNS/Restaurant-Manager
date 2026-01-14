@@ -60,7 +60,7 @@ public class Server_Controller extends AbstractServer {
 		commands.put(MessageType.CHECK_IN_REQUEST, ckInCmd);
 		
 		// --- Reservations ---
-		Command resCmd = new ReservationCommand();
+		Command resCmd = new ReservationCommand(this);
 		commands.put(MessageType.CREATE_INSTANT_RESERVATION, resCmd);
 		commands.put(MessageType.CREATE_RESERVATION, resCmd);
 		commands.put(MessageType.CANCEL_RESERVATION, resCmd);
@@ -75,7 +75,7 @@ public class Server_Controller extends AbstractServer {
 		commands.put(MessageType.GET_VISIT_HISTORY, resCmd);
 		
 		// --- Tables ---
-		Command tableCmd = new TableCommand();
+		Command tableCmd = new TableCommand(this);
 		commands.put(MessageType.GET_ALL_TABLES, tableCmd);
 		commands.put(MessageType.ADD_TABLE_REQUEST, tableCmd);
 		commands.put(MessageType.UPDATE_TABLE_REQUEST, tableCmd);

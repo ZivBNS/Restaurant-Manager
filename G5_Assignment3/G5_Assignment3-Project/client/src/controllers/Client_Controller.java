@@ -207,6 +207,40 @@ public class Client_Controller implements ChatIF {
                 }
             }
         });
+
+        responseHandlers.put(MessageType.RESERVATION_DATA_UPDATED_BROADCAST, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                Platform.runLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        // 1. Admin: Manage Orders Screen
+                        if (ManageOrders_GUI.instance != null) {
+                            ManageOrders_GUI.instance.refreshAdminData();
+                        }
+
+                        // 2. Client: Add Reservation Screen (Refresh time slots availability)
+                        if (AddReservation_GUI.instance != null) {
+                            AddReservation_GUI.instance.refreshHours();
+                        }
+
+                        // 3. Client: View/Edit Reservations Screen
+                        if (ViewReservations_GUI.instance != null) {
+                            ViewReservations_GUI.instance.refreshTableData();
+                        }
+
+                        // 4. Terminal: Refresh Main View
+                        if (Terminal_GUI.instance != null) {
+                            // Ensure a user is logged in before requesting specific user data
+                            if (User_Session.getLoggedInUser() != null) {
+                                int userId = User_Session.getLoggedInUser().getId();
+                                sendGetDailyReservationsRequest(userId);
+                            }
+                        } 
+                    }
+                });
+            }
+        });
 		// -----------------------------------------------------------
 		// Check in and out Actions
 		// -----------------------------------------------------------
@@ -238,6 +272,51 @@ public class Client_Controller implements ChatIF {
 
 		// instant reservation from terminal
 
+		
+
+		// -----------------------------------------------------------
+		// Billing & Final Payment Handlers (Standardized Format)
+		// -----------------------------------------------------------
+
+		responseHandlers.put(MessageType.RETURN_BILL_BY_RESERVATION_ID, new ResponseHandler() {
+		    @Override
+		    public void handle(Message msg) {
+		        Bill b = (Bill) msg.getContent();
+		            // Display the finalized bill in the GUI
+		            if (BillPayment_GUI.instance != null) {
+		                Platform.runLater(new Runnable() {
+		                    @Override
+		                    public void run() {
+		                        BillPayment_GUI.instance.displayBill(b);
+		                    }
+		                });
+		            }
+		            if (Terminal_GUI.instance != null) {
+		                Terminal_GUI.instance.onGetBillSuccess(b);
+		            }
+		        }
+		    });
+
+		responseHandlers.put(MessageType.BILL_REQUEST_FAILED, new ResponseHandler() {
+			@Override
+			public void handle(Message msg) {
+				String s = (String) msg.getContent();
+				if (Terminal_GUI.instance != null) {
+					Terminal_GUI.instance.onGetBillFailure(s);
+				}
+			}
+		});
+
+		responseHandlers.put(MessageType.BILL_PAYMENT_SUCCESS, new ResponseHandler() {
+			@Override
+			public void handle(Message msg) {
+				if (BillPayment_GUI.instance != null) {
+					Platform.runLater(() -> BillPayment_GUI.instance.onPaymentSuccess());
+				} else if (Terminal_GUI.instance != null) {
+					Terminal_GUI.instance.onPaymentSuccessResponse(true);
+				}
+			}
+		});
 		responseHandlers.put(MessageType.INSTANT_RESERVATION_FAILED, new ResponseHandler() {
 			@Override
 			public void handle(Message msg) {
@@ -348,56 +427,6 @@ public class Client_Controller implements ChatIF {
 		        }
 		    }
 		});
-
-		// -----------------------------------------------------------
-		// Billing & Final Payment Handlers (Standardized Format)
-		// -----------------------------------------------------------
-
-		responseHandlers.put(MessageType.RETURN_BILL_BY_RESERVATION_ID, new ResponseHandler() {
-		    @Override
-		    public void handle(Message msg) {
-		        Bill b = (Bill) msg.getContent();
-		            // Display the finalized bill in the GUI
-		            if (BillPayment_GUI.instance != null) {
-		                Platform.runLater(new Runnable() {
-		                    @Override
-		                    public void run() {
-		                        BillPayment_GUI.instance.displayBill(b);
-		                    }
-		                });
-		            }
-		            if (Terminal_GUI.instance != null) {
-		                Terminal_GUI.instance.onGetBillSuccess(b);
-		            }
-		        }
-		    });
-
-		responseHandlers.put(MessageType.BILL_REQUEST_FAILED, new ResponseHandler() {
-			@Override
-			public void handle(Message msg) {
-				String s = (String) msg.getContent();
-				if (Terminal_GUI.instance != null) {
-					Terminal_GUI.instance.onGetBillFailure(s);
-				}
-			}
-		});
-
-		responseHandlers.put(MessageType.BILL_PAYMENT_SUCCESS, new ResponseHandler() {
-			@Override
-			public void handle(Message msg) {
-				if (BillPayment_GUI.instance != null) {
-					Platform.runLater(() -> BillPayment_GUI.instance.onPaymentSuccess());
-				} else if (Terminal_GUI.instance != null) {
-					Terminal_GUI.instance.onPaymentSuccessResponse(true);
-				}
-			}
-		});
-
-
-		// -----------------------------------------------------------
-		// Updates, Cancellations & Admin Actions
-		// -----------------------------------------------------------
-
 		responseHandlers.put(MessageType.RESERVATION_UPDATE_SUCCESS, new ResponseHandler() {
 			@Override
 			public void handle(Message msg) {
@@ -407,16 +436,6 @@ public class Client_Controller implements ChatIF {
 				}
 			}
 		});
-
-		responseHandlers.put(MessageType.ADMIN_UPDATE_SUCCESS, new ResponseHandler() {
-			@Override
-			public void handle(Message msg) {
-				if (ManageOrders_GUI.instance != null) {
-					ManageOrders_GUI.instance.refreshAdminData();
-				}
-			}
-		});
-
 		responseHandlers.put(MessageType.RESERVATION_CANCELED, new ResponseHandler() {
 			@Override
 			public void handle(Message msg) {
@@ -437,6 +456,21 @@ public class Client_Controller implements ChatIF {
 				}
 			}
 		});
+		// -----------------------------------------------------------
+		// Updates, Cancellations & Admin Actions
+		// -----------------------------------------------------------
+
+
+		responseHandlers.put(MessageType.ADMIN_UPDATE_SUCCESS, new ResponseHandler() {
+			@Override
+			public void handle(Message msg) {
+				if (ManageOrders_GUI.instance != null) {
+					ManageOrders_GUI.instance.refreshAdminData();
+				}
+			}
+		});
+
+		
 		// Inside initializeHandlers in Client_Controller.java
 
         responseHandlers.put(MessageType.ADMIN_UPDATE_SUCCESS, new ResponseHandler() {
@@ -817,6 +851,20 @@ public class Client_Controller implements ChatIF {
                     // 3. Refresh the table list to show changes
                     sendComplexObject(new Message(MessageType.GET_ALL_TABLES, null));
                 }
+            }
+        });
+		responseHandlers.put(MessageType.TABLE_DATA_UPDATED_BROADCAST, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                Platform.runLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        // Only refresh if the Manage Tables screen is currently open
+                        if (ManageTables_GUI.instance != null) {
+                            sendGetAllTablesRequest(); 
+                        }
+                    }
+                });
             }
         });
 		// -----------------------------------------------------------
