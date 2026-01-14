@@ -18,6 +18,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.control.TableView;
@@ -41,12 +42,15 @@ public class OrderHistory_GUI implements Initializable {
     @FXML private TableColumn<Reservation, String> colTable;
     @FXML private TableColumn<Reservation, String> colBill;
 
+    // Added reference to the Back Button to manipulate its visibility
+    @FXML private Button btnBack;
+
     // Local data list to bind with the TableView
     private ObservableList<Reservation> dataList = FXCollections.observableArrayList();
 
     /**
      * Called automatically when the FXML is loaded.
-     * Initializes table columns and fetches history data.
+     * Initializes table columns, fetches history data, and handles button visibility.
      */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -80,8 +84,6 @@ public class OrderHistory_GUI implements Initializable {
             }
         });
 
-        // Status Column
-        
         // Bill Total Column (Calculates final price from the Bill object)
         colBill.setCellValueFactory(new Callback<CellDataFeatures<Reservation, String>, ObservableValue<String>>() {
             @Override
@@ -103,9 +105,26 @@ public class OrderHistory_GUI implements Initializable {
         // Bind data list to table
         historyTable.setItems(dataList);
 
-        // --- Fetch Data from Server ---
+        // --- Role Based Logic ---
         if (User_Session.getLoggedInUser() != null) {
-            ConnectToServer_GUI.clientController.sendGetReservationHistoryRequest(User_Session.getLoggedInUser().getId());
+            String role = User_Session.getLoggedInUser().getIdentity();
+            
+            // Case 1: Subscriber viewing their own dashboard
+            if ("Subscriber".equals(role)) {
+                // Auto-fetch data
+                ConnectToServer_GUI.clientController.sendGetReservationHistoryRequest(User_Session.getLoggedInUser().getId());
+                // Button remains visible (default)
+            } 
+            // Case 2: Employee/Manager viewing via Manage Users Popup
+            else {
+                // Hide the back button because this is a popup window
+                if (btnBack != null) {
+                    btnBack.setVisible(false);
+                    // Optional: remove it from layout calculations so it doesn't take up space
+                    btnBack.setManaged(false); 
+                }
+                // Note: We do NOT auto-fetch here. The ManageUsers_GUI triggers the fetch for the specific user ID.
+            }
         }
     }
 

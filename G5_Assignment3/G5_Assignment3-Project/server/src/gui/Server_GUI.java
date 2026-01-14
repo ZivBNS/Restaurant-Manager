@@ -11,15 +11,16 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import java.io.IOException;
 import Data.DB_Controller;
+import Data.Init_All; // Import the Init class
 import Data.OpeningHours_Repository;
 import Data.Reservation_Repository;
 import Data.Table_Repository;
-import Data.Waitlist_Repository;
 
 /**
  * GUI class for the Bistro System server management.
@@ -32,6 +33,7 @@ public class Server_GUI extends Application {
     private TextField portField;
     private Button connectBtn;
     private Button exitBtn;
+    private Button initBtn; // New Button
 
     /**
      * Initializes and displays the primary stage with the server control panel.
@@ -44,7 +46,7 @@ public class Server_GUI extends Application {
 
         // --- Header Section ---
         Label titleLabel = new Label("SERVER CONTROL PANEL");
-        titleLabel.getStyleClass().add("header-title"); // שימוש ב-CSS
+        titleLabel.getStyleClass().add("header-title"); 
         
         VBox header = new VBox(titleLabel);
         header.setAlignment(Pos.CENTER);
@@ -53,51 +55,64 @@ public class Server_GUI extends Application {
         // --- Connection Bar ---
         HBox connectionBar = new HBox(15);
         connectionBar.setAlignment(Pos.CENTER_LEFT);
-        connectionBar.setPadding(new Insets(20)); // ריווח פנימי לכרטיס
-        connectionBar.getStyleClass().add("card"); // עיצוב כרטיס מה-CSS
+        connectionBar.setPadding(new Insets(20)); 
+        connectionBar.getStyleClass().add("card"); 
 
         Label portLabel = new Label("Port:");
-        portLabel.getStyleClass().add("card-label"); // טקסט תווית מה-CSS
+        portLabel.getStyleClass().add("card-label"); 
 
         portField = new TextField("5555");
         portField.setPrefWidth(80);
         portField.setPrefHeight(35);
-        // TextField מקבל עיצוב אוטומטי מה-CSS הכללי
 
         connectBtn = new Button("START SERVER");
         connectBtn.setPrefHeight(35);
         HBox.setHgrow(connectBtn, Priority.ALWAYS);
         connectBtn.setMaxWidth(Double.MAX_VALUE);
-        connectBtn.getStyleClass().addAll("button", "btn-primary"); // כפתור ראשי (זהב)
+        connectBtn.getStyleClass().addAll("button", "btn-primary"); 
 
         exitBtn = new Button("SHUTDOWN");
         exitBtn.setPrefHeight(35);
         exitBtn.setDisable(true);
         exitBtn.setMinWidth(120);
-        exitBtn.getStyleClass().addAll("button", "btn-danger"); // כפתור סכנה (אדום)
+        exitBtn.getStyleClass().addAll("button", "btn-danger"); 
 
-        // הוספת הרכיבים לבר העליון
         connectionBar.getChildren().addAll(portLabel, portField, connectBtn, exitBtn);
 
-        // --- Log Section ---
+        // --- Log Section Header (Label + Init Button) ---
+        HBox logHeaderBox = new HBox(10);
+        logHeaderBox.setAlignment(Pos.CENTER_LEFT);
+        logHeaderBox.setPadding(new Insets(10, 0, 5, 5));
+
         Label logLabel = new Label("LIVE SERVER LOG");
         logLabel.getStyleClass().add("card-label");
-        logLabel.setPadding(new Insets(10, 0, 5, 5));
+        
+        // Spacer to push button to right (optional) or just keep it next to label
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
 
+        // NEW: Init DB Button
+        initBtn = new Button("INIT DB");
+        initBtn.setPrefHeight(30);
+        initBtn.getStyleClass().addAll("button", "btn-secondary"); // Style it orange/grey
+        initBtn.setTooltip(new Tooltip("Reset Database Data"));
+
+        logHeaderBox.getChildren().addAll(logLabel, spacer, initBtn);
+
+        // --- Log Area ---
         logArea = new TextArea();
         logArea.setEditable(false);
         VBox.setVgrow(logArea, Priority.ALWAYS);
-        logArea.getStyleClass().add("console-log"); // מחלקה ייעודית ללוג (ראה CSS למטה)
+        logArea.getStyleClass().add("console-log"); 
 
         // --- Main Layout Assembly ---
         VBox root = new VBox(10);
         root.setPadding(new Insets(20));
         root.setAlignment(Pos.TOP_CENTER);
-        // Root מקבל אוטומטית את צבע הרקע מה-CSS כי הוספנו את ה-Stylesheet ל-Scene
 
-        root.getChildren().addAll(header, connectionBar, logLabel, logArea);
+        root.getChildren().addAll(header, connectionBar, logHeaderBox, logArea);
 
-        // --- Event Handlers (ללא שינוי) ---
+        // --- Event Handlers ---
         connectBtn.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
@@ -111,6 +126,14 @@ public class Server_GUI extends Application {
                 closeProgram();
             }
         });
+        
+        // NEW: Init Action
+        initBtn.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                handleInitAction();
+            }
+        });
 
         primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override
@@ -120,14 +143,49 @@ public class Server_GUI extends Application {
         });
 
         Scene scene = new Scene(root, 600, 700);
-        // *** טעינת קובץ ה-CSS ***
         scene.getStylesheets().add(getClass().getResource("/Theme/application.css").toExternalForm());
         
         primaryStage.setScene(scene);
         primaryStage.show();
     }
 
-    // --- Logic Methods (ללא שינוי) ---
+    // --- Logic Methods ---
+
+    /**
+     * Executes the Database Initialization logic.
+     * Runs Init_All.main() in a background thread to avoid freezing the UI.
+     */
+    private void handleInitAction() {
+        if (serverController != null) {
+            appendLog("WARNING: Cannot init DB while server is running. Please shutdown first.");
+            return;
+        }
+
+        initBtn.setDisable(true);
+        appendLog("System: Starting Database Initialization...");
+
+        // Run in background thread
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    // Call the main method of Init_All
+                    Init_All.main(null); 
+                    
+                    Platform.runLater(() -> {
+                        appendLog("System: Database Initialization Completed.");
+                        initBtn.setDisable(false);
+                    });
+                } catch (Exception e) {
+                    Platform.runLater(() -> {
+                        appendLog("ERROR: Init failed - " + e.getMessage());
+                        initBtn.setDisable(false);
+                    });
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
 
     /**
      * Safely shuts down the server, closes the database connection pool, and exits the application.
@@ -166,6 +224,7 @@ public class Server_GUI extends Application {
             connectBtn.setDisable(true);
             connectBtn.setText("SERVER ONLINE");
             exitBtn.setDisable(false); 
+            initBtn.setDisable(true); // Disable Init while server runs for safety
             portField.setDisable(true);
                         
             OpeningHours_Repository.getInstance().init();

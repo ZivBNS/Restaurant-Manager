@@ -512,4 +512,13 @@ public class ViewReservations_GUI {
 	public void updateTable(List<Reservation> list) {
 		masterData.setAll(list);
 	}
+	/**
+     * Called by Client_Controller when opening hours change via broadcast.
+     * Refreshes the time slots in the edit section if a date is selected.
+     */
+    public void refreshHours() {
+        if (editDatePicker != null && editDatePicker.getValue() != null) {
+            loadDynamicHours(editDatePicker.getValue(), null);
+        }
+    }
 }

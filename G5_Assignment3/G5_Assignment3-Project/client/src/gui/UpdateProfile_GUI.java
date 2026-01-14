@@ -7,6 +7,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
@@ -24,7 +25,7 @@ public class UpdateProfile_GUI {
     public static String previousScreen;
     public static UpdateProfile_GUI instance; 
     private UserRecord currentUser;
-
+    private boolean isUpdatePending = false;
     @FXML private TextField txtFirstName;
     @FXML private TextField txtLastName;
     @FXML private TextField txtPhone;
@@ -84,7 +85,7 @@ public class UpdateProfile_GUI {
         		txtPhone.getText(), txtEmail.getText(), txtUsername.getText(),
                 (txtPassword.getText() == null || txtPassword.getText().isEmpty()) ? currentUser.getPassword() : txtPassword.getText(),
                 		currentUser.getIdentity(), currentUser.getSubscriberCode());
-        
+        this.isUpdatePending = true;
         ConnectToServer_GUI.clientController.sendComplexObject(
                 new Message(MessageType.UPDATE_USER_DETAILS_REQUEST, updated)
         );
@@ -113,16 +114,28 @@ public class UpdateProfile_GUI {
     }
     
     /**
- 	 * Called when the profile update is successful.
- 	 * Updates the form with the latest user details and shows a success message.
- 	 * 
+     * Called by Client_Controller when data changes (either by me or by admin broadcast).
      */
     public void onRefresh() {
-    	
-    	setUser(User_Session.getLoggedInUser());
-        lblError.setText("Success!");
-        lblError.setStyle("-fx-text-fill: green;");
-        lblError.setVisible(true);
+        // Always update the data fields so they match the server
+        setUser(User_Session.getLoggedInUser());
+        
+        // Hide any previous error messages since the data load was successful
+        lblError.setVisible(false);
+
+        // --- Check the flag ---
+        if (this.isUpdatePending) {
+            // Case A: I clicked Save. Show Success Alert instead of a label.
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Success");
+            alert.setHeaderText(null);
+            alert.setContentText("Profile updated successfully!");
+            alert.showAndWait();
+            
+            // Reset flag
+            this.isUpdatePending = false;
+        } 
+        // Case B (Else): Admin updated me. We updated the fields above, so we just do nothing else.
     }
     
     /**

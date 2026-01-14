@@ -44,7 +44,8 @@ public class ManageUsers_GUI {
 	private TableColumn<UserRecord, Integer> colSubscriberCode;
 	@FXML
 	private TableColumn<UserRecord, String> colIdentity;
-
+	@FXML
+    private Button historyBtn;
 	@FXML
 	private TextField idField, firstNameField, lastNameField, phoneField, emailField, usernameField,
 			subscriberCodeField;
@@ -90,24 +91,28 @@ public class ManageUsers_GUI {
 
 		// Selection Listener - Controls button states
 		usersTable.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<UserRecord>() {
-			@Override
-			public void changed(ObservableValue<? extends UserRecord> obs, UserRecord oldV, UserRecord newV) {
-				selectedUser = newV;
-				if (newV == null) {
-					// No Selection -> "Add Mode"
-					clearForm();
-					saveBtn.setDisable(false); // Can add
-					updateBtn.setDisable(true); // Can't update
-					deleteBtn.setDisable(true); // Can't delete
-				} else {
-					// Selection Exists -> "Edit Mode"
-					fillForm(newV);
-					saveBtn.setDisable(true); // Can't add new over existing selection
-					updateBtn.setDisable(false); // Can update
-					deleteBtn.setDisable(false); // Can delete
-				}
-			}
-		});
+            @Override
+            public void changed(ObservableValue<? extends UserRecord> obs, UserRecord oldV, UserRecord newV) {
+                selectedUser = newV;
+                if (newV == null) {
+                    // No Selection -> "Add Mode"
+                    clearForm();
+                    saveBtn.setDisable(false); 
+                    updateBtn.setDisable(true); 
+                    deleteBtn.setDisable(true); 
+                    // DISABLE History button
+                    if(historyBtn != null) historyBtn.setDisable(true);
+                } else {
+                    // Selection Exists -> "Edit Mode"
+                    fillForm(newV);
+                    saveBtn.setDisable(true); 
+                    updateBtn.setDisable(false); 
+                    deleteBtn.setDisable(false); 
+                    // ENABLE History button
+                    if(historyBtn != null) historyBtn.setDisable(false);
+                }
+            }
+        });
 
 		// Initialize Roles
 		identityCombo.setItems(FXCollections.observableArrayList("Subscriber", "Employee", "Manager"));
@@ -117,7 +122,8 @@ public class ManageUsers_GUI {
 		saveBtn.setDisable(false);
 		updateBtn.setDisable(true);
 		deleteBtn.setDisable(true);
-		
+		if(historyBtn != null) 
+			historyBtn.setDisable(true);
 		formErrorLabel.setStyle("-fx-font-size: 40px;");
 
 		refreshData();
@@ -338,4 +344,28 @@ public class ManageUsers_GUI {
 		usernameField.setStyle("");
 		passwordField.setStyle("");
 	}
+	@FXML
+    private void onHistoryClicked(ActionEvent event) {
+        if (selectedUser == null) return;
+
+        try {
+            // Load the OrderHistory FXML
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/OrderHistory.fxml"));
+            Parent root = loader.load();
+
+            // Create a NEW Stage (Window) for the popup
+            Stage stage = new Stage();
+            stage.setTitle("Order History - " + selectedUser.getUsername());
+            stage.setScene(new Scene(root));
+            
+            // IMPORTANT: Request the history for the SELECTED user (not the logged-in admin)
+            ConnectToServer_GUI.clientController.sendGetReservationHistoryRequest(selectedUser.getId());
+
+            // Show the new window without closing the current one
+            stage.show();
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

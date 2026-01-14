@@ -56,7 +56,7 @@
                 <Insets left="40" />
             </padding>
             <children>
-                <Button onAction="#onBackClicked" styleClass="button, btn-secondary" text="Back to Dashboard" />
+<Button fx:id="btnBack" onAction="#onBackClicked" text="Back to Dashboard" styleClass="button, btn-secondary" />	
             </children>
         </HBox>
     </bottom>

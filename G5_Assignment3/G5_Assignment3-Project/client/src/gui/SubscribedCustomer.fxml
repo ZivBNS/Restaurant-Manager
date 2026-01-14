@@ -65,9 +65,7 @@
             <padding>
                 <Insets bottom="15" top="10" />
             </padding>
-            <children>
-                <Label style="-fx-font-size: 11px; -fx-text-fill: #7f85a3;" text="Bistro Member Services" />
-            </children>
+
         </VBox>
     </bottom>
 

@@ -81,7 +81,7 @@ public class Server_Controller extends AbstractServer {
 		commands.put(MessageType.DELETE_TABLE_REQUEST, tableCmd);
 
 		// --- Users ---
-		UserCommand userCmd = new UserCommand(this.userController);
+		UserCommand userCmd = new UserCommand(this.userController,this);
 		commands.put(MessageType.GET_ALL_USERS_REQUEST, userCmd);
 		commands.put(MessageType.ADD_USER_REQUEST, userCmd);
 		commands.put(MessageType.EDIT_USER_REQUEST, userCmd);
@@ -109,7 +109,7 @@ public class Server_Controller extends AbstractServer {
 		commands.put(MessageType.GET_MONTHLY_REPORT, reportCmd);
 		
 		// --- Opening Hours Management ---
-		Command ohCmd = new OpeningHoursCommand();
+		Command ohCmd = new OpeningHoursCommand(this);
 		commands.put(MessageType.GET_OPENING_HOURS, ohCmd);
 		commands.put(MessageType.UPDATE_REGULAR_HOURS, ohCmd);
 		commands.put(MessageType.ADD_SPECIAL_HOUR, ohCmd);
@@ -220,4 +220,14 @@ public class Server_Controller extends AbstractServer {
 			System.out.println(message);
 		}
 	}
+	
+	/**
+     * Broadcasts a message to all connected clients to trigger a UI refresh.
+     * This is called by Commands after a successful database update.
+     * * @param message The message object containing the new data or a refresh signal.
+     */
+    public void broadcastToAllClients(Message message) {
+        // Serialize the message using Kryo before sending
+        sendToAllClients(KryoUtil.serialize(message));
+    }
 }

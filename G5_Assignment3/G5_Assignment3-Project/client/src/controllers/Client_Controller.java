@@ -1,7 +1,6 @@
 package controllers;
 
 import java.io.*;
-import java.sql.Time;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -467,33 +466,51 @@ public class Client_Controller implements ChatIF {
 		// Inside initializeHandlers() method in Client_Controller.java
 
 		responseHandlers.put(MessageType.RETURN_OPENING_HOURS, new ResponseHandler() {
-            @Override
-            public void handle(Message msg) {
-                Opening_Hours oh = (Opening_Hours) msg.getContent();
-                Restaurant.getInstance().setOpeningHours(oh);
+		    @Override
+		    public void handle(Message msg) {
+		        Opening_Hours oh = (Opening_Hours) msg.getContent();
+		        // 1. Update global data so any screen accessing it gets the latest information
+		        Restaurant.getInstance().setOpeningHours(oh);
 
-                // Refresh management screen if open
-                if (ManageHours_GUI.instance != null) {
-                    ManageHours_GUI.instance.refreshUI(oh);
-                    
-                    // CHECK FLAG: Only show alert if user requested an update
-                    if (ManageHours_GUI.instance.isUpdatePending()) {
-                        Platform.runLater(new Runnable() {
-                            @Override
-                            public void run() {
-                                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                                alert.setTitle("Success");
-                                alert.setHeaderText(null);
-                                alert.setContentText("Operation completed successfully!");
-                                alert.showAndWait();
-                            }
-                        });
-                        // Reset flag
-                        ManageHours_GUI.instance.setUpdatePending(false);
-                    }
-                } 
-            }
-        });
+		        Platform.runLater(new Runnable() {
+		            @Override
+		            public void run() {
+		                // --- Manage Hours Screen (Main screen for this action) ---
+		                if (ManageHours_GUI.instance != null) {
+		                    ManageHours_GUI.instance.refreshUI(oh);
+
+		                    // Show "Success" alert only to the user who performed the action
+		                    if (ManageHours_GUI.instance.isUpdatePending()) {
+		                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+		                        alert.setTitle("Success");
+		                        alert.setHeaderText(null);
+		                        alert.setContentText("Operation completed successfully!");
+		                        alert.showAndWait();
+		                        ManageHours_GUI.instance.setUpdatePending(false);
+		                    }
+		                }
+
+		                // --- New Reservation Screen ---
+		                if (AddReservation_GUI.instance != null) {
+		                    // Calls the function to refresh time slots based on the selected date
+		                    AddReservation_GUI.instance.refreshHours();
+		                }
+
+		                // --- View Reservations Screen (Client) ---
+		                if (ViewReservations_GUI.instance != null) {
+		                    // If the client is editing, the opening hours list will update
+		                    ViewReservations_GUI.instance.refreshHours();
+		                }
+
+		                // --- Manage Orders Screen (Admin) ---
+		                if (ManageOrders_GUI.instance != null) {
+		                    // If the admin is editing/approving, this will refresh the hours
+		                    ManageOrders_GUI.instance.refreshHours();
+		                }
+		            }
+		        });
+		    }
+		});
 		responseHandlers.put(MessageType.OPENING_HOURS_ONLY_ONE_A_DAY_ERROR, new ResponseHandler() {
             @Override
             public void handle(Message msg) {
@@ -590,13 +607,46 @@ public class Client_Controller implements ChatIF {
 		};
 
 		
-		responseHandlers.put(MessageType.GET_ALL_USERS_RESPONSE, userHandler);
 		responseHandlers.put(MessageType.ADD_USER_RESPONSE_OK, userHandler);
 		responseHandlers.put(MessageType.ADD_USER_RESPONSE_ERR, userHandler);
 		responseHandlers.put(MessageType.EDIT_USER_RESPONSE_OK, userHandler);
 		responseHandlers.put(MessageType.EDIT_USER_RESPONSE_ERR, userHandler);
 		responseHandlers.put(MessageType.DELETE_USER_RESPONSE_OK, userHandler);
 		responseHandlers.put(MessageType.DELETE_USER_RESPONSE_ERR, userHandler);
+		// -----------------------------------------------------------
+        // User List Broadcast Handler
+        // -----------------------------------------------------------
+		responseHandlers.put(MessageType.GET_ALL_USERS_RESPONSE, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                List<UserRecord> allUsers = (List<UserRecord>) msg.getContent();
+
+                Platform.runLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        // 1. Refresh Admin Screen
+                        if (manageUsers_GUI != null) {
+                            manageUsers_GUI.handle(msg);
+                        }
+
+                        // 2. Refresh Personal Profile Screen (Critical Part!)
+                        if (UpdateProfile_GUI.instance != null && User_Session.getLoggedInUser() != null) {
+                            int myId = User_Session.getLoggedInUser().getId();
+                            
+                            for (UserRecord u : allUsers) {
+                                if (u.getId() == myId) {
+                                    User_Session.setLoggedInUser(u);
+                                    
+                                    UpdateProfile_GUI.instance.onRefresh(); 
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+		
 		responseHandlers.put(MessageType.RETURN_USER_DETAILS, new ResponseHandler() {
 			@Override
 			public void handle(Message msg) {
@@ -621,14 +671,22 @@ public class Client_Controller implements ChatIF {
 		// -----------------------------------------------------------
 
 		responseHandlers.put(MessageType.UPDATE_USER_DETAILS_RESPONSE_OK, new ResponseHandler() {
-			@Override
-			public void handle(Message msg) {
-				User_Session.setLoggedInUser((UserRecord) msg.getContent());
-				if (UpdateProfile_GUI.instance != null) {
-					UpdateProfile_GUI.instance.onRefresh();
-				}
-			}
-		});
+            @Override
+            public void handle(Message msg) {
+                // Update the Session with the fresh data from the server
+                User_Session.setLoggedInUser((UserRecord) msg.getContent());
+
+                // Ensure we call onRefresh to display the success message
+                if (UpdateProfile_GUI.instance != null) {
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            UpdateProfile_GUI.instance.onRefresh();
+                        }
+                    });
+                }
+            }
+        });
 
 		responseHandlers.put(MessageType.UPDATE_USER_DETAILS_RESPONSE_ERR, new ResponseHandler() {
 			@Override

@@ -424,4 +424,13 @@ public class AddReservation_GUI {
 	public DatePicker getDatePicker() {
 		return datePicker;
 	}
+	/**
+     * Called by Client_Controller when opening hours change via broadcast.
+     * Refreshes the time slots if a date is selected.
+     */
+    public void refreshHours() {
+        if (datePicker.getValue() != null) {
+            loadDynamicHours(datePicker.getValue()); 
+        }
+    }
 }

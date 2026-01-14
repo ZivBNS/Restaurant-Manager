@@ -44,10 +44,10 @@ public class Init_All {
             initTables(con, stmt);
             initOpeningHours(con, stmt);
             initUsers(con, stmt);
-            initReservations(con, stmt); 
+            //initReservations(con, stmt); 
             initWaitlists(con, stmt);    
             initMonthlyReports(con, stmt);
-            initBills(con, stmt);
+            //initBills(con, stmt);
             
             System.out.println("Initialization completed successfully.");
         } catch (SQLException e) {

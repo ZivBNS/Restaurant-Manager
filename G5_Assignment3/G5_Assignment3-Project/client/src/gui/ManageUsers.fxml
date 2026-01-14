@@ -47,10 +47,11 @@
                 <VBox spacing="5.0" styleClass="card" GridPane.columnIndex="0" GridPane.rowIndex="0">
                     <padding><Insets bottom="15" left="15" right="15" top="15" /></padding>
                     <children>
-                       <HBox alignment="CENTER_LEFT">
+                       <HBox alignment="CENTER_LEFT" spacing="10">
                            <children>
                                <Label styleClass="card-title" text="Registered Users" />
                                <Region HBox.hgrow="ALWAYS" />
+                               <Button fx:id="historyBtn" onAction="#onHistoryClicked" styleClass="button, btn-secondary" text="📜 History" disable="true" />
                                <Button onAction="#onRefresh" styleClass="button, btn-secondary" text="⟳ Refresh" />
                            </children>
                        </HBox>

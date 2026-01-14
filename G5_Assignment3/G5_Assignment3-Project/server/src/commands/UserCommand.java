@@ -1,34 +1,56 @@
 package commands;
 
+import controllers.Server_Controller;
 import controllers.User_Controller;
 import messages.Message;
+import messages.MessageType;
 import ocsf.server.ConnectionToClient;
 
 /**
  * Command implementation for user-related operations.
- * Utilizes a specific instance of User_Controller to process requests.
+ * Updated to support Server-Side Broadcasting.
  */
 public class UserCommand implements Command {
+    
     private final User_Controller userController;
+    private final Server_Controller server; // Reference for broadcasting
 
     /**
-     * Constructs a UserCommand with a specific controller instance.
-     * * @param userController The controller instance used to handle user logic.
+     * Constructor accepting both controllers.
      */
-    // Constructor accepts the controller instance
-    public UserCommand(User_Controller userController) {
+    public UserCommand(User_Controller userController, Server_Controller server) {
         this.userController = userController;
+        this.server = server;
     }
 
-    /**
-     * Executes the user command by calling the instance method of the associated User_Controller.
-     * * @param msg    The message containing the user-related request.
-     * @param client The connection from the client.
-     * @return A Message object representing the controller's response.
-     */
     @Override
     public Message execute(Message msg, ConnectionToClient client) {
-        // Now calling the instance method correctly
-        return userController.handle(msg);
+        // 1. Perform the operation (Add/Edit/Delete/Get/Update)
+        Message response = userController.handle(msg);
+
+        // 2. Check if a modification occurred successfully
+        MessageType type = response.getType();
+        boolean isModification = (
+            type == MessageType.ADD_USER_RESPONSE_OK ||
+            type == MessageType.EDIT_USER_RESPONSE_OK ||
+            type == MessageType.DELETE_USER_RESPONSE_OK ||
+            type == MessageType.UPDATE_USER_DETAILS_RESPONSE_OK
+        );
+
+        if (isModification) {
+            // --- BROADCAST ---
+            // Fetch the updated list of all users to refresh Admin screens
+            Message allUsersMsg = userController.handle(new Message(MessageType.GET_ALL_USERS_REQUEST, null));
+            
+            // Broadcast the list to ALL clients
+            server.broadcastToAllClients(allUsersMsg);
+            
+            // Note: We still return the original 'response' here (e.g., "User Updated"),
+            // unlike OpeningHours where we returned null. 
+            // Why? Because the specific user/admin performing the action expects a specific confirmation/feedback 
+            // (like "User Added Successfully") separate from the background table refresh.
+        }
+
+        return response;
     }
 }
