@@ -44,10 +44,10 @@ public class Init_All {
             initTables(con, stmt);
             initOpeningHours(con, stmt);
             initUsers(con, stmt);
-            //initReservations(con, stmt); 
+            initReservations(con, stmt); 
             initWaitlists(con, stmt);    
             initMonthlyReports(con, stmt);
-            //initBills(con, stmt);
+            initBills(con, stmt);
             
             System.out.println("Initialization completed successfully.");
         } catch (SQLException e) {
@@ -202,10 +202,10 @@ public class Init_All {
                 double rawAmount = 50.0 + (Math.random() * 400.0);
                 double totalAmount = Math.round(rawAmount * 100.0) / 100.0;
 
-                // 2. Determine Discount (15% for Subscribers)
+                // 2. Determine Discount (10% for Subscribers)
                 double discount = 0.0;
                 if ("Subscriber".equalsIgnoreCase(identity)) {
-                    discount = 15.0;
+                    discount = 10.0;
                 }
 
                 // 3. Generate Details based on price
@@ -235,8 +235,8 @@ public class Init_All {
     }
 
     /**
-     * Initializes a set of dummy users, including subscribers and employees.
-     * * @param con  the database connection.
+     * Initializes a set of dummy users, including subscribers, employees, and a manager.
+     * @param con  the database connection.
      * @param stmt the statement object for executing SQL.
      */
     private static void initUsers(Connection con, Statement stmt) {
@@ -248,23 +248,32 @@ public class Init_All {
         int subCode = 100000;
         char userChar = 'a';
         try {
+            // 1. Insert Subscribers
             for (int i = 0; i < 20; i++) {
                 String sql = String.format("INSERT INTO Users (FirstName, LastName, Phone, Email, Username, Password, subscriberCode, Identity) VALUES ('%s', '%s', '050%d', '%s', '%s', '1', %d, 'Subscriber')",
                         firstNames[i], lastNames[i], (1000000 + i), firstNames[i].toLowerCase() + "@mail.com", String.valueOf(userChar++), subCode++);
                 stmt.executeUpdate(sql);
             }
             System.out.println("Inserted 20 subscribers.");
+
+            // 2. Insert Employees (username '1', password '1')
             for (int i = 0; i < EmployeeFirstNames.length; i++) {
                 String sql = String.format("INSERT INTO Users (FirstName, LastName, Phone, Email, Username, Password, subscriberCode, Identity) VALUES ('%s', '%s', '050%d', '%s', '%s', '1', %d, 'Employee')",
-                		EmployeeFirstNames[i], EmployeeLastNames[i], (1000000 + i), EmployeeFirstNames[i].toLowerCase() + "@mail.com", "1", subCode++);
+                		EmployeeFirstNames[i], EmployeeLastNames[i], (2000000 + i), EmployeeFirstNames[i].toLowerCase() + "@mail.com", "1", subCode++);
                 stmt.executeUpdate(sql);
             }
             System.out.println("Inserted Employees.");
+
+            // 3. Insert Manager (username '2', password '2') - NEW
+            String managerSql = String.format("INSERT INTO Users (FirstName, LastName, Phone, Email, Username, Password, subscriberCode, Identity) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', %d, 'Manager')",
+                    "Manager", "Boss", "0509999999", "manager@bistro.com", "2", "2", subCode++);
+            stmt.executeUpdate(managerSql);
+            System.out.println("Inserted Manager (User: 2, Pass: 2).");
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
-
     /**
      * Initializes various types of reservations: Historical (Completed), Future (Pending), and Live (Active).
      * * @param con  the database connection.
@@ -296,7 +305,6 @@ public class Init_All {
                     LocalDate date = LocalDate.of(2025, 12, day);
                     int dailyOrders = 8 + (int)(Math.random() * 18); 
                     for (int i = 0; i < dailyOrders; i++) {
-                        // ... (אותו קוד קיים לחלק ההיסטורי) ...
                         int uid = userIds.get(userIdx % userIds.size());
                         userIdx++;
                         LocalDateTime start = LocalDateTime.of(date, LocalTime.of(10 + (i % 12), 0));
@@ -323,7 +331,6 @@ public class Init_All {
 
                 // --- PART 2: Future (Pending) ---
                 for (int day = 15; day <= 21; day++) {
-                    // ... (אותו קוד קיים לחלק העתידי) ...
                     LocalDate date = LocalDate.of(2026, 1, day);
                     int dailyOrders = 5;
                     for (int i = 0; i < dailyOrders; i++) {
@@ -346,19 +353,16 @@ public class Init_All {
                 }
 
                 // --- PART 3: Current Live (Active) - NEW ---
-                // אנשים שיושבים כרגע במסעדה (נניח התאריך הוא 10.1.2026)
                 LocalDate today = LocalDate.of(2026, 1, 10); 
-                int activeTables = 4; // 4 שולחנות פעילים כרגע
+                int activeTables = 4; 
 
                 for (int i = 0; i < activeTables; i++) {
                     int uid = userIds.get(userIdx % userIds.size());
                     userIdx++;
 
-                    // הם הגיעו לפני שעה בערך
                     LocalDateTime start = LocalDateTime.of(today, LocalTime.now().minusMinutes(45 + (i * 10)));
                     LocalDateTime end = start.plusHours(2);
                     
-                    // הם הגיעו בפועל (Actual Arrival)
                     LocalDateTime actArr = start.plusMinutes(2); 
 
                     int numDiners = 2 + (int)(Math.random() * 4);
@@ -369,11 +373,11 @@ public class Init_All {
                     ps.setString(3, userData.get(uid)[1]);
                     ps.setTimestamp(4, Timestamp.valueOf(start));
                     ps.setTimestamp(5, Timestamp.valueOf(end));
-                    ps.setTimestamp(6, Timestamp.valueOf(actArr)); // הגיעו
-                    ps.setNull(7, java.sql.Types.TIMESTAMP);       // עדיין לא עזבו (NULL)
+                    ps.setTimestamp(6, Timestamp.valueOf(actArr)); 
+                    ps.setNull(7, java.sql.Types.TIMESTAMP);       
                     ps.setInt(8, numDiners);
-                    ps.setInt(9, tableId); // יש להם שולחן
-                    ps.setString(10, "Active"); // סטטוס פעיל
+                    ps.setInt(9, tableId); 
+                    ps.setString(10, "Active"); 
                     ps.setInt(11, lastCode++);
                     
                     ps.addBatch();
@@ -430,7 +434,6 @@ public class Init_All {
             try (ResultSet rsPending = stmt.executeQuery(selectPending)) {
                 while (rsPending.next()) {
                     int resId = rsPending.getInt("ID");
-                    LocalDateTime resTime = rsPending.getTimestamp("ReservationStartTime").toLocalDateTime();
                     
                     // הם נכנסו לרשימה לפני 10 דקות
                     LocalDateTime created = LocalDateTime.now().minusMinutes(10 + (int)(Math.random()*15));

@@ -19,6 +19,8 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.control.TableView;
@@ -28,131 +30,173 @@ import javafx.util.Callback;
 import utils.User_Session;
 
 /**
- * Controller for viewing the User's Order History.
- * Displays a list of past completed reservations including their final bill amount.
+ * Controller for viewing User History.
+ * Separated into two tabs:
+ * 1. Order History: All reservation attempts (Completed, Canceled, No-Show).
+ * 2. Visit History: Only successful visits with bill and table details.
  */
 public class OrderHistory_GUI implements Initializable {
 
     public static OrderHistory_GUI instance;
 
-    @FXML private TableView<Reservation> historyTable;
-    @FXML private TableColumn<Reservation, String> colDate;
-    @FXML private TableColumn<Reservation, String> colTime;
-    @FXML private TableColumn<Reservation, Integer> colDiners;
-    @FXML private TableColumn<Reservation, String> colTable;
-    @FXML private TableColumn<Reservation, String> colBill;
-
-    // Added reference to the Back Button to manipulate its visibility
     @FXML private Button btnBack;
+    @FXML private TabPane historyTabs;
+    @FXML private Tab tabOrders;
+    @FXML private Tab tabVisits;
 
-    // Local data list to bind with the TableView
-    private ObservableList<Reservation> dataList = FXCollections.observableArrayList();
+    // --- Table 1: Order History (The Plan) ---
+    @FXML private TableView<Reservation> orderTable;
+    @FXML private TableColumn<Reservation, String> colOrderDate;
+    @FXML private TableColumn<Reservation, String> colOrderTime;
+    @FXML private TableColumn<Reservation, Integer> colOrderGuests;
+    @FXML private TableColumn<Reservation, String> colOrderStatus;
 
-    /**
-     * Called automatically when the FXML is loaded.
-     * Initializes table columns, fetches history data, and handles button visibility.
-     */
+    // --- Table 2: Visit History (The Reality) ---
+    @FXML private TableView<Reservation> visitTable;
+    @FXML private TableColumn<Reservation, String> colVisitDate;
+    @FXML private TableColumn<Reservation, String> colVisitArrival;
+    @FXML private TableColumn<Reservation, String> colVisitDeparture;
+    @FXML private TableColumn<Reservation, String> colVisitTable;
+    @FXML private TableColumn<Reservation, String> colVisitBill;
+
+    // Data Lists
+    private ObservableList<Reservation> orderList = FXCollections.observableArrayList();
+    private ObservableList<Reservation> visitList = FXCollections.observableArrayList();
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         instance = this;
+        setupOrderTable();
+        setupVisitTable();
+        
+        // Check Role & Fetch Data
+        if (User_Session.getLoggedInUser() != null) {
+            String role = User_Session.getLoggedInUser().getIdentity();
+            
+            if ("Subscriber".equals(role)) {
+                int uid = User_Session.getLoggedInUser().getId();
+                // Request both lists
+                ConnectToServer_GUI.clientController.sendGetReservationHistoryRequest(uid); // For Orders
+                ConnectToServer_GUI.clientController.sendGetVisitHistoryRequest(uid);       // For Visits
+            } else {
+                // Admin View (Popup mode) - Hide Back Button
+                if (btnBack != null) {
+                    btnBack.setVisible(false);
+                    btnBack.setManaged(false);
+                }
+            }
+        }
+    }
 
-        // --- Column Setup (Using Anonymous Inner Classes instead of Lambdas) ---
-
-        // Date Column
-        colDate.setCellValueFactory(new PropertyValueFactory<Reservation, String>("formattedDate"));
-
-        // Time Column
-        colTime.setCellValueFactory(new PropertyValueFactory<Reservation, String>("formattedTime"));
-
-        // Diners/Guests Column
-        colDiners.setCellValueFactory(new Callback<CellDataFeatures<Reservation, Integer>, ObservableValue<Integer>>() {
+    /**
+     * Configures columns for the Order History table.
+     */
+    private void setupOrderTable() {
+        colOrderDate.setCellValueFactory(new PropertyValueFactory<Reservation, String>("formattedDate"));
+        colOrderTime.setCellValueFactory(new PropertyValueFactory<Reservation, String>("formattedTime"));
+        colOrderStatus.setCellValueFactory(new PropertyValueFactory<Reservation, String>("status"));
+        
+        colOrderGuests.setCellValueFactory(new Callback<CellDataFeatures<Reservation, Integer>, ObservableValue<Integer>>() {
             @Override
             public ObservableValue<Integer> call(CellDataFeatures<Reservation, Integer> param) {
                 return new SimpleIntegerProperty(param.getValue().getNumberOfDiners()).asObject();
             }
         });
         
-        // Table ID Column (Handles null or 0 values)
-        colTable.setCellValueFactory(new Callback<CellDataFeatures<Reservation, String>, ObservableValue<String>>() {
+        orderTable.setItems(orderList);
+    }
+
+    /**
+     * Configures columns for the Visit History table.
+     */
+    /**
+     * Configures columns for the Visit History table.
+     * Uses Callbacks to format LocalDateTime objects into Strings.
+     */
+    private void setupVisitTable() {
+        // Date Column
+        colVisitDate.setCellValueFactory(new PropertyValueFactory<Reservation, String>("formattedDate"));
+        
+        colVisitArrival.setCellValueFactory(new Callback<CellDataFeatures<Reservation, String>, ObservableValue<String>>() {
             @Override
             public ObservableValue<String> call(CellDataFeatures<Reservation, String> param) {
-                Integer tableId = param.getValue().getTableId();
-                if (tableId == null || tableId == 0) {
-                    return new SimpleStringProperty("TBD");
+                if (param.getValue().getActualArrivalTime() != null) {
+                    // Format to HH:mm (e.g., 19:30)
+                    String formatted = param.getValue().getActualArrivalTime().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+                    return new SimpleStringProperty(formatted);
                 }
-                return new SimpleStringProperty(String.valueOf(tableId));
+                return new SimpleStringProperty("-");
             }
         });
 
-        // Bill Total Column (Calculates final price from the Bill object)
-        colBill.setCellValueFactory(new Callback<CellDataFeatures<Reservation, String>, ObservableValue<String>>() {
+        colVisitDeparture.setCellValueFactory(new Callback<CellDataFeatures<Reservation, String>, ObservableValue<String>>() {
+            @Override
+            public ObservableValue<String> call(CellDataFeatures<Reservation, String> param) {
+                if (param.getValue().getActualDepartureTime() != null) {
+                    // Format to HH:mm
+                    String formatted = param.getValue().getActualDepartureTime().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+                    return new SimpleStringProperty(formatted);
+                }
+                return new SimpleStringProperty("Active"); // Or "-"
+            }
+        });
+
+        // Table Column
+        colVisitTable.setCellValueFactory(new Callback<CellDataFeatures<Reservation, String>, ObservableValue<String>>() {
+            @Override
+            public ObservableValue<String> call(CellDataFeatures<Reservation, String> param) {
+                Integer tId = param.getValue().getTableId();
+                return new SimpleStringProperty((tId != null && tId != 0) ? String.valueOf(tId) : "-");
+            }
+        });
+
+        // Bill Column
+        colVisitBill.setCellValueFactory(new Callback<CellDataFeatures<Reservation, String>, ObservableValue<String>>() {
             @Override
             public ObservableValue<String> call(CellDataFeatures<Reservation, String> param) {
                 Reservation res = param.getValue();
-                
-                // Check if the reservation has an attached bill
                 if (res.getBill() != null) {
-                    // Calculate final price (including subscriber discount if applicable)
-                    double finalPrice = res.getBill().calculateFinalAmount();
-                    // Format to 2 decimal places with currency symbol
-                    return new SimpleStringProperty(String.format("%.2f ₪", finalPrice));
+                    return new SimpleStringProperty(String.format("%.2f ₪", res.getBill().calculateFinalAmount()));
                 }
-                
-                return new SimpleStringProperty("N/A"); // Should not happen for 'Completed' orders
+                return new SimpleStringProperty("N/A");
             }
         });
 
-        // Bind data list to table
-        historyTable.setItems(dataList);
-
-        // --- Role Based Logic ---
-        if (User_Session.getLoggedInUser() != null) {
-            String role = User_Session.getLoggedInUser().getIdentity();
-            
-            // Case 1: Subscriber viewing their own dashboard
-            if ("Subscriber".equals(role)) {
-                // Auto-fetch data
-                ConnectToServer_GUI.clientController.sendGetReservationHistoryRequest(User_Session.getLoggedInUser().getId());
-                // Button remains visible (default)
-            } 
-            // Case 2: Employee/Manager viewing via Manage Users Popup
-            else {
-                // Hide the back button because this is a popup window
-                if (btnBack != null) {
-                    btnBack.setVisible(false);
-                    // Optional: remove it from layout calculations so it doesn't take up space
-                    btnBack.setManaged(false); 
-                }
-                // Note: We do NOT auto-fetch here. The ManageUsers_GUI triggers the fetch for the specific user ID.
-            }
-        }
+        visitTable.setItems(visitList);
     }
 
     /**
-     * Updates the table with data received from the server.
-     * Uses Platform.runLater to ensure thread safety.
-     * @param history The list of reservations.
+     * Updates the Order History table.
+     * @param orders List of all reservations.
      */
-    public void updateTable(final List<Reservation> history) {
+    public void updateOrderTable(final List<Reservation> orders) {
         Platform.runLater(new Runnable() {
             @Override
             public void run() {
-                dataList.setAll(history);
+                orderList.setAll(orders);
             }
         });
     }
 
     /**
-     * Navigates back to the Subscriber Dashboard.
-     * @param event The button click event.
+     * Updates the Visit History table.
+     * @param visits List of completed visits.
      */
+    public void updateVisitTable(final List<Reservation> visits) {
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                visitList.setAll(visits);
+            }
+        });
+    }
+
     @FXML
     void onBackClicked(ActionEvent event) {
         try {
             Parent root = FXMLLoader.load(getClass().getResource("/gui/SubscribedCustomer.fxml"));
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
-            stage.setTitle("Bistro Member Dashboard");
             stage.centerOnScreen();
             instance=null;
         } catch (Exception e) {

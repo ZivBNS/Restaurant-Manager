@@ -1,5 +1,6 @@
 package entities;
-
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 /**
  * Represents a bill associated with a restaurant reservation.
  * This class handles the pricing, discounts, and payment status of an order.
@@ -78,12 +79,24 @@ public class Bill {
 	/** @return The ID of the reservation linked to this bill */
     public int getReservationId() { return reservationId; }
 
-	/**
-     * Calculates the final amount to be paid after applying the discount rate.
-     * * @return The final total after discount.
+    /**
+     * Calculates the final amount to pay after discount.
+     * Uses BigDecimal to ensure precise financial rounding.
+     * @return The total amount minus the discount percentage, rounded to 2 decimals.
      */
     public double calculateFinalAmount() {
-        return this.totalAmount * (1.0 - (discountRate));
+        // 1. Calculate the raw result using double
+        double discountFactor = UserDiscountRate / 100.0;
+        double rawResult = totalAmount * (1 - discountFactor);
+
+        // 2. Convert to BigDecimal for precise rounding
+        BigDecimal bd = new BigDecimal(Double.toString(rawResult));
+        
+        // 3. Round to 2 decimal places using HALF_UP (Standard financial rounding: 0.5 goes up)
+        bd = bd.setScale(2, RoundingMode.HALF_UP);
+        
+        // 4. Return the precise double value
+        return bd.doubleValue();
     }
 
     // --- Getters and Setters ---

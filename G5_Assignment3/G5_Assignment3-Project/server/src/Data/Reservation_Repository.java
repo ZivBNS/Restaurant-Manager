@@ -977,12 +977,12 @@ public class Reservation_Repository {
     }
 
     /**
-     * Retrieves all completed reservations for a specific subscriber, joined with their bill data.
-     * Used to display the dining history in the customer's personal area.
+     * Retrieves ONLY completed visits for a user, including bill details.
+     * This corresponds to the "Visit History" tab.
      * @param userId The subscriber ID.
-     * @return A list of historical Reservation objects, each containing its associated Bill entity.
+     * @return List of completed reservations with bills.
      */
-    public List<Reservation> getHistoryByUserId(int userId) {
+    public List<Reservation> getCompletedVisitsByUserId(int userId) {
         List<Reservation> results = new ArrayList<>();
         
         String sql = "SELECT r.*, " +
@@ -1002,21 +1002,19 @@ public class Reservation_Repository {
                     while (rs.next()) {
                         Reservation res = extractReservationFromResultSet(rs);
                         
+                        // Extract Bill Data
                         int billId = rs.getInt("BillID");
                         if (billId > 0) {
-                            // (int id, int reservationId, String billDetails, double totalAmount, String status, double discountRate)
                             entities.Bill bill = new entities.Bill(
-                                billId,                             // id
-                                res.getId(),                        // reservationId
-                                rs.getString("BillDetails"),        // billDetails
-                                rs.getDouble("TotalAmount"),        // totalAmount
-                                rs.getString("BillStatus"),         // status
-                                rs.getDouble("DiscountPercentage")  // discountRate
+                                billId,
+                                res.getId(),
+                                rs.getString("BillDetails"),
+                                rs.getDouble("TotalAmount"),
+                                rs.getString("BillStatus"),
+                                rs.getDouble("DiscountPercentage")
                             );
-                            
                             res.setBill(bill);
                         }
-                        
                         results.add(res);
                     }
                 }
@@ -1024,8 +1022,39 @@ public class Reservation_Repository {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            if (pConn != null)
-                db.releaseConnection(pConn);
+            if (pConn != null) db.releaseConnection(pConn);
+        }
+        return results;
+    }
+
+    /**
+     * Retrieves ALL reservation history (Completed, Canceled, No-show).
+     * This corresponds to the "Order History" tab.
+     * @param userId The subscriber ID.
+     * @return List of all past reservations.
+     */
+    public List<Reservation> getAllReservationHistory(int userId) {
+        List<Reservation> results = new ArrayList<>();
+        // Fetch everything that is NOT pending/active (i.e., historical)
+        String sql = "SELECT * FROM Reservations WHERE UserID = ? " +
+                     "AND Status IN ('Completed', 'Canceled', 'No-show') " +
+                     "ORDER BY ReservationStartTime DESC";
+
+        PooledConnection pConn = null;
+        try {
+            pConn = db.getConnection();
+            try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(sql)) {
+                pstmt.setInt(1, userId);
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    while (rs.next()) {
+                        results.add(extractReservationFromResultSet(rs));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            if (pConn != null) db.releaseConnection(pConn);
         }
         return results;
     }

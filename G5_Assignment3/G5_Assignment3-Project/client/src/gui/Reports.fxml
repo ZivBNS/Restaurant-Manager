@@ -41,9 +41,10 @@
             <tabs>
                 <Tab text="Time &amp; Delays">
                     <content>
-                        <VBox alignment="CENTER" spacing="10" styleClass="card">
+                        <VBox alignment="CENTER" spacing="5" styleClass="card">
                             <padding><Insets bottom="20" left="20" right="20" top="20" /></padding>
                             <Label styleClass="card-title" text="Daily Average Lateness &amp; Overstays" />
+                            
                             <BarChart fx:id="timeBarChart" VBox.vgrow="ALWAYS">
                                 <xAxis>
                                     <CategoryAxis label="Day of Month" side="BOTTOM" fx:id="timeXAxis" />
@@ -52,15 +53,19 @@
                                     <NumberAxis label="Time (Minutes)" side="LEFT" />
                                 </yAxis>
                             </BarChart>
+                            
+<Label text="* Compares average arrival delays vs. time spent beyond reserved slot (Overstay).   &#10;(+) Positive: Late Arrival / Overstay  |  (-) Negative: Early Arrival / Left Early"                                   style="-fx-text-fill: #a0a0a0; -fx-font-size: 12px; -fx-font-style: italic;" 
+                                   wrapText="true"/>
                         </VBox>
                     </content>
                 </Tab>
 
                 <Tab text="Subscribers &amp; Orders">
                     <content>
-                        <VBox alignment="CENTER" spacing="10" styleClass="card">
+                        <VBox alignment="CENTER" spacing="5" styleClass="card">
                             <padding><Insets bottom="20" left="20" right="20" top="20" /></padding>
                             <Label styleClass="card-title" text="Daily Orders vs. Waiting List Activity" />
+                            
                             <LineChart fx:id="ordersLineChart" VBox.vgrow="ALWAYS">
                                 <xAxis>
                                     <CategoryAxis label="Day of Month" side="BOTTOM" fx:id="ordersXAxis" />
@@ -69,6 +74,10 @@
                                     <NumberAxis label="Count" side="LEFT" />
                                 </yAxis>
                             </LineChart>
+                            
+                            <Label text="* Displays the daily volume of orders placed by subscribers compared to the demand on the waiting list." 
+                                   style="-fx-text-fill: #a0a0a0; -fx-font-size: 12px; -fx-font-style: italic;" 
+                                   wrapText="true"/>
                         </VBox>
                     </content>
                 </Tab>

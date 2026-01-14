@@ -606,6 +606,7 @@ public class ManageOrders_GUI {
 	 */
 	@FXML
 	private void onBackClicked(ActionEvent event) {
+		instance = null;
 		try {
 			Parent root = FXMLLoader.load(getClass().getResource("/gui/Workers.fxml"));
 			Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();

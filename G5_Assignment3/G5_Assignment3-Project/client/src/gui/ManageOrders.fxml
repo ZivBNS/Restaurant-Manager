@@ -35,8 +35,8 @@
             <padding><Insets bottom="10" left="15" right="15" top="5" /></padding>
             
             <columnConstraints>
-                <ColumnConstraints hgrow="ALWAYS" percentWidth="65.0" />
-                <ColumnConstraints hgrow="ALWAYS" percentWidth="35.0" minWidth="300.0" />
+                <ColumnConstraints hgrow="ALWAYS" percentWidth="70.0" />
+                <ColumnConstraints hgrow="ALWAYS" percentWidth="30.0" minWidth="300.0" />
             </columnConstraints>
             
             <rowConstraints>
@@ -59,7 +59,7 @@
                         <TableView fx:id="adminTable" VBox.vgrow="ALWAYS" minHeight="0">
                             <columns>
                                 <TableColumn fx:id="colCode" prefWidth="60.0" text="Code" />
-                                <TableColumn fx:id="colUserID" prefWidth="60.0" text="ID" />
+                                <TableColumn fx:id="colUserID" prefWidth="60.0" text="User ID" />
                                 <TableColumn fx:id="colPhone" prefWidth="90.0" text="Phone" />
                                 <TableColumn fx:id="colEmail" prefWidth="110.0" text="Email" />
                                 <TableColumn fx:id="colDate" prefWidth="80.0" text="Date" />
@@ -75,25 +75,36 @@
                     </children>
                 </VBox>
 
-                <VBox spacing="10.0" styleClass="card" GridPane.columnIndex="1">
+                <VBox spacing="8.0" styleClass="card" GridPane.columnIndex="1">
                     <padding><Insets bottom="15" left="15" right="15" top="15" /></padding>
                     <children>
                         <Label styleClass="card-title" text="Order Details" />
-                        <Separator opacity="0.2" />
+                        <Separator opacity="0.1" />
 
-                        <GridPane hgap="10" vgap="5" VBox.vgrow="ALWAYS" minHeight="0">
+                        <GridPane hgap="10" vgap="8" VBox.vgrow="ALWAYS" minHeight="0">
                             <columnConstraints>
                                 <ColumnConstraints percentWidth="50" hgrow="ALWAYS"/>
                                 <ColumnConstraints percentWidth="50" hgrow="ALWAYS"/>
                             </columnConstraints>
+                            
                             <rowConstraints>
-                                <RowConstraints vgrow="SOMETIMES" /> <RowConstraints vgrow="SOMETIMES" /> <RowConstraints vgrow="SOMETIMES" /> <RowConstraints vgrow="SOMETIMES" /> <RowConstraints vgrow="SOMETIMES" /> <RowConstraints vgrow="SOMETIMES" /> <RowConstraints vgrow="SOMETIMES" /> <RowConstraints vgrow="SOMETIMES" /> <RowConstraints vgrow="SOMETIMES" /> <RowConstraints vgrow="SOMETIMES" /> </rowConstraints>
+                                <RowConstraints vgrow="NEVER" /> 
+                                <RowConstraints vgrow="NEVER" /> 
+                                <RowConstraints vgrow="NEVER" /> 
+                                <RowConstraints vgrow="NEVER" /> 
+                                <RowConstraints vgrow="NEVER" /> 
+                                <RowConstraints vgrow="NEVER" /> 
+                                <RowConstraints vgrow="NEVER" /> 
+                                <RowConstraints vgrow="NEVER" /> 
+                                <RowConstraints vgrow="NEVER" /> 
+                                <RowConstraints vgrow="NEVER" /> 
+                            </rowConstraints>
 
                             <children>
                                 <Label styleClass="card-label" text="Confirmation Code" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
                                 <Label styleClass="card-label" text="User ID" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
                                 
-                                <TextField fx:id="txtOrderID" disable="true" text="New" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                                <TextField fx:id="txtOrderID" disable="true" text="New" style="-fx-opacity: 0.7;" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
                                 <TextField fx:id="txtUserID" promptText="Member ID" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
                                 <Label styleClass="card-label" text="Phone" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
@@ -106,7 +117,7 @@
                                 <Label styleClass="card-label" text="Table ID" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
 
                                 <Spinner fx:id="spGuests" editable="true" maxWidth="Infinity" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
-                                <TextField fx:id="txtTable" disable="true" text="Auto" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+                                <TextField fx:id="txtTable" disable="true" text="Auto" style="-fx-opacity: 0.7;" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
 
                                 <Label styleClass="card-label" text="Date" GridPane.columnIndex="0" GridPane.rowIndex="6"/>
                                 <Label styleClass="card-label" text="Time" GridPane.columnIndex="1" GridPane.rowIndex="6"/>
@@ -120,7 +131,7 @@
                             </children>
                         </GridPane>
 
-                        <Separator opacity="0.2" />
+                        <Separator opacity="0.1" />
 
                         <GridPane hgap="10.0" vgap="10.0">
                             <columnConstraints>

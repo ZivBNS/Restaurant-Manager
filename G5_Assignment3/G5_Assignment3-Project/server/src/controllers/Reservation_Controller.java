@@ -43,6 +43,7 @@ public class Reservation_Controller {
             case GET_LATEST_RESERVATION_BY_PHONE: return getLatestReservationById(msg);
             case GET_LATEST_RESERVATION_BY_EMAIL: return getLatestReservationByEmail(msg);
             case GET_RESERVATION_HISTORY: return getReservationHistory(msg);
+            case GET_VISIT_HISTORY: return getVisitHistory(msg);
             default: return null;
         }
     }
@@ -353,10 +354,26 @@ public class Reservation_Controller {
     private static Message getReservationHistory(Message msg) {
         try {
             int userId = (int) msg.getContent();
-            List<Reservation> history = reservationRepository.getHistoryByUserId(userId);
+            // Call the new method for ALL history
+            List<Reservation> history = reservationRepository.getAllReservationHistory(userId); 
             return new Message(MessageType.RETURN_RESERVATION_HISTORY, history);
         } catch (Exception e) {
-            return new Message(MessageType.ERROR_RESPONSE, "Failed to fetch history: " + e.getMessage());
+            return new Message(MessageType.ERROR_RESPONSE, "Failed to fetch orders: " + e.getMessage());
+        }
+    }
+    /**
+     * Handles the request to fetch ONLY completed visits (Visit History).
+     * @param msg The message containing the User ID.
+     * @return A message containing the list of completed reservations with bill details.
+     */
+    private static Message getVisitHistory(Message msg) {
+        try {
+            int userId = (int) msg.getContent();
+            List<Reservation> visits = Reservation_Repository.getInstance().getCompletedVisitsByUserId(userId);
+                        return new Message(MessageType.RETURN_VISIT_HISTORY, visits);
+            
+        } catch (Exception e) {
+            return new Message(MessageType.ERROR_RESPONSE, "Failed to fetch visits: " + e.getMessage());
         }
     }
 }

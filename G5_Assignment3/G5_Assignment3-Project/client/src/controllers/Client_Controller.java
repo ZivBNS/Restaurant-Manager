@@ -180,16 +180,33 @@ public class Client_Controller implements ChatIF {
 		        }
 		    }
 		});
-		responseHandlers.put(MessageType.RETURN_RESERVATION_HISTORY, new ResponseHandler() {
-		    @Override
-		    public void handle(Message msg) {
-		        List<Reservation> historyList = (List<Reservation>) msg.getContent();
-		        // We will create OrderHistory_GUI in the next steps
-		        if (OrderHistory_GUI.instance != null) {
-		            OrderHistory_GUI.instance.updateTable(historyList);
-		        }
-		    }
-		});
+		responseHandlers.put(MessageType.RETURN_VISIT_HISTORY, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                Object content = msg.getContent();
+                
+                if (content instanceof List) {
+                    List<Reservation> visits = (List<Reservation>) content;
+                    if (OrderHistory_GUI.instance != null) {
+                        OrderHistory_GUI.instance.updateVisitTable(visits);
+                    }
+                } else {
+                    System.err.println("[Client Error] Expected List<Reservation> but received: " + content.getClass().getSimpleName());
+                    System.err.println("[Server Message]: " + content);
+                }
+            }
+        });
+        
+        // Ensure the existing handler updates the ORDER table
+        responseHandlers.put(MessageType.RETURN_RESERVATION_HISTORY, new ResponseHandler() {
+            @Override
+            public void handle(Message msg) {
+                List<Reservation> history = (List<Reservation>) msg.getContent();
+                if (OrderHistory_GUI.instance != null) {
+                    OrderHistory_GUI.instance.updateOrderTable(history); // Updated method name
+                }
+            }
+        });
 		// -----------------------------------------------------------
 		// Check in and out Actions
 		// -----------------------------------------------------------
@@ -246,11 +263,14 @@ public class Client_Controller implements ChatIF {
 			@Override
 			public void handle(Message msg) {
 				int confirmationCode = (Integer) msg.getContent();
-				if (AddReservation_GUI.instance != null) {
-					AddReservation_GUI.instance.showSuccessAlert(confirmationCode);
-				}
+				
+				// Priority 1: If Admin screen is open, show alert there
 				if (ManageOrders_GUI.instance != null) {
 					ManageOrders_GUI.instance.showSuccessAlert(confirmationCode);
+				}
+				// Priority 2: If Admin is NOT open, check Client screen
+				else if (AddReservation_GUI.instance != null) {
+					AddReservation_GUI.instance.showSuccessAlert(confirmationCode);
 				}
 			}
 		});
@@ -1332,6 +1352,13 @@ public class Client_Controller implements ChatIF {
 	 public void sendCancelReservationRequest(int reservationId) {
 	     sendComplexObject(new Message(MessageType.CANCEL_RESERVATION, reservationId));
 	 }
+	 /**
+	     * Sends a request to get the completed visit history (with bills) for a user.
+	     * @param userId The subscriber ID.
+	     */
+	    public void sendGetVisitHistoryRequest(int userId) {
+	        sendComplexObject(new Message(MessageType.GET_VISIT_HISTORY, userId));
+	    }
 
 	 /**
 	  * asks for the restaurant entity to get the time of the close for today, to refresh at the terminal.

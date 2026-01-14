@@ -358,10 +358,16 @@ public class ManageUsers_GUI {
             stage.setTitle("Order History - " + selectedUser.getUsername());
             stage.setScene(new Scene(root));
             
-            // IMPORTANT: Request the history for the SELECTED user (not the logged-in admin)
-            ConnectToServer_GUI.clientController.sendGetReservationHistoryRequest(selectedUser.getId());
+            // Request BOTH types of history for the SELECTED user
+            int targetUserId = selectedUser.getId();
+            
+            // 1. Request Order History (All reservations)
+            ConnectToServer_GUI.clientController.sendGetReservationHistoryRequest(targetUserId);
+            
+            // 2. Request Visit History (Completed visits with bills)
+            ConnectToServer_GUI.clientController.sendGetVisitHistoryRequest(targetUserId);
 
-            // Show the new window without closing the current one
+            // Show the new window
             stage.show();
             
         } catch (Exception e) {
