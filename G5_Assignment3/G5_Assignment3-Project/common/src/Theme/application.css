@@ -9,12 +9,7 @@
  * Sets the global background with a subtle dot pattern and defines the primary font family.
  */
 .root {
-    -fx-background-image: url("restaurant_background.jpg"); 
-    
-    -fx-background-repeat: no-repeat;
-    -fx-background-size: cover;
-    -fx-background-position: center;
-    
+    -fx-background-color: #111315; /* Pure Matte Black */
     -fx-font-family: "Segoe UI", "Roboto", sans-serif;
     -fx-focus-color: transparent;
     -fx-faint-focus-color: transparent;
