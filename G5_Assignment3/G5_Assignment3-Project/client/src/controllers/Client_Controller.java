@@ -81,11 +81,7 @@ public class Client_Controller implements ChatIF {
 			public void handle(Message msg) {
 				UserRecord userRecord = (UserRecord) msg.getContent();
 				User_Session.setLoggedInUser(userRecord);
-				/*
-				 * Subscribed_Customer sub = new Subscribed_Customer( userRecord.getFirstName(),
-				 * userRecord.getLastName(), userRecord.getPhone(), userRecord.getEmail(),
-				 * userRecord.getUsername(), userRecord.getPassword() );
-				 */
+
 				if (Terminal_GUI.instance != null) {
 					// sub.setUserId(userRecord.getId());
 					Terminal_GUI.instance.handleMessageIfLoggedIn(userRecord);
@@ -745,7 +741,6 @@ public class Client_Controller implements ChatIF {
 		responseHandlers.put(MessageType.UPDATE_USER_DETAILS_RESPONSE_ERR, new ResponseHandler() {
 			@Override
 			public void handle(Message msg) {
-				//User_Session.setLoggedInUser((UserRecord) msg.getContent());
 				if (UpdateProfile_GUI.instance != null) {
 					UpdateProfile_GUI.instance.onError(msg.getContent().toString());
 				}
@@ -942,7 +937,7 @@ public class Client_Controller implements ChatIF {
 
 	/**
      * Helper method to refresh reservations for the currently logged-in user.
-     * UPDATED: Now uses getCasualIdentifier() to support Email logins.
+     * uses getCasualIdentifier() to support Email logins.
      */
     private void refreshUserReservations() {
         Object user;

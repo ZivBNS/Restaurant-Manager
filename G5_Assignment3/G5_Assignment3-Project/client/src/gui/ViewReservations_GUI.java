@@ -53,7 +53,6 @@ public class ViewReservations_GUI {
 	@FXML
 	private ComboBox<String> editTimeCombo;
 
-	/** Spinner replacing the old TextField to manage guest count with constraints */
 	@FXML
 	private Spinner<Integer> editGuestsSpinner;
 

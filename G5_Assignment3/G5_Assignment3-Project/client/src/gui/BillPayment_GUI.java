@@ -74,7 +74,7 @@ public class BillPayment_GUI {
             lblOriginalAmount.setVisible(true);
             lblOriginalAmount.setManaged(true);
 
-            // FIXED: Added a small space before %% to ensure the symbol is fully visible
+            // Added a small space before %% to ensure the symbol is fully visible
             lblDiscountInfo.setText(String.format("✓ Member Discount Applied: %.0f %%", discountPercent));
             lblDiscountInfo.setVisible(true);
             lblDiscountInfo.setManaged(true);

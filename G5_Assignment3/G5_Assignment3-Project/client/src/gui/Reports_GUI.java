@@ -101,9 +101,12 @@ public class Reports_GUI {
      * Updates both charts on the JavaFX thread.
      */
     public void updateReportView(MonthlyFullReportData reportData) {
-        Platform.runLater(() -> {
-            populateTimeChart(reportData.getTimeDetails());
-            populateSubscriberChart(reportData.getSubscriberDetails());
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                populateTimeChart(reportData.getTimeDetails());
+                populateSubscriberChart(reportData.getSubscriberDetails());
+            }
         });
     }
 

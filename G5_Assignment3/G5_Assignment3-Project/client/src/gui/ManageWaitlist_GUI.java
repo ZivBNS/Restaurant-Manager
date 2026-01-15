@@ -20,8 +20,8 @@ import javafx.scene.control.cell.MapValueFactory;
 import javafx.stage.Stage;
 
 /**
- * Controller for the Waitlist Management Screen.
- * Now includes functionality to cancel a selected waitlist entry.
+ * Controller class for the Manage Waitlist screen. Handles displaying and
+ * managing waitlist entries for reservations.
  */
 public class ManageWaitlist_GUI {
 

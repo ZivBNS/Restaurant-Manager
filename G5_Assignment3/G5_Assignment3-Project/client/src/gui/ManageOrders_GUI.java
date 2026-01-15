@@ -665,7 +665,6 @@ public class ManageOrders_GUI {
 		});
 	}
 
-	// NEW: Called when an update is successful
     /**
      * Displays a success alert when a reservation is updated successfully.
      */
@@ -716,6 +715,6 @@ public class ManageOrders_GUI {
 	public void refreshHours() {
         if (datePicker.getValue() != null) {
             loadDynamicHours(datePicker.getValue(), null); 
-        }
-    }
+		}
+	}
 }

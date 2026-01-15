@@ -977,18 +977,26 @@ public class Reservation_Repository {
     }
 
     /**
-     * Retrieves ONLY completed visits for a user, including bill details.
-     * This corresponds to the "Visit History" tab.
-     * @param userId The subscriber ID.
-     * @return List of completed reservations with bills.
+     * Retrieves the history of completed dining visits for a specific user.
+     * <p>
+     * This method fetches reservations that strictly meet two conditions:
+     * 1. The reservation status is 'Completed'.
+     * 2. There is an associated Bill record in the database.
+     * </p>
+     * * @param userId The unique ID of the subscriber.
+     * @return A List of Reservation objects populated with their associated Bill details.
      */
     public List<Reservation> getCompletedVisitsByUserId(int userId) {
         List<Reservation> results = new ArrayList<>();
         
+        // SQL Query construction:
+        // We use 'JOIN' (which is an INNER JOIN) instead of 'LEFT JOIN'.
+        // This acts as a filter: if a reservation does not have a matching row in the Bills table,
+        // it will be excluded from the results entirely.
         String sql = "SELECT r.*, " +
                      "b.ID AS BillID, b.TotalAmount, b.BillDetails, b.DiscountPercentage, b.Status AS BillStatus " +
                      "FROM Reservations r " +
-                     "LEFT JOIN Bills b ON r.ID = b.ReservationID " +
+                     "JOIN Bills b ON r.ID = b.ReservationID " + 
                      "WHERE r.UserID = ? AND r.Status = 'Completed' " +
                      "ORDER BY r.ReservationStartTime DESC";
         
@@ -1000,21 +1008,25 @@ public class Reservation_Repository {
                 
                 try (ResultSet rs = pstmt.executeQuery()) {
                     while (rs.next()) {
+                        // 1. Extract the base Reservation data
                         Reservation res = extractReservationFromResultSet(rs);
                         
-                        // Extract Bill Data
+                        // 2. Extract the Bill data
+                        // Since we used INNER JOIN, we are guaranteed that BillID is valid and exists.
                         int billId = rs.getInt("BillID");
-                        if (billId > 0) {
-                            entities.Bill bill = new entities.Bill(
-                                billId,
-                                res.getId(),
-                                rs.getString("BillDetails"),
-                                rs.getDouble("TotalAmount"),
-                                rs.getString("BillStatus"),
-                                rs.getDouble("DiscountPercentage")
-                            );
-                            res.setBill(bill);
-                        }
+                        
+                        entities.Bill bill = new entities.Bill(
+                            billId,
+                            res.getId(),
+                            rs.getString("BillDetails"),
+                            rs.getDouble("TotalAmount"),
+                            rs.getString("BillStatus"),
+                            rs.getDouble("DiscountPercentage")
+                        );
+                        
+                        // 3. Attach the Bill object to the Reservation
+                        res.setBill(bill);
+                        
                         results.add(res);
                     }
                 }

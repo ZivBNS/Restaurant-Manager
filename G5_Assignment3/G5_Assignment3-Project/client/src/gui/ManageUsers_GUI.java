@@ -26,8 +26,6 @@ import messages.MessageType;
 
 public class ManageUsers_GUI {
 
-	// --- FXML UI Bindings ---
-	// searchField Removed
 	@FXML
 	private TableView<UserRecord> usersTable;
 	@FXML
@@ -258,7 +256,7 @@ public class ManageUsers_GUI {
 		clearAllFieldStyles();
 		clearForm();
 
-		// Reset Button States manually (though listener handles it too)
+		// Reset Button States manually
 		saveBtn.setDisable(false);
 		updateBtn.setDisable(true);
 		deleteBtn.setDisable(true);

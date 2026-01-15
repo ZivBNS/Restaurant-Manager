@@ -220,7 +220,6 @@ public class MainScreen_GUI {
             return;
         }
         stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        //stage.centerOnScreen();
 
         LoginData loginData = new LoginData(username, password);
         ConnectToServer_GUI.clientController.sendSubscriberLoginRequest(loginData);
@@ -238,12 +237,10 @@ public class MainScreen_GUI {
 
         // 1. Basic Validation
         if (!checkFieldsValid(username,password)) {
-        	//add error msg
             return;
         }
         
         if (!checkConnectionToServer()) {
-        	//add error msg
             return;
         }
         stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
@@ -282,7 +279,6 @@ public class MainScreen_GUI {
      */
     public void onEmployeeLoginSuccess(UserRecord user) {
         try {
-            // Note: Changed file name to Workers.fxml based on your previous code
         	User_Session.setLoggedInUser(user);
             FXMLLoader loader = new FXMLLoader(getClass().getResource("Workers.fxml")); 
             Parent root = loader.load();
@@ -352,7 +348,6 @@ public class MainScreen_GUI {
             Parent root = loader.load();
             
             User_Session.setLoggedInUser(user);
-            // Switch scene
             stage.setScene(new Scene(root));
             stage.centerOnScreen();
 
