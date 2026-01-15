@@ -73,23 +73,21 @@ public class UpdateProfile_GUI {
 
         if (txtFirstName.getText().isEmpty() || txtLastName.getText().isEmpty()
                 || txtPhone.getText().isEmpty() || txtEmail.getText().isEmpty()) {
-            lblError.setText("Please fill all fields.");
-            lblError.setVisible(true);
+        	onError("Please fill all fields.");
             return;
         }
 
         if (!DataChecker.validateContactInfo(txtEmail.getText(), txtPhone.getText())) {
-			lblError.setText("Invalid email or phone format.");
-			lblError.setVisible(true);
+        	onError("Invalid email or phone format.");
 			return;
 		}
         
         if (!isValidName(txtFirstName.getText())) {
-        	lblError.setText("Invalid first name");
+        	onError("Invalid first name");
 			return;
 		}
 		if (!isValidName(txtLastName.getText())) {
-			lblError.setText("Invalid last name");
+			onError("Invalid last name");
 			return;
 		}
 
