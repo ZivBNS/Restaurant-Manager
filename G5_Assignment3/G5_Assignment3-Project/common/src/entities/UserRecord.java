@@ -26,7 +26,7 @@ public class UserRecord{
     private Integer subscriberCode;
 
     /**
-     * Full constructor for creating a UserRecord, typically used when retrieving data from the database.
+     * Full constructor for creating a UserRecord, used for employees and subscribers.
      * * @param id The user's unique ID.
      * @param firstName User's first name.
      * @param lastName User's last name.
@@ -51,7 +51,7 @@ public class UserRecord{
     }
 
     /**
-     * Partial constructor used for identification purposes via contact info.
+     * Partial constructor used guest users
      * * @param phone The user's phone number.
      * @param email The user's email address.
      */

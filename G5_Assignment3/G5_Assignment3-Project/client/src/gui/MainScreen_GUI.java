@@ -344,24 +344,25 @@ public class MainScreen_GUI {
     /**
      * Handles successful guest login by navigating to the Casual Customer Dashboard.
      */
-    public void onGuestLoginSuccess() {
+    public void onGuestLoginSuccess(UserRecord user) {
     	try {
         	
             // 3. Load the Casual Customer Dashboard
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/CasualCustomer.fxml"));
             Parent root = loader.load();
             
+            User_Session.setLoggedInUser(user);
             // Switch scene
             stage.setScene(new Scene(root));
             stage.centerOnScreen();
 
-            stage.setTitle("Bistro - Member Dashboard");
+            stage.setTitle("Bistro - Guest Dashboard");
             stage.show();
         	instance = null;
             System.out.println("MainScreen: Casual Session Started ");
 
         } catch (IOException e) {
-            System.err.println("Error loading SubscribedCustomer.fxml");
+            System.err.println("Error loading CasualCustomer.fxml");
             e.printStackTrace();
             casualErrorLabel.setText("System error loading dashboard.");
             casualErrorLabel.setVisible(true);

@@ -14,6 +14,7 @@ import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import messages.Message;
 import messages.MessageType;
+import utils.DataChecker;
 import utils.User_Session;
 
 /**
@@ -77,9 +78,21 @@ public class UpdateProfile_GUI {
             return;
         }
 
+        if (!DataChecker.validateContactInfo(txtEmail.getText(), txtPhone.getText())) {
+			lblError.setText("Invalid email or phone format.");
+			lblError.setVisible(true);
+			return;
+		}
+        
+        if (!isValidName(txtFirstName.getText())) {
+        	lblError.setText("Invalid first name");
+			return;
+		}
+		if (!isValidName(txtLastName.getText())) {
+			lblError.setText("Invalid last name");
+			return;
+		}
 
-        System.out.println( currentUser);
-        System.out.println( currentUser.getSubscriberCode());
         UserRecord updated = new UserRecord(
         		currentUser.getId(), txtFirstName.getText(), txtLastName.getText(),
         		txtPhone.getText(), txtEmail.getText(), txtUsername.getText(),
@@ -135,18 +148,32 @@ public class UpdateProfile_GUI {
             // Reset flag
             this.isUpdatePending = false;
         } 
-        // Case B (Else): Admin updated me. We updated the fields above, so we just do nothing else.
+        
+    }
+    
+    /**
+     * Called when a server broadcast updates the user list.
+     */
+    public void onBroadcastRefresh() {
+        // Update fields to match latest server state
+        setUser(User_Session.getLoggedInUser());
     }
     
     /**
  	 * Called when there is an error updating the profile.
  	 * Displays an error message.
      */
-    public void onError() {
-        lblError.setText("Error");
+    public void onError(String errorMessage) {
+        lblError.setText(errorMessage);
         lblError.setStyle("-fx-text-fill: red;");
         lblError.setVisible(true);
     }
+    
+	// Validation Helper
+	private boolean isValidName(String name) {
+		return name != null && !name.trim().isEmpty() && name.matches("[A-Za-z ]+");
+	}
+
 }
 
 

@@ -152,6 +152,27 @@ public class User_Controller {
         String err = validateForUpdate(u);
         if (err != null) return new Message(MessageType.EDIT_USER_RESPONSE_ERR, err);
 
+        // Check that username isn't taken by another user
+        if (repo.existsByUsername(u.getUsername())) {
+            // if username exists, ensure it's not the current user (by ID)
+            UserRecord existing = repo.getByID(u.getId());
+            if (existing == null || !u.getUsername().equals(existing.getUsername())) {
+                return new Message(MessageType.EDIT_USER_RESPONSE_ERR, "Username already exists.");
+            }
+        }
+
+        // Check for email/phone uniqueness excluding this user own record
+        int id = u.getId();
+        String phone = "";
+        try { phone = u.getPhone(); } catch (NumberFormatException ignored) {}
+        
+        if (!isBlank(u.getEmail()) && repo.existsByEmailExcludingId(u.getEmail(), id)) {
+            return new Message(MessageType.EDIT_USER_RESPONSE_ERR, "Email already exists.");
+        }
+        if (!isBlank(phone) && repo.existsByPhoneExcludingId(phone, id)) {
+            return new Message(MessageType.EDIT_USER_RESPONSE_ERR, "Phone already exists.");
+        }
+
         boolean ok = repo.updateUser(u);
         return ok
             ? new Message(MessageType.EDIT_USER_RESPONSE_OK, "User updated.")
@@ -185,11 +206,23 @@ public class User_Controller {
         String err = validateForUpdate(u);
         if (err != null) return new Message(MessageType.UPDATE_USER_DETAILS_RESPONSE_ERR, err);
 
+        // Ensure email/phone uniqueness excluding the users own record
+        int id = u.getId();
+        String phone = "";
+        try { phone = u.getPhone(); } catch (NumberFormatException ignored) {}
+        
+        if (!isBlank(u.getEmail()) && repo.existsByEmailExcludingId(u.getEmail(), id)) {
+            return new Message(MessageType.UPDATE_USER_DETAILS_RESPONSE_ERR, "Email already exists.");
+        }
+        if (!isBlank(phone) && repo.existsByPhoneExcludingId(phone, id)) {
+            return new Message(MessageType.UPDATE_USER_DETAILS_RESPONSE_ERR, "Phone already exists.");
+        }
+
         boolean ok = repo.updateUser(u);
         UserRecord userToReturn = repo.getByID(u.getId());
         return ok
             ? new Message(MessageType.UPDATE_USER_DETAILS_RESPONSE_OK, userToReturn)
-            : new Message(MessageType.UPDATE_USER_DETAILS_RESPONSE_ERR, userToReturn);
+            : new Message(MessageType.UPDATE_USER_DETAILS_RESPONSE_ERR, "Failed to update user.");
     }
 
     /**

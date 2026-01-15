@@ -250,32 +250,82 @@ public class User_Repository {
      * @return true if the username exists in the database.
      */
 	public boolean existsByUsername(String username) {
-	    PooledConnection pConn = null;
+        PooledConnection pConn = null;
 
-	    String sql =
-	        "SELECT 1 FROM users WHERE Username = ? LIMIT 1";
+        String sql =
+            "SELECT 1 FROM users WHERE Username = ? LIMIT 1";
 
-	    try {
-	        pConn = db.getConnection();
+        try {
+            pConn = db.getConnection();
 
-	        try (PreparedStatement ps =
-	                 pConn.getConnection().prepareStatement(sql)) {
+            try (PreparedStatement ps =
+                     pConn.getConnection().prepareStatement(sql)) {
 
-	            ps.setString(1, username);
+                ps.setString(1, username);
 
-	            try (ResultSet rs = ps.executeQuery()) {
-	                return rs.next(); // true if a row exists
-	            }
-	        }
+                try (ResultSet rs = ps.executeQuery()) {
+                    return rs.next(); // true if a row exists
+                }
+            }
 
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	    } finally {
-	        if (pConn != null) db.releaseConnection(pConn);
-	    }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            if (pConn != null) db.releaseConnection(pConn);
+        }
 
-	    return false;
-	}
+        return false;
+    }
+
+    /**
+     * Checks whether an email exists on any other user than the provided ID.
+     * Used to validate updates so a user can keep their own email without failing the uniqueness check.
+     */
+    public boolean existsByEmailExcludingId(String email, int excludeId) {
+        if (email == null || email.trim().isEmpty()) return false;
+        PooledConnection pConn = null;
+        String sql = "SELECT 1 FROM users WHERE Email = ? AND identity <> 'Deleted' AND ID <> ? LIMIT 1";
+        try {
+            pConn = db.getConnection();
+            try (PreparedStatement ps = pConn.getConnection().prepareStatement(sql)) {
+                ps.setString(1, email.trim());
+                ps.setInt(2, excludeId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    return rs.next();
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            if (pConn != null) db.releaseConnection(pConn);
+        }
+        return false;
+    }
+
+    /**
+     * Checks whether a phone exists on any other user than the provided ID.
+     * Used to validate updates so a user can keep their own phone without failing the uniqueness check.
+     */
+    public boolean existsByPhoneExcludingId(String phone, int excludeId) {
+        if (phone == null || phone.isEmpty()) return false;
+        PooledConnection pConn = null;
+        String sql = "SELECT 1 FROM users WHERE Phone = ? AND identity <> 'Deleted' AND ID <> ? LIMIT 1";
+        try {
+            pConn = db.getConnection();
+            try (PreparedStatement ps = pConn.getConnection().prepareStatement(sql)) {
+                ps.setString(1, phone);
+                ps.setInt(2, excludeId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    return rs.next();
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            if (pConn != null) db.releaseConnection(pConn);
+        }
+        return false;
+    }
 
     /**
      * Inserts a new user into the database and generates their unique subscriber code.

@@ -71,7 +71,7 @@ public class Client_Controller implements ChatIF {
 			@Override
 			public void handle(Message msg) {
 				if (MainScreen_GUI.instance != null) {
-					MainScreen_GUI.instance.onGuestLoginSuccess();
+					MainScreen_GUI.instance.onGuestLoginSuccess((UserRecord) msg.getContent());
 				}
 			}
 		});
@@ -683,7 +683,7 @@ public class Client_Controller implements ChatIF {
                             manageUsers_GUI.handle(msg);
                         }
 
-                        // 2. Refresh Personal Profile Screen (Critical Part!)
+                        // 2. Refresh Personal Profile Screen 
                         if (UpdateProfile_GUI.instance != null && User_Session.getLoggedInUser() != null) {
                             int myId = User_Session.getLoggedInUser().getId();
                             
@@ -691,7 +691,7 @@ public class Client_Controller implements ChatIF {
                                 if (u.getId() == myId) {
                                     User_Session.setLoggedInUser(u);
                                     
-                                    UpdateProfile_GUI.instance.onRefresh(); 
+                                    UpdateProfile_GUI.instance.onBroadcastRefresh(); 
                                     break;
                                 }
                             }
@@ -745,9 +745,9 @@ public class Client_Controller implements ChatIF {
 		responseHandlers.put(MessageType.UPDATE_USER_DETAILS_RESPONSE_ERR, new ResponseHandler() {
 			@Override
 			public void handle(Message msg) {
-				User_Session.setLoggedInUser((UserRecord) msg.getContent());
+				//User_Session.setLoggedInUser((UserRecord) msg.getContent());
 				if (UpdateProfile_GUI.instance != null) {
-					UpdateProfile_GUI.instance.onError();
+					UpdateProfile_GUI.instance.onError(msg.getContent().toString());
 				}
 			}
 		});

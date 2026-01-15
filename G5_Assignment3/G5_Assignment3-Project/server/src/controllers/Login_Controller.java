@@ -84,7 +84,8 @@ public class Login_Controller {
     	System.out.println("[Login_Controller] Recieved login request from casual user: ");
         boolean userFound = userRepository.getByEmailOrPhone(email, phone);
         if (!userFound) {
-        	return new Message(MessageType.LOGIN_SUCCESS_GUEST);
+        	UserRecord guestUser = new UserRecord(phone, email);
+        	return new Message(MessageType.LOGIN_SUCCESS_GUEST, guestUser);
         }else {
         	System.out.println("[Login_Controller] Email or Phone for guest user already exist in database ");
         	return new Message(MessageType.LOGIN_FAILED_GUEST); // message string is intentionally empty 
