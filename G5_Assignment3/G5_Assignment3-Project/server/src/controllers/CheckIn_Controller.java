@@ -134,7 +134,7 @@ public class CheckIn_Controller {
 	    double baseAmount = BigDecimal.valueOf(rawRandom).setScale(1, RoundingMode.HALF_UP).doubleValue();
 	    newBill.setTotalAmount(baseAmount+5);
 	    newBill.setStatus("Unpaid");
-	    String details = String.format("Food & Drinks - %.1f$\nTips - 3$\nSitting - 2$", baseAmount);
+	    String details = String.format("Food & Drinks - %.1f₪\nTips - 3₪\nSitting - 2₪", baseAmount);
 	    newBill.setBillDetails(details);
 
 	    return billRepository.set(newBill);

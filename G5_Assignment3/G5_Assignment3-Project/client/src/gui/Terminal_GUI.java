@@ -880,7 +880,7 @@ public class Terminal_GUI {
                 String finalAmount= String.format("%.1f", (bill.calculateFinalAmount()));
                 if (bill.getBillDetails()==null || bill.getBillDetails().isEmpty()) bill.setBillDetails("");
                 String isUser = (currentBillToPay.getDiscountRate()!=0)? "\nUser Discount - 10%": "";
-                payBillStatusLabel.setText(bill.getBillDetails() + isUser + "\n\nTotal to Pay: " + finalAmount + "$");
+                payBillStatusLabel.setText(bill.getBillDetails() + isUser + "\n\nTotal to Pay: " + finalAmount + "₪");
                 payBillStatusLabel.setStyle("-fx-text-fill: #2c3e50; -fx-font-size: 14px;");
                 payBillStatusLabel.setVisible(true);
                 

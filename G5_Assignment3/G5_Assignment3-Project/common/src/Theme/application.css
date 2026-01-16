@@ -678,9 +678,11 @@
  */
 .discount-label {
     -fx-text-fill: #2ecc71;
-    -fx-font-size: 13px;
+    -fx-font-size: 14px;
     -fx-font-weight: bold;
-    /* This ensures the label doesn't cut off the symbol */
-    -fx-min-width: 250px; 
-    -fx-padding: 0 10 0 0; 
+    -fx-min-width: 280px;
+    -fx-max-width: infinity;
+    -fx-padding: 5 10 5 0; 
+    -fx-line-spacing: 5;
+    -fx-alignment: CENTER_LEFT;
 }

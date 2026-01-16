@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane prefHeight="600.0" prefWidth="450.0" stylesheets="/Theme/application.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.BillPayment_GUI">
+<BorderPane prefHeight="650.0" prefWidth="480.0" stylesheets="/Theme/application.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.BillPayment_GUI">
 
     <top>
         <VBox alignment="CENTER" spacing="10">
@@ -29,7 +29,7 @@
                 <Insets bottom="20" left="20" right="20" top="10" />
             </padding>
             <children>
-                <VBox maxWidth="350" spacing="20" styleClass="card" style="-fx-background-color: #1e1e26; -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 10, 0, 0, 5);">
+                <VBox maxWidth="400" spacing="20" styleClass="card" style="-fx-background-color: #1e1e26; -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 10, 0, 0, 5);">
                     <padding>
                         <Insets bottom="30" left="30" right="30" top="30" />
                     </padding>
@@ -42,38 +42,40 @@
                             </children>
                         </HBox>
 
-                        <VBox spacing="8" style="-fx-background-color: rgba(255,255,255,0.03); -fx-padding: 15; -fx-background-radius: 10; -fx-border-color: rgba(212, 163, 88, 0.2); -fx-border-radius: 10;">
+                        <VBox spacing="10" style="-fx-background-color: rgba(255,255,255,0.03); -fx-padding: 18; -fx-background-radius: 10; -fx-border-color: rgba(212, 163, 88, 0.2); -fx-border-radius: 10;">
                             <children>
-                                <Label styleClass="card-label" text="Payment Summary" style="-fx-font-size: 12px; -fx-opacity: 0.7;" />
+                                <Label styleClass="card-label" style="-fx-font-size: 12px; -fx-opacity: 0.7;" text="Payment Summary" />
                                 
-                                <Label fx:id="lblOriginalAmount" managed="false" visible="false" 
-                                       style="-fx-text-fill: #999999; -fx-font-size: 14px; -fx-strikethrough: true;" />
+                                <Label fx:id="lblOriginalAmount" managed="false" style="-fx-text-fill: #999999; -fx-font-size: 14px; -fx-strikethrough: true;" visible="false" />
                                 
-                                <Label fx:id="lblDiscountInfo" managed="false" visible="false" maxWidth="Infinity"
-                                       style="-fx-text-fill: #2ecc71; -fx-font-size: 13px; -fx-font-weight: bold; -fx-padding: 0 5 0 0;" />
+                                <HBox alignment="CENTER_LEFT">
+                                    <children>
+                                        <Label fx:id="lblDiscountInfo" managed="false" style="-fx-text-fill: #2ecc71; -fx-font-size: 15px; -fx-font-weight: bold;" visible="false" wrapText="false" />
+                                    </children>
+                                </HBox>
                                 
                                 <Separator opacity="0.1" />
                                 
-                                <HBox alignment="BASELINE_LEFT" spacing="8">
+                                <HBox alignment="BASELINE_LEFT" spacing="10">
                                     <children>
-                                        <Label style="-fx-text-fill: white; -fx-font-size: 15px;" text="Total to Pay:" />
-                                        <Label fx:id="lblTotalAmount" style="-fx-text-fill: #d4a358; -fx-font-size: 24px; -fx-font-weight: bold;" />
+                                        <Label style="-fx-text-fill: white; -fx-font-size: 16px;" text="Total to Pay:" />
+                                        <Label fx:id="lblTotalAmount" style="-fx-text-fill: #d4a358; -fx-font-size: 26px; -fx-font-weight: bold;" />
                                     </children>
                                 </HBox>
                             </children>
                         </VBox>
 
-                        <VBox spacing="6">
+                        <VBox spacing="8">
                             <children>
                                 <Label styleClass="card-label" text="Bill Details" />
-                                <Label fx:id="lblBillDetails" maxWidth="280" style="-fx-text-fill: white; -fx-font-size: 14px;" wrapText="true" />
+                                <Label fx:id="lblBillDetails" maxWidth="340" minHeight="-Infinity" style="-fx-text-fill: white; -fx-font-size: 14px; -fx-line-spacing: 3;" wrapText="true" />
                             </children>
                         </VBox>
 
                         <VBox spacing="12">
-                            <padding><Insets top="10"/></padding>
+                            <padding><Insets top="10" /></padding>
                             <children>
-                                <Button fx:id="btnPay" maxWidth="Infinity" onAction="#onPay" prefHeight="45" styleClass="button, btn-primary" text="Confirm &amp; Pay" />
+                                <Button fx:id="btnPay" maxWidth="Infinity" onAction="#onPay" prefHeight="50" styleClass="button, btn-primary" text="Confirm &amp; Pay" />
                                 <Button maxWidth="Infinity" onAction="#onBackClicked" prefHeight="45" styleClass="button, btn-secondary" text="Back" />
                             </children>
                         </VBox>
@@ -82,13 +84,6 @@
             </children>
         </VBox>
     </center>
-
-    <bottom>
-        <VBox alignment="CENTER">
-            <padding><Insets bottom="15" top="10" /></padding>
-
-        </VBox>
-    </bottom>
 </BorderPane>
 
 

@@ -86,8 +86,7 @@ public class Bill {
      */
     public double calculateFinalAmount() {
         // 1. Calculate the raw result using double
-        double discountFactor = UserDiscountRate / 100.0;
-        double rawResult = totalAmount * (1 - discountFactor);
+        double rawResult = totalAmount * (1 - discountRate);
 
         // 2. Convert to BigDecimal for precise rounding
         BigDecimal bd = new BigDecimal(Double.toString(rawResult));
