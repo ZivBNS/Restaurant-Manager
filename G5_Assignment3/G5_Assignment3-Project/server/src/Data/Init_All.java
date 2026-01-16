@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import entities.Bill;
 import entities.Restaurant_Table;
 
 /**
@@ -176,7 +177,7 @@ public class Init_All {
 
     /**
      * Generates bills for all 'Completed' reservations.
-     * Applies a 15% discount if the customer is a Subscriber.
+     * Applies a 10% discount if the customer is a Subscriber.
      * * @param con  the database connection.
      * @param stmt the statement object for executing SQL.
      */
@@ -205,7 +206,7 @@ public class Init_All {
                 // 2. Determine Discount (10% for Subscribers)
                 double discount = 0.0;
                 if ("Subscriber".equalsIgnoreCase(identity)) {
-                    discount = 10.0;
+                    discount = 0.10;
                 }
 
                 // 3. Generate Details based on price
@@ -281,6 +282,7 @@ public class Init_All {
      */
     private static void initReservations(Connection con, Statement stmt) {
         int lastCode = 200000;
+        int lastIdForCreatingExistingReservations=521;
         List<Integer> userIds = new ArrayList<Integer>();
         Map<Integer, String[]> userData = new HashMap<Integer, String[]>();
 
@@ -365,7 +367,7 @@ public class Init_All {
                     
                     LocalDateTime actArr = start.plusMinutes(2); 
 
-                    int numDiners = 2 + (int)(Math.random() * 4);
+                    int numDiners = 2;
                     int tableId = 1 + (int)(Math.random() * 10);
 
                     ps.setInt(1, uid);
@@ -384,6 +386,10 @@ public class Init_All {
                 }
 
                 ps.executeBatch();
+                for (int i = 0; i < activeTables; i++) {
+                    Bill_Repository.getInstance().createBill(new Bill(lastIdForCreatingExistingReservations++, true));
+                }                
+                
             }
             System.out.println("Reservations: Init complete (History, Future-Pending, Live-Active).");
         } catch (SQLException e) { 
@@ -427,24 +433,21 @@ public class Init_All {
             }
 
             // --- Part B: Active Waitlist (People currently waiting) ---
-            // אנחנו שולפים הזמנות עתידיות/ממתינות (Pending) ומדמים שהן ברשימת המתנה כרגע
-            String selectPending = "SELECT ID, ReservationStartTime FROM Reservations " +
-                                   "WHERE Status = 'Pending' LIMIT 3"; // ניקח 3 אנשים שמחכים
-            
+            /*String selectPending = "SELECT ID, ReservationStartTime FROM Reservations " +
+                                   "WHERE Status = 'Pending' LIMIT 3";            
             try (ResultSet rsPending = stmt.executeQuery(selectPending)) {
                 while (rsPending.next()) {
                     int resId = rsPending.getInt("ID");
                     
-                    // הם נכנסו לרשימה לפני 10 דקות
                     LocalDateTime created = LocalDateTime.now().minusMinutes(10 + (int)(Math.random()*15));
 
                     ps.setInt(1, resId);
-                    ps.setString(2, "Waiting"); // הם עדיין ברשימה
+                    ps.setString(2, "Waiting");
                     ps.setTimestamp(3, Timestamp.valueOf(created));
-                    ps.setNull(4, java.sql.Types.TIMESTAMP); // עדיין לא התפנה שולחן (NULL)
+                    ps.setNull(4, java.sql.Types.TIMESTAMP);
                     ps.addBatch();
                 }
-            }
+            }*/
 
             ps.executeBatch();
             System.out.println("Waitlist: Initialized (Historical & Active).");

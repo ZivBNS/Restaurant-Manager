@@ -231,7 +231,6 @@ public class User_Repository {
      */
 	private UserRecord mapRowToUser(ResultSet rs) throws SQLException {
         return new UserRecord(
-
         	rs.getInt("ID"),
             rs.getString("firstName"),
             rs.getString("lastName"),

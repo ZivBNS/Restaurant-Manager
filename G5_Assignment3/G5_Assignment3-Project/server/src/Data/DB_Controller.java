@@ -19,7 +19,7 @@ public class DB_Controller {
     private static DB_Controller instance;
     
     /** Database connection details. */
-    private final String DB_URL = "jdbc:mysql://localhost:3306/bistro?serverTimezone=Asia/Jerusalem&useSSL=false&allowPublicKeyRetrieval=true";
+    private final String DB_URL = "jdbc:mysql://localhost:3306/bistro?serverTimezone=Asia/Jerusalem&useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true";
     private final String USER = "root";
     private final String[] PASS = {"8630547","zaqwsxcde321","212009666","Aa123456"};
     private final int MAX_POOL_SIZE = 10;
