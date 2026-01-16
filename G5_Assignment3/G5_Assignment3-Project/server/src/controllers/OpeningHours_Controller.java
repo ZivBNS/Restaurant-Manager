@@ -52,49 +52,61 @@ public class OpeningHours_Controller {
     }
 
     /**
-     * Handles a batch update message containing data for all days.
-     * <p><strong>Validation:</strong> Checks if any proposed change conflicts with
-     * existing future reservations (e.g., closing a day that has bookings).</p>
-     * * @param msg Message containing a Map of DayOfWeek to [OpenTime, CloseTime, IsActive].
-     * @return Success message with updated data, or Error message with conflict details.
+     * Handles a batch update message.
+     * Supports "Forced Update" via a boolean flag.
+     * If not forced, checks for conflicts and returns the latest conflict date.
+     * * @param msg Message containing a Map with "schedule" (Map<DayOfWeek, Object[]>) and "force" (Boolean).
+     * @return Success message or Conflict error with the date.
      */
     private static Message handleBatchUpdate(Message msg) {
         try {
+            // Unpack the wrapper map
             @SuppressWarnings("unchecked")
-            Map<DayOfWeek, Object[]> batchData = (Map<DayOfWeek, Object[]>) msg.getContent();
+            Map<String, Object> requestData = (Map<String, Object>) msg.getContent();
             
-            // --- VALIDATION STEP ---
-            Reservation_Repository resRepo = Reservation_Repository.getInstance();
-            
-            // Iterate through the proposed changes to check for conflicts
-            for (Map.Entry<DayOfWeek, Object[]> entry : batchData.entrySet()) {
-                DayOfWeek day = entry.getKey();
-                LocalTime open = (LocalTime) entry.getValue()[0];
-                LocalTime close = (LocalTime) entry.getValue()[1];
-                boolean active = (Boolean) entry.getValue()[2];
+            @SuppressWarnings("unchecked")
+            Map<DayOfWeek, Object[]> batchData = (Map<DayOfWeek, Object[]>) requestData.get("schedule");
+            boolean isForced = (Boolean) requestData.get("force");
 
-                // Query the Reservation Repository to see if this change affects active bookings
-                LocalDate conflictDate = resRepo.findConflictForRegularUpdate(day, open, close, active);
+            // If NOT forced, perform validation
+            if (!isForced) {
+                Reservation_Repository resRepo = Reservation_Repository.getInstance();
                 
-                if (conflictDate != null) {
-                    return new Message(MessageType.OPENING_HOURS_UPDATE_CONFLICT_ERROR, 
-                        "Cannot update " + day + " hours.\n" +
-                        "Existing reservations conflict with this change.\n" +
-                        "Latest conflict found on: " + conflictDate);
+                // Iterate to find the LATEST conflict date across all days
+                LocalDate maxConflictDate = null;
+
+                for (Map.Entry<DayOfWeek, Object[]> entry : batchData.entrySet()) {
+                    DayOfWeek day = entry.getKey();
+                    LocalTime open = (LocalTime) entry.getValue()[0];
+                    LocalTime close = (LocalTime) entry.getValue()[1];
+                    boolean active = (Boolean) entry.getValue()[2];
+
+                    LocalDate conflict = resRepo.findConflictForRegularUpdate(day, open, close, active);
+                    
+                    if (conflict != null) {
+                        if (maxConflictDate == null || conflict.isAfter(maxConflictDate)) {
+                            maxConflictDate = conflict;
+                        }
+                    }
+                }
+
+                // If any conflict was found, return the error with the DATE object
+                if (maxConflictDate != null) {
+                    return new Message(MessageType.OPENING_HOURS_UPDATE_CONFLICT_ERROR, maxConflictDate);
                 }
             }
-            // -----------------------
 
-            // Proceed with update if validation passes
+            // Proceed with update (either forced or no conflict found)
             boolean success = OpeningHours_Repository.getInstance().updateAllDays(batchData);
             
             if (success) {
-                // Reload data into Singleton before returning to ensure client gets fresh data
                 OpeningHours_Repository.getInstance().init();
                 return new Message(MessageType.RETURN_OPENING_HOURS, Restaurant.getInstance().getOpeningHours());
             }
             return new Message(MessageType.ERROR_RESPONSE, "Batch update failed in DB.");
+
         } catch (Exception e) {
+            e.printStackTrace();
             return new Message(MessageType.ERROR_RESPONSE, "Data formatting error.");
         }
     }

@@ -169,10 +169,7 @@ public class Reservation_Repository {
 	 * @return true if all updates were successful.
 	 */
 	public boolean updateReservationForCheckIn(int confCode, int TableId, ReservationStatus rs) {
-		// UserID INT, TableID INT, Phone VARCHAR(14), Email VARCHAR(35),
-		// ReservationStartTime DATETIME, ReservationEndTime DATETIME ,
-		// ActualArrivalTime DATETIME, ActualDepartureTime DATETIME, NumberOfDiners INT,
-		// ConfirmationCode INT, Status CreationTime DATETIME);
+
 		if(!updateStatusByConfirmationCode(confCode, rs)) {
 			System.out.println("R_R------>>>>>> cannot change status during check in");
 			return false;
@@ -1072,25 +1069,27 @@ public class Reservation_Repository {
     }
 
     /**
-     * Checks if a proposed change to regular weekly hours conflicts with future reservations.
-     * @param dayOfWeek The day of the week being updated.
-     * @param newOpen   The proposed opening time.
-     * @param newClose  The proposed closing time.
-     * @param isActive  The proposed status (false if the restaurant plans to close on that day).
-     * @return The date of the furthest conflicting reservation, or null if no conflicts exist.
+     * Checks for scheduling conflicts between proposed operating hours and existing reservations.
+     * This method handles both standard shifts and overnight shifts (crossing midnight).
+     * * @param targetDay The day of the week to check (e.g., WEDNESDAY).
+     * @param newOpen   The new opening time.
+     * @param newClose  The new closing time.
+     * @param isActive  True if the day is set to be open, False if the day is being closed.
+     * @return The {@link LocalDate} of the furthest future reservation that conflicts with the new hours, 
+     * or {@code null} if no conflicts are found.
      */
-    public LocalDate findConflictForRegularUpdate(DayOfWeek dayOfWeek, LocalTime newOpen, LocalTime newClose, boolean isActive) {
-        // We only care about future reservations
-        String sql = "SELECT ReservationStartTime, ReservationEndTime FROM reservations " +
-                     "WHERE Status IN ('Pending', 'Active') " +
-                     "AND ReservationStartTime > NOW()"; 
-                     
-        // Note: We fetch all future reservations and filter in Java because 
-        // SQL 'DayOfWeek' functions vary by database vendor (MySQL vs others).
+    public LocalDate findConflictForRegularUpdate(DayOfWeek targetDay, LocalTime newOpen, LocalTime newClose, boolean isActive) {
         
-        PooledConnection pConn = null;
-        LocalDate lastConflict = null;
+        LocalDate furthestConflictDate = null;
+        
+        // Check if the shift spans across midnight (e.g., Open 12:00 PM, Close 03:00 AM next day)
+        boolean crossesMidnight = newClose.isBefore(newOpen);
 
+        String sql = "SELECT ID, ReservationStartTime, ReservationEndTime FROM reservations " +
+                     "WHERE Status = 'Pending' " +
+                     "AND ReservationStartTime > NOW()";
+
+        PooledConnection pConn = null;
         try {
             pConn = db.getConnection();
             try (Statement stmt = pConn.getConnection().createStatement();
@@ -1100,27 +1099,53 @@ public class Reservation_Repository {
                     LocalDateTime resStart = rs.getTimestamp("ReservationStartTime").toLocalDateTime();
                     LocalDateTime resEnd = rs.getTimestamp("ReservationEndTime").toLocalDateTime();
 
-                    // Check if this reservation falls on the day we are changing
-                    if (resStart.getDayOfWeek() == dayOfWeek) {
-                        
-                        // Case 1: Proposed to close the day entirely
-                        if (!isActive) {
-                            if (lastConflict == null || resStart.toLocalDate().isAfter(lastConflict)) {
-                                lastConflict = resStart.toLocalDate();
-                            }
-                            continue;
-                        }
+                    // Filter: Ensure we only check reservations that fall on the specific target day
+                    if (resStart.getDayOfWeek() != targetDay) {
+                        continue; 
+                    }
 
-                        // Case 2: Reservation is outside new hours
+                    boolean isConflict = false;
+                    // Scenario A: The user wants to CLOSE the restaurant on this day.
+                    if (!isActive) {
+                        isConflict = true;
+                    } else {
                         LocalTime resStartTime = resStart.toLocalTime();
                         LocalTime resEndTime = resEnd.toLocalTime();
 
-                        // Logic: Conflict if reservation starts before new Open OR ends after new Close
-                        // (Handling midnight crossing logic simply for now: assuming same day shifts)
-                        if (resStartTime.isBefore(newOpen) || resEndTime.isAfter(newClose)) {
-                             if (lastConflict == null || resStart.toLocalDate().isAfter(lastConflict)) {
-                                lastConflict = resStart.toLocalDate();
+                        if (crossesMidnight) {
+                            // --- Logic for Overnight Shifts (e.g., 12:00 to 03:00) ---
+                            // In this scenario, a time is "forbidden" only if it falls in the "closed gap" 
+                            // between the closing time (morning) and opening time (noon).
+                            // i.e., Conflict if time is AFTER 03:00 AND BEFORE 12:00.
+
+                            // Check start time against the closed gap
+                            if (resStartTime.isAfter(newClose) && resStartTime.isBefore(newOpen)) {
+                                isConflict = true;
                             }
+                            // Check end time against the closed gap
+                            else if (resEndTime.isAfter(newClose) && resEndTime.isBefore(newOpen)) {
+                                isConflict = true;
+                            }
+
+                        } else {
+                            // --- Logic for Standard Shifts (e.g., 08:00 to 22:00) ---
+                            // Standard bounds check.
+                            if (resStartTime.isBefore(newOpen)) {
+                                isConflict = true;
+                            } else if (resEndTime.isAfter(newClose)) {
+                                 if (!resEndTime.equals(newClose)) {
+                                    isConflict = true;
+                                 }
+                            }
+                        }
+                    }
+
+                    // If a conflict was found, update the furthest date found so far
+                    if (isConflict) {
+                        LocalDate currentResDate = resStart.toLocalDate();
+                        // We want the MAX date (the furthest one in the future)
+                        if (furthestConflictDate == null || currentResDate.isAfter(furthestConflictDate)) {
+                            furthestConflictDate = currentResDate;
                         }
                     }
                 }
@@ -1130,7 +1155,8 @@ public class Reservation_Repository {
         } finally {
             if (pConn != null) db.releaseConnection(pConn);
         }
-        return lastConflict;
+        
+        return furthestConflictDate;
     }
 
     /**

@@ -91,7 +91,6 @@ public class Table_Repository {
      * @return true if the deactivation was successful, false otherwise.
      */
     public boolean deleteById(int tableNumber) {
-        // SQL CHANGE: Update IsActive instead of Delete
         String sql = "UPDATE tables SET IsActive = 0 WHERE TableNumber = ?";
         
         PooledConnection pConn = null;

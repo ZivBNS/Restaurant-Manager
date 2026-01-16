@@ -122,18 +122,7 @@ public class Reservation_Controller {
             // Default dining duration is 2 hours
             LocalDateTime endTime = startTime.plusHours(2);
             
-            // 3. must check: if the person invite more orders to the same time - result: block him
-//            List<Reservation> checkReservations = tableRepository.getOverlappingReservationsList(startTime, endTime, reservation.getId());
-//            for (Reservation r:checkReservations) {
-//                boolean sameUserId = (r.getUserId() != null && r.getUserId().equals(reservation.getUserId()));
-//                boolean sameEmail = (r.getEmail() != null && !r.getEmail().isEmpty() && r.getEmail().equalsIgnoreCase(reservation.getEmail()));                
-//                boolean samePhone = (r.getPhone() != null && !r.getPhone().isEmpty() && r.getPhone().equals(reservation.getPhone()));
-//                if (sameUserId || sameEmail || samePhone)
-//                	return new Message(MessageType.RESERVATION_FAILED_ALREADY_BOOKED, "It looks like you're already booked with us for this time!\nPlease use your existing confirmation code, or cancel the previous reservation to make a new one.");
-//            }
-            
-
-            // 4. Capacity Check
+            // 3. Capacity Check
             // Check availability for requested time using the Table Repository
             if (!tableRepository.isCapacityAvailable(startTime, endTime, reservation.getNumberOfDiners(), null)) {
                 
@@ -150,7 +139,7 @@ public class Reservation_Controller {
                 return new Message(MessageType.RESERVATION_FAILED_NO_TABLE, suggestedTime);
             }
 
-            // 5. Finalize Reservation Data
+            // 4. Finalize Reservation Data
             // Logical Seating: TableID is NULL until actual arrival (Check-in)
             reservation.setTableId(null); 
             reservation.setOrderEndTime(endTime);
@@ -164,7 +153,7 @@ public class Reservation_Controller {
             	reservation.setOrderEndTime(LocalDateTime.now().withMinute(mnt).withSecond(0).withNano(0).plusHours(2));
             }
             
-            // 6. Asynchronous Notification
+            // 5. Asynchronous Notification
             // Check if email exists before trying to send to prevent errors
             if (reservation.getEmail() != null && !reservation.getEmail().isEmpty()) {
                 System.out.println("[Email Service] Sending Confirmation Email to: " + reservation.getEmail());
@@ -173,7 +162,7 @@ public class Reservation_Controller {
                 System.out.println("[Warning] No email provided. Skipping notification.");
             }
             
-            // 7. Database Persistence
+            // 6. Database Persistence
             if (reservationRepository.set(reservation)) {
                 System.out.println("[Success] Reservation created. Code: " + reservation.getConfirmationCode());
                 return new Message(MessageType.RESERVATION_CONFIRMED, reservation.getConfirmationCode());

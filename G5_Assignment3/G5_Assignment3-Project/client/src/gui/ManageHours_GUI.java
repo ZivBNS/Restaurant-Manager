@@ -153,24 +153,62 @@ public class ManageHours_GUI {
 	 * Validates input before sending.
 	 */
 	private void onSaveBatch() {
-		Map<DayOfWeek, Object[]> batchData = new HashMap<DayOfWeek, Object[]>();
-		for (Map.Entry<DayOfWeek, DayRowControls> entry : dayControlsMap.entrySet()) {
-			DayRowControls controls = entry.getValue();
-			try {
-				LocalTime open = LocalTime.parse(controls.open.getValue());
-				LocalTime close = LocalTime.parse(controls.close.getValue());
-				boolean active = controls.active.isSelected();
-				batchData.put(entry.getKey(), new Object[] { open, close, active });
-			} catch (Exception e) {
-				showAlert("Error", "Please select times for " + entry.getKey());
-				return;
-			}
-		}
-		// Set flag before sending
-		this.updatePending = true;
-		ConnectToServer_GUI.clientController.sendBatchUpdateHours(batchData);
-	}
+        sendBatchRequest(false);
+    }
+	/**
+     * Helper to collect data and send request.
+     * @param force Whether to force the update ignoring conflicts.
+     */
+    private void sendBatchRequest(boolean force) {
+        Map<DayOfWeek, Object[]> batchData = new HashMap<DayOfWeek, Object[]>();
+        for (Map.Entry<DayOfWeek, DayRowControls> entry : dayControlsMap.entrySet()) {
+            DayRowControls controls = entry.getValue();
+            try {
+                LocalTime open = LocalTime.parse(controls.open.getValue());
+                LocalTime close = LocalTime.parse(controls.close.getValue());
+                boolean active = controls.active.isSelected();
+                batchData.put(entry.getKey(), new Object[] { open, close, active });
+            } catch (Exception e) {
+                showAlert("Error", "Please select times for " + entry.getKey());
+                return;
+            }
+        }
+        this.updatePending = true;
+        // Call the updated method in Client_Controller
+        ConnectToServer_GUI.clientController.sendBatchUpdateHours(batchData, force);
+    }
 
+    /**
+     * Displays a confirmation dialog when conflicts are detected.
+     * Allows the user to force the update or cancel and revert changes.
+     * * @param conflictDate The latest date where a reservation conflict exists.
+     */
+    public void showConflictDialog(LocalDate conflictDate) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Schedule Conflict");
+        alert.setHeaderText("Existing reservations conflict with these hours.");
+        
+        String msg = "The latest conflict was found on: " + conflictDate + "\n" +
+                     "You can safely change hours after this date.\n\n" +
+                     "Do you want to FORCE the update? (This DO NOT affect existing bookings, prevant from making new ones)";
+        alert.setContentText(msg);
+
+        ButtonType buttonTypeUpdateAnyway = new ButtonType("Update Anyway");
+        ButtonType buttonTypeCancel = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+        alert.getButtonTypes().setAll(buttonTypeUpdateAnyway, buttonTypeCancel);
+
+        java.util.Optional<ButtonType> result = alert.showAndWait();
+        
+        if (result.isPresent() && result.get() == buttonTypeUpdateAnyway) {
+            // Option 1: User chose to FORCE update -> Send request with force=true
+            sendBatchRequest(true);
+        } else {
+            // Option 2: User chose CANCEL or closed the window -> Revert GUI changes
+            // We request the data from the server again to reset the ComboBoxes/CheckBoxes
+            ConnectToServer_GUI.clientController.sendGetOpeningHoursRequest();
+        }
+    }
 	/**
 	 * Refreshes the UI with the latest Opening_Hours data.
 	 * 

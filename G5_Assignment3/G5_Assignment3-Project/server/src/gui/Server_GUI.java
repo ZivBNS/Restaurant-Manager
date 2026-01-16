@@ -33,7 +33,7 @@ public class Server_GUI extends Application {
     private TextField portField;
     private Button connectBtn;
     private Button exitBtn;
-    private Button initBtn; // New Button
+    private Button initBtn; 
 
     /**
      * Initializes and displays the primary stage with the server control panel.
@@ -87,11 +87,11 @@ public class Server_GUI extends Application {
         Label logLabel = new Label("LIVE SERVER LOG");
         logLabel.getStyleClass().add("card-label");
         
-        // Spacer to push button to right (optional) or just keep it next to label
+        // Spacer to push button to right or just keep it next to label
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        // NEW: Init DB Button
+        // Init DB Button
         initBtn = new Button("INIT DB");
         initBtn.setPrefHeight(30);
         initBtn.getStyleClass().addAll("button", "btn-secondary"); // Style it orange/grey
@@ -127,7 +127,7 @@ public class Server_GUI extends Application {
             }
         });
         
-        // NEW: Init Action
+        // Init Action
         initBtn.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {

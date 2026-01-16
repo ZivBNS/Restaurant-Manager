@@ -59,7 +59,7 @@
                                 <VBox spacing="5">
                                     <children>
                                         <Label styleClass="card-label" text="Date" />
-                                        <DatePicker fx:id="editDatePicker" prefWidth="140" />
+                                        <DatePicker fx:id="editDatePicker" editable="false" prefWidth="140" />
                                     </children>
                                 </VBox>
                 

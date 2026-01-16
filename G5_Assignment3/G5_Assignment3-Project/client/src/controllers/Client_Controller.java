@@ -587,32 +587,24 @@ public class Client_Controller implements ChatIF {
          * Handles the specific error when an opening hours update fails due to
          * existing reservations conflicting with the new schedule.
          */
-        responseHandlers.put(MessageType.OPENING_HOURS_UPDATE_CONFLICT_ERROR, new ResponseHandler() {
-            @Override
-            public void handle(Message msg) {
-                String conflictDetails = (String) msg.getContent();
+		responseHandlers.put(MessageType.OPENING_HOURS_UPDATE_CONFLICT_ERROR, new ResponseHandler() {
+	        @Override
+	        public void handle(Message msg) {
+	            // The server now sends the LocalDate object directly
+	            LocalDate conflictDate = (LocalDate) msg.getContent();
 
-                // Check if the management screen is currently active
-                if (ManageHours_GUI.instance != null) {
-                    
-                    // 1. Critical: Reset the 'pending' flag so the UI logic doesn't get stuck
-                    ManageHours_GUI.instance.setUpdatePending(false);
-
-                    // 2. Display the conflict details in an Error Alert
-                    Platform.runLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            Alert alert = new Alert(Alert.AlertType.ERROR);
-                            alert.setTitle("Update Rejected");
-                            alert.setHeaderText("Schedule Conflict Detected");
-                            alert.setContentText(conflictDetails); // Displays the text sent from Server  
-                            alert.showAndWait();
-                            sendGetOpeningHoursRequest();
-                        }
-                    });
-                }
-            }
-        });
+	            if (ManageHours_GUI.instance != null) {
+	                ManageHours_GUI.instance.setUpdatePending(false);
+	                
+	                Platform.runLater(new Runnable() {
+	                    @Override
+	                    public void run() {
+	                        ManageHours_GUI.instance.showConflictDialog(conflictDate);
+	                    }
+	                });
+	            }
+	        }
+	    });
         /**
          * Handles the specific error when an opening hours update fails due to
          * existing reservations conflicting with the new schedule.
@@ -1089,13 +1081,17 @@ public class Client_Controller implements ChatIF {
     }
 
 	/**
-	 * Sends a batch update request for the weekly schedule.
-	 * 
-	 * @param batchData Map of Day to [Open, Close, IsActive]
-	 */
-	public void sendBatchUpdateHours(Map<DayOfWeek, Object[]> batchData) {
-		sendComplexObject(new Message(MessageType.UPDATE_REGULAR_HOURS, batchData));
-	}
+     * Sends a batch update request.
+     * Wraps the schedule data and the force flag into a single map.
+     * * @param batchData Map of Day to [Open, Close, IsActive]
+     * @param force     True to overwrite existing reservations, False to validate.
+     */
+    public void sendBatchUpdateHours(Map<DayOfWeek, Object[]> batchData, boolean force) {
+        Map<String, Object> wrapper = new HashMap<String, Object>();
+        wrapper.put("schedule", batchData);
+        wrapper.put("force", force);
+        sendComplexObject(new Message(MessageType.UPDATE_REGULAR_HOURS, wrapper));
+    }
 
 	
 	public void sendUpdateReservationRequest(Reservation reservationToUpdate) {
