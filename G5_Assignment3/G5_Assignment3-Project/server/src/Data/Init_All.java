@@ -48,7 +48,7 @@ public class Init_All {
             initOpeningHours(con, stmt);
             initUsers(con, stmt);
             initReservations(con, stmt); 
-            //initWaitlists(con, stmt);    
+            initWaitlists(con, stmt);    
             initMonthlyReports(con, stmt);
             initBills(con, stmt);
             
