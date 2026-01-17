@@ -3,6 +3,7 @@ package gui;
 import javafx.application.Platform;
 import javafx.animation.PauseTransition;
 import javafx.util.Duration;
+import utils.DataChecker;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -426,15 +427,43 @@ public class Terminal_GUI {
      */
     private void handleInstantBookingSubmit() {
         int diners = instDinersSpinner.getValue();
-        String phone = (loggedInUser == null) ? instPhoneField.getText().trim() : loggedInUser.getPhone();
-        String email = (loggedInUser == null) ? instEmailField.getText().trim() : loggedInUser.getEmail();
+        String phone;
+        String email;
+        
+        if (loggedInUser == null) {
+        	phone = instPhoneField.getText().trim();
+        	email = instEmailField.getText().trim();
 
-        if (loggedInUser == null && phone.isEmpty() && email.isEmpty()) {
-            instStatusLabel.setText("Error: Provide Phone or Email!");
-            instStatusLabel.setStyle("-fx-text-fill: #e74c3c;");
-            instStatusLabel.setVisible(true);
-            return;
+        	if (email.isEmpty() && phone.isEmpty()) {
+        		instStatusLabel.setText("Error: Please enter a phone or email");
+                instStatusLabel.setStyle("-fx-text-fill: #e74c3c;");
+                instStatusLabel.setVisible(true);
+                return;
+        	}
+        	
+        	if (!phone.isEmpty()) {
+        		if(!DataChecker.validateContactInfo(null, phone)) {
+        			instStatusLabel.setText("Error: Please enter a valid phone");
+                    instStatusLabel.setStyle("-fx-text-fill: #e74c3c;");
+                    instStatusLabel.setVisible(true);
+                    return;
+        		}
+        	}
+    		if (!email.isEmpty()) {
+    			if(!DataChecker.validateContactInfo(email, null)) {
+        			instStatusLabel.setText("Error: Please enter a valid email");
+                    instStatusLabel.setStyle("-fx-text-fill: #e74c3c;");
+                    instStatusLabel.setVisible(true);
+                    return;
+        		}
+    		}
+
+    		
+        }else {
+        	phone = loggedInUser.getPhone();
+        	email = loggedInUser.getEmail();
         }
+
 
         try {
             Reservation instantRes = new Reservation((loggedInUser == null ? null : loggedInUser.getId()), phone, email, LocalDateTime.now(), LocalDateTime.now().plusHours(2), diners);
