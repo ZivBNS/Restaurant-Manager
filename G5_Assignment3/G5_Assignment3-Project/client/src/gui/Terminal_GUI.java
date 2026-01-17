@@ -374,7 +374,8 @@ public class Terminal_GUI {
     	VBox[] forms = {checkInForm, instantForm, payBillForm, cancelForm};
         for (VBox f : forms) f.setVisible(false);
         if (formToShow != null) formToShow.setVisible(true);
-        
+        checkInCodeField.setVisible(true);
+        btnSubmitCheckIn.setVisible(true);        
         billDetailsBox.setVisible(false);
         billDetailsBox.setManaged(false);
         payBillCodeField.setVisible(true);
@@ -400,8 +401,7 @@ public class Terminal_GUI {
                 node.setVisible(true);
                 node.setManaged(true);
             }
-        }
-        
+        }        
         if (formToShow == checkInForm) {
             if (loggedInUser == null) {
                 todayReservationsTable.setVisible(false);
@@ -669,39 +669,22 @@ public class Terminal_GUI {
             }
         });
     }
-    /*
-    public void onDailyReservationsReceived(List<Reservation> reservations) {
-        Platform.runLater(() -> {
-            if (reservations != null && !reservations.isEmpty()) {
-                reservations.sort(Comparator.comparing(Reservation::getOrderStartTime));
-                
-                todayReservationsTable.getItems().setAll(reservations);
-                if (checkInForm.isVisible()) {
-                    todayReservationsTable.setVisible(true);
-                    todayReservationsTable.setManaged(true);
-                    
-                    checkInStatusLabel.setText("");
-                    checkInStatusLabel.setVisible(false);
-                }
-            } else {
-                todayReservationsTable.setVisible(false);
-                todayReservationsTable.setManaged(false);
-                
-                if (checkInForm.isVisible()) {
-                    checkInStatusLabel.setText("You have no active reservations for today.");
-                    checkInStatusLabel.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold; -fx-font-size: 16px;");
-                    checkInStatusLabel.setVisible(true);
-                }
-            }
-        });
-    }
-    */
+    
     /**
      * Handles the reception of daily reservations from the server.
      * @param reservations The list of reservations for the day.
      */
     public void onDailyReservationsReceived(List<Reservation> reservations) {
         Platform.runLater(() -> {
+            String currentText = checkInStatusLabel.getText();
+            boolean isSuccessMessageShown = currentText != null && 
+                                          (currentText.contains("Successful") || 
+                                           currentText.contains("Table Number") || 
+                                           currentText.contains("Approved"));
+            
+            if (isSuccessMessageShown) {
+                return; 
+            }
             if (reservations != null && !reservations.isEmpty()) {
                 reservations.sort(Comparator.comparing(Reservation::getOrderStartTime));
                 todayReservationsTable.getItems().setAll(reservations);
@@ -813,15 +796,23 @@ public class Terminal_GUI {
             
             todayReservationsTable.setVisible(false);
             todayReservationsTable.setManaged(false);
+            checkInCodeField.setVisible(false);
+            btnSubmitCheckIn.setVisible(false); 
+
             highlightButton(btnCheckIn);
-            if (confiCode==0) checkInStatusLabel.setText( "Check-In Successful!" + "\nPlease proceed to Table Number: " + tableNumber);
-            else checkInStatusLabel.setText("Reservation Approved! your code is: " + confiCode + "\nPlease proceed to Table Number: " + tableNumber);
-            confiCode=0;
+            
+            if (confiCode == 0) 
+                checkInStatusLabel.setText("Check-In Successful!\nPlease proceed to Table Number: " + tableNumber);
+            else 
+                checkInStatusLabel.setText("Reservation Approved! Your code is: " + confiCode + "\nPlease proceed to Table Number: " + tableNumber);
+            
+            confiCode = 0;
             checkInStatusLabel.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold; -fx-font-size: 16px;");
             checkInStatusLabel.setVisible(true);
             checkInCodeField.clear();
-            resetWithDelay();
-        });
+            
+            resetWithDelay(); 
+            });
     }
 
     /**
