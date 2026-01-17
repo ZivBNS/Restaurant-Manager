@@ -28,6 +28,11 @@ import messages.Message;
 import utils.DataChecker;
 import utils.User_Session;
 
+/**
+ * Controller class for the Main Screen GUI. This class handles user
+ * interactions for employee, subscriber, and guest logins, as well as
+ * navigation to other screens such as the terminal and dashboards.
+ */
 public class MainScreen_GUI {
 	public static MainScreen_GUI instance;
 

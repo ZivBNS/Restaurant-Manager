@@ -168,6 +168,13 @@ public class OpeningHours_Repository {
             if (pConn != null) db.releaseConnection(pConn);
         }
     }
+
+	/**
+	 * Deletes a special hour exception from the database.
+	 * 
+	 * @param date The date of the exception to delete.
+	 * @return true if deleted successfully, false otherwise.
+	 */
     public boolean deleteSpecialHour(LocalDate date) {
         String sql = "DELETE FROM specialhours WHERE Date = ?";
         PooledConnection pConn = null;

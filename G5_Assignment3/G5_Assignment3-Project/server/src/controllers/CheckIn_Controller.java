@@ -18,19 +18,18 @@ import messages.Message;
 import messages.MessageType;
 
 /**
- * Controller responsible for managing the check-in process.
- * Handles reservation verification, table assignment, waitlist status updates, and bill creation.
- * Supported waitlist states: PWAITING, WAITING, NOTIFIED, COMPLETED, CANCELED.
+ * Controller class responsible for handling check-in operations. This class
+ * processes check-in requests, verifies reservations, manages waitlists,
+ * assigns tables, and initializes bills.
  */
-/*******************************************************************
- * waitlist states are: PWAITING, WAITING, NOTIFIED, COMPLETED, CANCELED
- *******************************************************************/
 public class CheckIn_Controller {
     private static final Reservation_Repository reservationRepository = Reservation_Repository.getInstance();
     private static final Table_Repository tableRepository = Table_Repository.getInstance();
     private static final Waitlist_Repository WaitlistRepository = Waitlist_Repository.getInstance();
     private static final Bill_Repository billRepository = Bill_Repository.getInstance();
-
+    /*******************************************************************
+     * waitlist states are: PWAITING, WAITING, NOTIFIED, COMPLETED, CANCELED
+     *******************************************************************/
     /**
      * Routes the incoming message to the appropriate check-in logic based on its type.
      * * @param msg The message received from the client.

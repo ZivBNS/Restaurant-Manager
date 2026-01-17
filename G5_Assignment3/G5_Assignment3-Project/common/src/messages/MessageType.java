@@ -1,6 +1,9 @@
 package messages;
 
-
+/**
+ * Enum representing different types of messages exchanged between the client
+ * and server.
+ */
 public enum MessageType {
 	
     // --- Authorization and User Management ---

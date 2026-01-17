@@ -8,6 +8,10 @@ import org.objenesis.strategy.StdInstantiatorStrategy; // Make sure you import t
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
+/**
+ * Utility class for serializing and deserializing objects using Kryo. This
+ * class provides methods to convert objects to byte arrays and vice versa.
+ */
 public class KryoUtil {
 
     // 1. ThreadLocal ensures every thread gets its own Kryo instance

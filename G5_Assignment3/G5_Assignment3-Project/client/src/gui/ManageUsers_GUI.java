@@ -24,6 +24,10 @@ import javafx.util.Duration;
 import messages.Message;
 import messages.MessageType;
 
+/**
+ * Controller class for managing users in the GUI. This class handles user
+ * interactions for adding, editing, deleting, and viewing users.
+ */
 public class ManageUsers_GUI {
 
 	@FXML

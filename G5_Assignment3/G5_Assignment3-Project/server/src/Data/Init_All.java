@@ -48,7 +48,7 @@ public class Init_All {
             initOpeningHours(con, stmt);
             initUsers(con, stmt);
             initReservations(con, stmt); 
-            initWaitlists(con, stmt);    
+            //initWaitlists(con, stmt);    
             initMonthlyReports(con, stmt);
             initBills(con, stmt);
             
@@ -206,11 +206,9 @@ public class Init_All {
 
     /**
      * Initializes Bills for completed AND active reservations.
-     * Active reservations get an empty/open bill.
+     * Active reservations now get a random amount (Open Tab) instead of 0.
      */
     private static void initBills(Connection con, Statement stmt) {
-        // UPDATED: Now selects both Completed AND Active reservations
-        // Added 'r.Status' to the selection to distinguish logic inside the loop
         String selectSql = "SELECT r.ID, u.Identity, r.Status " +
                            "FROM Reservations r " +
                            "LEFT JOIN Users u ON r.UserID = u.ID " +
@@ -226,33 +224,34 @@ public class Init_All {
             while (rs.next()) {
                 int resId = rs.getInt("ID");
                 String identity = rs.getString("Identity"); 
-                String resStatus = rs.getString("Status"); // Get the status
+                String resStatus = rs.getString("Status"); 
 
-                double totalAmount;
+                // UPDATED: Generate random amount for EVERYONE (Active & Completed)
+                double rawAmount = 50.0 + (Math.random() * 400.0);
+                double totalAmount = Math.round(rawAmount * 100.0) / 100.0;
+
                 String details;
                 String billStatus;
                 double discount = 0.0;
                 
-                // Calculate Discount Potential (User Identity)
+                // Calculate Discount
                 if ("Subscriber".equalsIgnoreCase(identity)) {
-                    discount = 10.0;
+                    discount = 0.10; // 10% discount
                 }
 
-                // --- LOGIC SPLIT ---
-                if ("Active".equalsIgnoreCase(resStatus)) {
-                    // CASE 1: Active Reservation -> Empty/Open Bill
-                    totalAmount = 0.0;
-                    details = "Service in progress"; // Or "Open Tab"
-                    billStatus = "Unpaid";
-                } else {
-                    // CASE 2: Completed Reservation -> Generate Full History
-                    double rawAmount = 50.0 + (Math.random() * 400.0);
-                    totalAmount = Math.round(rawAmount * 100.0) / 100.0;
-                    billStatus = "Paid";
+                // Generate details string based on price range
+                if (totalAmount < 100) details = "Light Lunch Special + Drinks";
+                else if (totalAmount < 250) details = "Standard Dinner Service (2 Guests)";
+                else details = "Premium Chef's Special + Wine Bottle";
 
-                    if (totalAmount < 100) details = "Light Lunch Special + Drinks";
-                    else if (totalAmount < 250) details = "Standard Dinner Service (2 Guests)";
-                    else details = "Premium Chef's Special + Wine Bottle";
+                // --- LOGIC SPLIT ONLY FOR STATUS ---
+                if ("Active".equalsIgnoreCase(resStatus)) {
+                    // CASE 1: Active -> Has amount, but UNPAID
+                    billStatus = "Unpaid";
+                    details = details + " (Open Tab)"; // Append note that it's live
+                } else {
+                    // CASE 2: Completed -> Has amount and PAID
+                    billStatus = "Paid";
                 }
 
                 // Set values to PreparedStatement
@@ -384,7 +383,7 @@ public class Init_All {
                     }
                 }
 
-             // --- PART 2: Future (Pending - Long Term) ---
+                // --- PART 2: Future (Pending - Long Term) ---
                 LocalDate tomorrow = LocalDate.now().plusDays(1);
                 
                 // Generates reservations for the next 12 days
@@ -403,15 +402,15 @@ public class Init_All {
                     
                     switch (dayOfWeek) {
                         case FRIDAY:
-                            // Fridays open early for lunch (10:00, 12:00)
+                            // Fridays open early for lunch (10:00)
                             baseHour = 10; 
                             break;
                         case SATURDAY:
-                            // Saturdays open late evening (20:00, 22:00)
+                            // Saturdays open late evening (20:00)
                             baseHour = 20; 
                             break;
                         default:
-                            // Regular weekdays (Sunday, Monday, Thursday) - Evening (18:00, 20:00)
+                            // Regular weekdays (Sunday, Monday, Thursday) - Evening (18:00)
                             baseHour = 18; 
                             break;
                     }
@@ -441,6 +440,15 @@ public class Init_All {
                 // --- PART 3: Current Live (Active - Sitting Now) ---
                 // Generates orders that started 90, 60, 30, and 10 minutes ago
                 int[] minutesAgo = {90, 60, 30, 10}; 
+                
+                // UPDATED: Specific mapping for Tables and Diners as requested
+                // Index 0: Table 3, Diners 4
+                // Index 1: Table 4, Diners 5
+                // Index 2: Table 5, Diners 6
+                // Index 3: Table 6, Diners 8
+                int[] targetTables = {3, 4, 5, 6};
+                int[] targetDiners = {4, 5, 6, 8};
+
                 for (int i = 0; i < minutesAgo.length; i++) {
                     int uid = userIds.get(userIdx % userIds.size());
                     userIdx++;
@@ -452,8 +460,13 @@ public class Init_All {
                     ps.setTimestamp(5, Timestamp.valueOf(start.plusHours(2)));
                     ps.setTimestamp(6, Timestamp.valueOf(start.plusMinutes(2))); 
                     ps.setNull(7, java.sql.Types.TIMESTAMP);
-                    ps.setInt(8, 2 + i);
-                    ps.setInt(9, i + 1); 
+                    
+                    // Set specific diners count (4, 5, 6, 8)
+                    ps.setInt(8, targetDiners[i]); 
+                    
+                    // Set specific table ID (3, 4, 5, 6)
+                    ps.setInt(9, targetTables[i]); 
+                    
                     ps.setString(10, "Active"); 
                     ps.setInt(11, lastCode++);
                     ps.addBatch();
@@ -461,27 +474,27 @@ public class Init_All {
 
                 // --- PART 4: Waitlist Candidates (Pending for NOW/Soon, No Table) ---
                 // These are customers who booked for NOW or very soon, but have no table assigned (making them Waitlist candidates).
-                int[] minutesFromNow = {0, 15, 30}; // Booking for now, +15 mins, +30 mins
-                for (int i = 0; i < minutesFromNow.length; i++) {
-                    int uid = userIds.get(userIdx % userIds.size());
-                    userIdx++;
-                    
-                    // Booking for a near time
-                    LocalDateTime start = LocalDateTime.now().plusMinutes(minutesFromNow[i]).withSecond(0).withNano(0);
-                    
-                    ps.setInt(1, uid);
-                    ps.setString(2, userData.get(uid)[0]);
-                    ps.setString(3, userData.get(uid)[1]);
-                    ps.setTimestamp(4, Timestamp.valueOf(start));
-                    ps.setTimestamp(5, Timestamp.valueOf(start.plusHours(2)));
-                    ps.setNull(6, java.sql.Types.TIMESTAMP); // Not arrived yet
-                    ps.setNull(7, java.sql.Types.TIMESTAMP);
-                    ps.setInt(8, 4); // Party of 4
-                    ps.setNull(9, java.sql.Types.INTEGER);   // No table assigned (Crucial for Waitlist logic!)
-                    ps.setString(10, "Pending");             // Status is Pending until a table frees up
-                    ps.setInt(11, lastCode++);
-                    ps.addBatch();
-                }
+//                int[] minutesFromNow = {0, 15, 30}; // Booking for now, +15 mins, +30 mins
+//                for (int i = 0; i < minutesFromNow.length; i++) {
+//                    int uid = userIds.get(userIdx % userIds.size());
+//                    userIdx++;
+//                    
+//                    // Booking for a near time
+//                    LocalDateTime start = LocalDateTime.now().plusMinutes(minutesFromNow[i]).withSecond(0).withNano(0);
+//                    
+//                    ps.setInt(1, uid);
+//                    ps.setString(2, userData.get(uid)[0]);
+//                    ps.setString(3, userData.get(uid)[1]);
+//                    ps.setTimestamp(4, Timestamp.valueOf(start));
+//                    ps.setTimestamp(5, Timestamp.valueOf(start.plusHours(2)));
+//                    ps.setNull(6, java.sql.Types.TIMESTAMP); // Not arrived yet
+//                    ps.setNull(7, java.sql.Types.TIMESTAMP);
+//                    ps.setInt(8, 4); // Party of 4
+//                    ps.setNull(9, java.sql.Types.INTEGER);   // No table assigned (Crucial for Waitlist logic!)
+//                    ps.setString(10, "Pending");             // Status is Pending until a table frees up
+//                    ps.setInt(11, lastCode++);
+//                    ps.addBatch();
+//                }
 
                 ps.executeBatch();
             }

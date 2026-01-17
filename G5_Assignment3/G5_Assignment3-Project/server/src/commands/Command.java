@@ -2,6 +2,9 @@ package commands;
 import ocsf.server.ConnectionToClient;
 import messages.Message;
 
+/**
+ * Command interface defining the contract for executing commands.
+ */
 public interface Command {
     /**
      * Executes the business logic associated with a specific command.

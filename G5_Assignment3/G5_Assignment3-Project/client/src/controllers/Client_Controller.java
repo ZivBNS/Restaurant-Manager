@@ -950,8 +950,11 @@ public class Client_Controller implements ChatIF {
         }
     }
 
-   
-	@Override
+   //** 
+    /**
+	 * Displays incoming messages by deserializing and routing them to appropriate handlers.
+	 */
+    @Override
 	public void display(Object message) {
 		if (message instanceof byte[]) {
 			Object obj = KryoUtil.deserialize((byte[]) message);
@@ -1036,7 +1039,9 @@ public class Client_Controller implements ChatIF {
 	// ----------------------------------------------------------------------
 	// Existing Request Methods
 	// ----------------------------------------------------------------------
-
+	/**
+	 * Reference to the Manage Users GUI for handling user management responses.
+	 */
 	public void setManageUsersGUI(ManageUsers_GUI manageUsers_GUI) {
 		this.manageUsers_GUI = manageUsers_GUI;
 	}
@@ -1093,30 +1098,62 @@ public class Client_Controller implements ChatIF {
         sendComplexObject(new Message(MessageType.UPDATE_REGULAR_HOURS, wrapper));
     }
 
-	
+    /**
+	 * Sends a update reservation request to the server.
+	 * 
+	 * @param newRes The reservation details for the new reservation.
+	 */
 	public void sendUpdateReservationRequest(Reservation reservationToUpdate) {
 		sendComplexObject(new Message(MessageType.UPDATE_RESERVATION_REQUEST, reservationToUpdate));
 	}
 
+	/**
+	 * Sends a new reservation request to the server.
+	 * 
+	 * @param newRes The reservation details for the new reservation.
+	 */
 	public void sendNewReservationRequest(Reservation newRes) {
 		sendComplexObject(new Message(MessageType.CREATE_RESERVATION, newRes));
 	}
 
+	/**
+	 * Sends a new instant reservation request to the server.
+	 * 
+	 * @param newRes The reservation details for the instant reservation.
+	 */
 	public void sendNewInstantReservationRequest(Reservation newRes) {
 		sendComplexObject(new Message(MessageType.CREATE_INSTANT_RESERVATION, newRes));
 	}
 
+	/**
+	 * Sends a request to fetch the current opening hours from the server.
+	 * 
+	 */
 	public void sendGetOpeningHoursRequest() {
 		sendComplexObject(new Message(MessageType.GET_OPENING_HOURS, null));
 	}
 
+	/**
+	 * Sends a request to delete a special hour entry for a specific date.
+	 * 
+	 * @param date The date of the special hour to delete.
+	 */
 	public void sendDeleteSpecialHourRequest(LocalDate date) {
 		sendComplexObject(new Message(MessageType.DELETE_SPECIAL_HOUR, date));
 	}
 
+	/**
+	 * Sends a request to fetch all tables from the server.
+	 * 
+	 */
 	public void sendGetAllPendingReservationsRequest() {
 		sendComplexObject(new Message(MessageType.GET_ALL_PENDING_RESERVATIONS, null));
 	}
+
+	/**
+	 * Sends a request to fetch all tables from the server.
+	 * 
+	 */
 	public void sendGetAllPendingAndActiveReservationsRequest() {
 		sendComplexObject(new Message(MessageType.GET_ALL_PENDING_AND_ACTIVE_RESERVATIONS, null));
 	}

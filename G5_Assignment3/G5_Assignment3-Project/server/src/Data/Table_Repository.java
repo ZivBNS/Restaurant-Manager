@@ -47,7 +47,6 @@ public class Table_Repository {
         int maxTableSize = 0;
         List<Restaurant_Table> tablesList = new ArrayList<>();
         
-        // SQL CHANGE: Added WHERE IsActive = 1
         String sql = "SELECT ID, TableNumber, Size, IsActive FROM tables WHERE IsActive = 1"; 
 
         PooledConnection pConn = null;
@@ -367,6 +366,14 @@ public class Table_Repository {
      * @param isDeleteOperation Set to true if simulating a deletion, false for an update.
      * @return A list of Reservations that would no longer fit in the restaurant after the change.
      */
+    /**
+     * Logic Flow:
+     * 1. The controller invokes findImpactedReservations to evaluate a table change.
+     * 2. It calls getAllFutureReservations to identify all potential candidates for inspection.
+     * 3. For each candidate, it calls getOverlappingReservationsList to identify groups competing for the same time slot.
+     * 4. It executes the getUnseatableReservations simulation twice: once for the current state and once for the proposed state.
+     * 5. Finally, it returns the delta (difference)—specifically identifying reservations that become "homeless" due to the change.
+     */
     public List<Reservation> findImpactedReservations(Restaurant_Table targetTable, boolean isDeleteOperation) {
         List<Reservation> impacted = new ArrayList<>();
         
@@ -393,7 +400,7 @@ public class Table_Repository {
         // 2. Build Future Tables List (The "After" Scenario)
         List<Restaurant_Table> futureTables = new ArrayList<>();
         for (Restaurant_Table t : currentTables) {
-            // CRITICAL FIX: Compare by TableNumber, not ID (targetTable usually has ID=0 from controller)
+            // Compare by TableNumber, not ID (targetTable usually has ID=0 from controller)
             if (t.getTableNumber() == targetTable.getTableNumber()) { 
                 if (isDeleteOperation) {
                     continue; // Skip -> This simulates deletion

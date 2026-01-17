@@ -14,6 +14,10 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
+/**
+ * Controller class for the Barcode GUI. This class handles the display of a
+ * barcode image and navigation back to the subscribed customer screen.
+ */
 public class Barcode_GUI {
 	@FXML
     private ImageView barcodeImage;

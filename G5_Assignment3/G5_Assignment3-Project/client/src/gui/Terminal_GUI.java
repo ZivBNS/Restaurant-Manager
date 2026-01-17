@@ -25,6 +25,11 @@ import entities.LoginData;
 import entities.Reservation;
 import entities.UserRecord;
 
+/**
+ * Controller class for the Terminal GUI. This class manages the terminal
+ * interface for user interactions such as check-in, instant booking, bill
+ * payment, and reservation cancellation.
+ */
 public class Terminal_GUI {
 
     public static Terminal_GUI instance;
@@ -93,7 +98,7 @@ public class Terminal_GUI {
                 lblScanBarcode.setText("Waiting for scan...");
                 PauseTransition pause = new PauseTransition(Duration.seconds(1));
                 pause.setOnFinished(e -> {
-                    ConnectToServer_GUI.clientController.sendSubscriberLoginRequest(new LoginData("a", "1"));
+                    ConnectToServer_GUI.clientController.sendSubscriberLoginRequest(new LoginData("aaaaa", "123456"));
                     lblScanBarcode.setText("Scan Barcode");
                 });
                 pause.play();

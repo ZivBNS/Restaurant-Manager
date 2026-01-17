@@ -803,9 +803,6 @@ public class Reservation_Repository {
 	public List<Reservation> getOverstayingReservations(int hours) {
 		List<Reservation> lateReservations = new ArrayList<>();
 
-		// השאילתה:
-		// 1. Status = 'Active' -> הלקוח עדיין יושב
-		// 2. ActualArrivalTime < (עכשיו פחות X שעות) -> הוא הגיע מזמן
 		String query = "SELECT * FROM reservations WHERE Status = 'Active' AND ActualArrivalTime < DATE_SUB(NOW(), INTERVAL ? HOUR)";
 
 		PooledConnection pConn = null;
@@ -815,7 +812,7 @@ public class Reservation_Repository {
 			pConn = db.getConnection();
 			pstmt = pConn.getConnection().prepareStatement(query);
 
-			pstmt.setInt(1, hours); // הצבת מספר השעות (למשל 2)
+			pstmt.setInt(1, hours);
 
 			try (ResultSet rs = pstmt.executeQuery()) {
 				while (rs.next()) {
@@ -848,9 +845,6 @@ public class Reservation_Repository {
 	public List<Reservation> getNoShowCandidates(int minutes) {
 		List<Reservation> noShowReservations = new ArrayList<>();
 
-		// השאילתה:
-		// 1. Status = 'Pending' -> הלקוח טרם הגיע
-		// 2. ReservationStartTime < (עכשיו פחות X דקות) -> זמן ההגעה עבר מזמן
 		String query = "SELECT * FROM reservations WHERE Status = 'Pending' AND ReservationStartTime < DATE_SUB(NOW(), INTERVAL ? MINUTE)";
 
 		PooledConnection pConn = null;
