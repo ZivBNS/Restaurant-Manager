@@ -85,6 +85,7 @@ public class Terminal_GUI {
     @FXML
     public void initialize() {
         instance = this;
+        ConnectToServer_GUI.clientController.sendGetOpeningHoursRequest();
         refreshOHAndMaxCapacity();
         instDinersSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 8, 2));
         btnCancelRes.setText("CANCEL ORDER/\nEXIT WAITLIST");
@@ -740,11 +741,11 @@ public class Terminal_GUI {
         	maxDinnersTableSize=8;
         }
         try {
-            closeTime= ConnectToServer_GUI.clientController.refreshOH();
-
-		} catch (Exception e) {
-			closeTime = LocalTime.of(21, 30);
-		}
+            closeTime = ConnectToServer_GUI.clientController.refreshOH();
+        } catch (Exception e) {
+            closeTime = LocalTime.of(21, 30); // Default fallback on error
+        }
+        
         if (instDinersSpinner!=null && instDinersSpinner.getValueFactory() != null) {
             ((SpinnerValueFactory.IntegerSpinnerValueFactory) instDinersSpinner.getValueFactory()).setMax(maxDinnersTableSize);
         }

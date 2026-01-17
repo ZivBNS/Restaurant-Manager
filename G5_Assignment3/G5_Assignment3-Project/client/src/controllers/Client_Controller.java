@@ -1451,5 +1451,6 @@ public class Client_Controller implements ChatIF {
 	public int refreshMaxTableCapacity() {
 	     return Restaurant.getBiggestTableSize();	
 	}
+
 	
 }

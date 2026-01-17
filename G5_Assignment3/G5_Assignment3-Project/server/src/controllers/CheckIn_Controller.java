@@ -78,7 +78,7 @@ public class CheckIn_Controller {
 		
         //step 3: search for empty space in the misada
         Integer tableID=tableRepository.findBestAvailableTable(now, now.plusHours(2), reservation.getNumberOfDiners());
-        if (!tableRepository.isCapacityAvailable(now, now.plusHours(2), reservation.getNumberOfDiners(), null)) tableID=null;
+        if (!tableRepository.isCapacityAvailable(now, now.plusHours(2), reservation.getNumberOfDiners(), reservation.getId())) tableID=null;
 		if (tableID==null) {
 			//if there is no place and the person reserved before, make him be first to be notified to get table(max 15 minutes wait)
 			if (reservation.getOrderStartTime().isBefore(now.plusHours(1)) && reservation.getOrderStartTime().isAfter(now.minusMinutes(15))) { //האם הזמין ונמצא בין שעה לפני לרבע שעה אחרי שעת ההזמנה המקורית
@@ -100,6 +100,7 @@ public class CheckIn_Controller {
 		if (rt==null) return new Message(MessageType.CHECK_IN_FAIL,"System error");
 		
 		//step 5: create new bill after checked in
+		System.out.println("Creating bill for reservation ID: " + reservation.getUserId());
 		boolean isBillCreated = createBillWhenCheckedInSuccesfully(reservation.getId(),reservation.getUserId()!=null);
 		if (!isBillCreated) return new Message(MessageType.CHECK_IN_FAIL,"System error");
 		

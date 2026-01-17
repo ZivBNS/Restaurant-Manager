@@ -347,7 +347,7 @@ public class AddReservation_GUI {
             // Determine if the reservation is for a logged-in user or a guest
 			if (User_Session.getLoggedInUser() != null) {
 				System.out.println(User_Session.getLoggedInUser().getSubscriberCode());
-				newRes = new Reservation(1, User_Session.getLoggedInUser().getPhone(),
+				newRes = new Reservation(User_Session.getLoggedInUser().getId(), User_Session.getLoggedInUser().getPhone(),
 						User_Session.getLoggedInUser().getEmail(), startDateTime, endDateTime, diners);
 			} else {
 				newRes = new Reservation(null, User_Session.getCasualPhone(), User_Session.getCasualEmail(),

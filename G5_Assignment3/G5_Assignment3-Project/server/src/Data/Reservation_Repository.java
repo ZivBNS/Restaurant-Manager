@@ -103,10 +103,15 @@ public class Reservation_Repository {
 		try {
 			pConn = db.getConnection();
 			try (PreparedStatement pstmt = pConn.getConnection().prepareStatement(sql)) {
-				if (res.getUserId() != null)
-					pstmt.setInt(1, res.getUserId());
-				else
-					pstmt.setNull(1, java.sql.Types.INTEGER);
+				Integer uId = res.getUserId();
+                
+                if (uId != null && uId != 0) {
+                    System.out.println("DEBUG: Inserting User Reservation (UserID: " + uId + ")");
+                    pstmt.setInt(1, uId); 
+                } else {
+                    System.out.println("DEBUG: Inserting Guest Reservation (Treating " + uId + " as NULL)");
+                    pstmt.setNull(1, java.sql.Types.INTEGER);
+                }
 
 				pstmt.setNull(2, java.sql.Types.INTEGER);
 
