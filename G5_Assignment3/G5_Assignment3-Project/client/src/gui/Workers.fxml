@@ -9,7 +9,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane fx:id="managerRoot" minHeight="650" minWidth="950" stylesheets="/Theme/application.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.Workers_GUI">
+<BorderPane fx:id="managerRoot" minHeight="650" minWidth="950" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.Workers_GUI" stylesheets="@/Theme/application_modern.css">
 
     <top>
         <VBox alignment="CENTER" spacing="10">
@@ -36,6 +36,8 @@
                 <Button fx:id="btnManageOrders" prefHeight="140.0" prefWidth="240.0" styleClass="button, btn-secondary, dashboard-card" text="Manage Reservations" />
     
                 <Button fx:id="btnManageWaitlist" prefHeight="140.0" prefWidth="240.0" styleClass="button, btn-secondary, dashboard-card" text="Manage Waitlist" />
+
+                <Button fx:id="btnViewTables" prefHeight="140.0" prefWidth="240.0" styleClass="button, btn-secondary, dashboard-card" text="View Live Tables" />
             
                 <Button fx:id="btnReports" managed="false" visible="false" prefHeight="140.0" prefWidth="240.0" styleClass="button, btn-secondary, dashboard-card" text="View Reports" />
             

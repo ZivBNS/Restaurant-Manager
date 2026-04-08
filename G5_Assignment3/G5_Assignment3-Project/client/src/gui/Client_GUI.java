@@ -34,6 +34,13 @@ public class Client_GUI extends Application {
             Parent root = loader.load();
 
             Scene scene = new Scene(root);
+            // Attempt to load the new/modern stylesheet at startup if present
+            try {
+                scene.getStylesheets().add(getClass().getResource("/Theme/application_modern.css").toExternalForm());
+            } catch (Exception ex) {
+                // If the modern stylesheet is not found, fall back silently (keeps existing behavior)
+                System.err.println("Client_GUI: application_modern.css not found on classpath: " + ex.getMessage());
+            }
             primaryStage.setTitle("Bistro - Connect to Server");
             primaryStage.setScene(scene);
             primaryStage.centerOnScreen();

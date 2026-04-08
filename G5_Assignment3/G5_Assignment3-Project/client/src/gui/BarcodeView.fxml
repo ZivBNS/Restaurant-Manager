@@ -11,8 +11,7 @@
       prefWidth="500.0"
       xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
-      fx:controller="gui.Barcode_GUI"
-      stylesheets="/Theme/application.css">
+      fx:controller="gui.Barcode_GUI" stylesheets="@/Theme/application_modern.css">
 
     <ImageView fx:id="barcodeImage"
                fitWidth="300"

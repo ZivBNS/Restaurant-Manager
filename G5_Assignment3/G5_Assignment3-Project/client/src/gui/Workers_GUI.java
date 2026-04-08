@@ -27,6 +27,7 @@ public class Workers_GUI {
     @FXML private Button btnManageUsers;
     @FXML private Button btnManageWaitlist;
     @FXML private Button btnReports;
+    @FXML private Button btnViewTables;
 
     /**
      * Initializes the dashboard, sets up permissions, and assigns unified 
@@ -86,6 +87,13 @@ public class Workers_GUI {
                 navigateTo("/gui/ManageWaitlist.fxml", "Bistro - Waitlist Management", event);
             }
         });
+        
+        btnViewTables.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				navigateTo("/gui/TablesView.fxml", "Bistro - View Tables", event);
+			}
+		});
 
         // --- Logout Logic (Returns to standard window size) ---
         btnLogout.setOnAction(new EventHandler<ActionEvent>() {

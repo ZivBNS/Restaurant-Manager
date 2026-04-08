@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+
+<!--
+  TablesView.fxml
+  - Dynamic visual view of restaurant tables
+  - A controller (e.g. gui.TablesView_GUI) should populate the `tablesContainer` FlowPane at runtime
+    by creating one node per table (StackPane/Group) with a Circle for the table and small Rectangles
+    for seats placed around the circle. Occupied seats can be dark-filled squares.
+-->
+<BorderPane xmlns="http://javafx.com/javafx/8.0.171"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="gui.TablesView_GUI"
+            stylesheets="@/Theme/application_modern.css">
+
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="10">
+            <padding>
+                <Insets top="16" left="16" bottom="10" />
+            </padding>
+            <children>
+                <Label styleClass="header-title" text="Floorplan - Live Table View" />
+                <Button fx:id="btnBack" text="Back" onAction="#onBackClicked" styleClass="button, btn-secondary" />
+            </children>
+        </HBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true" fitToHeight="true" pannable="true">
+            <content>
+                <!-- Container that will be filled programmatically with one node per table -->
+                <FlowPane fx:id="tablesContainer" hgap="24" vgap="24" prefWrapLength="900">
+                    <padding>
+                        <Insets top="16" left="16" right="16" bottom="16" />
+                    </padding>
+                </FlowPane>
+            </content>
+        </ScrollPane>
+    </center>
+
+    <bottom>
+        <HBox alignment="CENTER_LEFT">
+            <padding>
+                <Insets bottom="12" left="16" />
+            </padding>
+            <children>
+                <Label styleClass="card-label" text="Legend:" />
+                <Label text=" ○ = table  |  ■ = free seat  |  ■ (dark) = occupied" style=" -fx-opacity: 0.85;" />
+            </children>
+        </HBox>
+    </bottom>
+
+</BorderPane>

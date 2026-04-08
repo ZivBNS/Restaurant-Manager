@@ -116,7 +116,7 @@ public class Restaurant {
      * @return A List of Restaurant_Table objects.
      */
     public List<Restaurant_Table> getTables() {
-        // Defensive coding: Ensure we never return null to the GUI or other layers
+        
         if (tables == null) {
             tables = new ArrayList<>();
         }

@@ -345,6 +345,30 @@ public class Reservation_Repository {
 		}
 		return results;
 	}
+	
+	/**
+	 * Retrieves all reservations currently in 'Active' status.
+	 * Used by staff to monitor guests currently dining or recently arrived.
+	 * @return A list of active reservations.
+	 */
+	
+	public List<Reservation> getAllActiveReservations() {
+		List<Reservation> results = new ArrayList<>();
+		PooledConnection pConn = null;
+		try {
+			pConn = db.getConnection();
+			try (Statement stmt = pConn.getConnection().createStatement();
+					ResultSet rs = stmt.executeQuery("SELECT * FROM reservations WHERE Status = 'Active'")) {
+				while (rs.next())
+					results.add(extractReservationFromResultSet(rs));
+			}
+		} catch (SQLException e) {
+		} finally {
+			if (pConn != null)
+				db.releaseConnection(pConn);
+		}
+		return results;
+	}
 
 	/**
 	 * Retrieves all reservations that are either in 'Pending' or 'Active' status.

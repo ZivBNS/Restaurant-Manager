@@ -19,7 +19,7 @@ public class Init_All {
 	// Connection settings for initialization only
 	private static final String DB_URL = "jdbc:mysql://localhost/?serverTimezone=Asia/Jerusalem";
 	private static final String DB_USER = "root";
-    private static final String DB_PASS = "zaqwsxcde321";
+    private static final String DB_PASS = "Aa123456";
     
     /**
      * Entry point for database initialization.

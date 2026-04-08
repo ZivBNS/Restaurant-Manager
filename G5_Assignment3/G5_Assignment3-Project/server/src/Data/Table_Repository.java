@@ -610,4 +610,35 @@ public class Table_Repository {
 
         return null;
     }
+    
+    public List<Restaurant_Table> getAllTables() {
+		String sql = "SELECT ID, TableNumber, Size, IsActive FROM tables";
+		List<Restaurant_Table> tablesList = new ArrayList<>();
+
+		PooledConnection pConn = null;
+		try {
+			pConn = db.getConnection();
+			Connection conn = pConn.getConnection();
+
+			try (Statement stmt = conn.createStatement(); 
+				 ResultSet rs = stmt.executeQuery(sql)) {
+
+				while (rs.next()) {
+					int id = rs.getInt("ID");
+					int tableNumber = rs.getInt("TableNumber");
+					int size = rs.getInt("Size");
+					boolean isActive = rs.getBoolean("IsActive");
+
+					Restaurant_Table table = new Restaurant_Table(id, tableNumber, size, isActive);
+					tablesList.add(table);
+				}
+			}
+		} catch (SQLException e) {
+			System.err.println("[Table_Repository] Get All Tables Error: " + e.getMessage());
+		} finally {
+			if (pConn != null) db.releaseConnection(pConn);
+		}
+
+		return tablesList;
+	}
 }

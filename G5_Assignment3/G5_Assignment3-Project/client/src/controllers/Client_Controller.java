@@ -751,9 +751,13 @@ public class Client_Controller implements ChatIF {
                 Restaurant.getInstance().setTables(tables);
 
                 // 1. Update Manage Tables Screen if currently open
-                if (ManageTables_GUI.instance != null) {
-                    ManageTables_GUI.instance.loadTables(tables);
-                }
+				if (ManageTables_GUI.instance != null) {
+					ManageTables_GUI.instance.loadTables(tables);
+				}
+				// Update Tables view if open
+				if (gui.TablesView_GUI.instance != null) {
+					gui.TablesView_GUI.instance.loadTables(tables);
+				}
                 
                 // --- Calculate Max Capacity Logic ---
                 // We iterate through active tables to find the largest table size.

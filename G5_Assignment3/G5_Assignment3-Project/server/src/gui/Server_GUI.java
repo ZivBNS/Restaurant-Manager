@@ -143,7 +143,30 @@ public class Server_GUI extends Application {
         });
 
         Scene scene = new Scene(root, 600, 700);
-        scene.getStylesheets().add(getClass().getResource("/Theme/application.css").toExternalForm());
+        // Load base stylesheet first, then the modern stylesheet so modern rules override the base.
+        // JavaFX applies styles in order; later-added stylesheets have higher precedence.
+        try {
+            java.net.URL baseCss = getClass().getResource("/Theme/application.css");
+            if (baseCss != null) {
+                scene.getStylesheets().add(baseCss.toExternalForm());
+            } else {
+                System.err.println("Server_GUI: application.css not found on classpath.");
+            }
+        } catch (Exception ex) {
+            System.err.println("Server_GUI: error loading application.css: " + ex.getMessage());
+        }
+
+        // If modern stylesheet exists, add it after the base so it takes precedence.
+        try {
+            java.net.URL modernCss = getClass().getResource("/Theme/application_modern.css");
+            if (modernCss != null) {
+                scene.getStylesheets().add(modernCss.toExternalForm());
+            } else {
+                System.err.println("Server_GUI: application_modern.css not found on classpath.");
+            }
+        } catch (Exception ex) {
+            System.err.println("Server_GUI: error loading application_modern.css: " + ex.getMessage());
+        }
         
         primaryStage.setScene(scene);
         primaryStage.show();
